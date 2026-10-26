@@ -282,3 +282,28 @@ details.more summary::-webkit-details-marker{display:none}
 details.more > *:not(summary){margin-top:12px}
 .banner.card{flex-direction:row;align-items:center;padding:14px 16px}
 .carousel .prog-card{align-items:stretch}
+
+/* ===== v7: рост ===== */
+.tree{display:block;width:100%;height:auto}
+.tree-card{flex-direction:row!important;align-items:center!important;gap:14px;padding:12px 16px}
+.tree-mini{width:84px;flex:none}
+.tree-mini .tree{border-radius:50%}
+.tc-body{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.growth-hero{align-items:stretch}
+.tree.big{max-width:300px;margin:0 auto}
+.skill{cursor:default;align-items:flex-start}
+.skill .dt{gap:6px}
+.sdot{width:12px;height:12px;border-radius:50%;flex:none;margin-top:6px}
+.stages{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stg{background:var(--surface);border-radius:14px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;color:var(--muted)}
+.stg span{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-weight:700;font-size:.8rem}
+.stg.on{color:var(--ink)}
+.stg.on span{background:var(--accent);color:var(--accent-ink)}
+.stg small{font-size:.68rem;line-height:1.2}
+.xp-pop{position:fixed;left:50%;top:calc(18px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--accent);color:var(--accent-ink);padding:8px 14px;border-radius:999px;font-weight:700;font-size:.9rem;z-index:30;animation:xp 1.8s ease both;pointer-events:none}
+@keyframes xp{0%{opacity:0;transform:translate(-50%,-10px)}12%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-6px)}}
+.ffly{animation:ffly 3s ease-in-out infinite}
+@keyframes ffly{0%,100%{opacity:.2}50%{opacity:1}}
+.celebrate .tree{max-width:260px;margin:0 auto}
+.badges-card{margin-top:4px}
+@media (prefers-reduced-motion:reduce){.ffly,.xp-pop{animation:none}}

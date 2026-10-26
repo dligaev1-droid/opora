@@ -95,7 +95,7 @@ const ico = (n,sz=20)=>`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fi
 
 /* ===== Навигация ===== */
 const TABS=[["home","Главная"],["tests","Тесты"],["diary","Дневник"],["practices","Практики"],["about","Психолог"]];
-const TAB_OF={sos:"home", breath:"practices", ground:"practices", pmr:"practices", thoughts:"practices", programs:"practices", program:"practices", article:"practices", jar:"practices", badges:"practices"};
+const TAB_OF={badges:"home", sos:"home", breath:"practices", ground:"practices", pmr:"practices", thoughts:"practices", programs:"practices", program:"practices", article:"practices", jar:"practices"};
 let route="home", sub=null, prevRoute="home";
 function stopAll(){ stopBreath(); stopPmr(); }
 function go(r, s=null){
@@ -141,13 +141,13 @@ function checkBadges(){
 }
 function badgesRow(){
   const got=BADGES.filter(b=>S.badges.includes(b.id)).length;
-  return `<button class="card badges-card" data-go="badges">
+  return `<button class="card badges-card" data-go="badges" data-from="growth">
     <span class="row" style="justify-content:space-between;width:100%"><strong class="ct">Достижения</strong><span class="tag">${got} из ${BADGES.length}</span></span>
     <span class="badge-strip">${BADGES.map(b=>`<span class="bdg ${S.badges.includes(b.id)?"on":""}" title="${esc(b.t)}">${ico("star",16)}</span>`).join("")}</span>
   </button>`;
 }
 function vBadges(){
-  return `${backBtn("practices","Практики")}
+  return `${backBtn("growth","Мой рост")}
   <div class="stack-s"><h1>Достижения</h1></div>
   <div class="grid2">${BADGES.map(b=>{const on=S.badges.includes(b.id); return `<div class="tile badge ${on?"on":""}"><span class="ico">${ico(on?"star":"lock",18)}</span><strong>${esc(b.t)}</strong><span class="small muted">${esc(b.d)}</span></div>`;}).join("")}</div>`;
 }
@@ -185,7 +185,7 @@ function reliefDone(ex){
 function bindRelief(ex){
   const r=$("#rbR"); if(r) r.oninput=()=>{ $("#rbV").textContent=r.value; RL={ex, before:+r.value, after:+r.value, stage:"before"}; };
   const a=$("#raR"); if(a) a.oninput=()=>{ $("#raV").textContent=a.value; RL.after=+a.value; };
-  const s=$("#raSave"); if(s) s.onclick=()=>{ S.relief.push({ex, before:RL.before, after:RL.after, ts:Date.now()}); RL.stage="done"; save(); markDay(); render(); };
+  const s=$("#raSave"); if(s) s.onclick=()=>{ S.relief.push({ex, before:RL.before, after:RL.after, ts:Date.now()}); RL.stage="done"; save(); markDay(); award("calm",10); render(); };
   const ag=$("#rlAgain"); if(ag) ag.onclick=()=>{ RL={ex, before:RL.after, after:RL.after, stage:"before"}; render(); window.scrollTo(0,0); };
 }
 function reliefStart(ex){ const r=$("#rbR"); const v=r?+r.value:(RL&&RL.ex===ex?RL.before:6); RL={ex, before:v, after:Math.max(0,v-1), stage:"doing"}; }
@@ -211,6 +211,7 @@ function vHome(){
   <div class="card">
     <div class="moods">${MOODS.map(m=>`<button class="mood" data-qm="${m.v}" ${today&&today.mood===m.v?'aria-pressed="true"':''}>${face(m.v)}<span>${m.t}</span></button>`).join("")}</div>
   </div>
+  ${typeof homeTree==="function"?homeTree():""}
   <div class="card tip">
     <div class="row"><span class="ico">${ico("bulb",18)}</span><span class="label">Совет дня</span></div>
     <p>${esc(tipOfDay())}</p>
@@ -496,7 +497,7 @@ function bindTests(){
   $$("[data-test]").forEach(b=>b.onclick=()=>{T={id:b.dataset.test,i:0,a:[]}; render(); scrollTo(0,0);});
   $$("[data-ans]").forEach(b=>b.onclick=()=>{
     T.a[T.i]=+b.dataset.ans; T.i++;
-    if(T.i===TESTS[T.id].q.length){ S.tests.push({id:T.id, score:scoreOf(T.id,T.a), ts:Date.now()}); save(); markDay(); }
+    if(T.i===TESTS[T.id].q.length){ const sc=scoreOf(T.id,T.a); S.tests.push({id:T.id, score:sc, ts:Date.now()}); save(); markDay(); if(level(T.id,sc)[2]!=="m1") award("aware",10); }
     render(); scrollTo(0,0);
   });
   const bk=$("#tBack"); if(bk) bk.onclick=()=>{ if(T.i>0){T.i--;} else T={id:null,i:0,a:[]}; render(); };
@@ -668,7 +669,7 @@ function bindDiary(){
     const good=draft.good.trim();
     S.moods.push({id:uid(),ts:Date.now(),mood:draft.mood,tags:draft.tags,emotions:draft.emotions,note:draft.note.trim(),good});
     if(good) S.grat.push({id:uid(), text:good, ts:Date.now(), fresh:true});
-    S.demoCleared=true; save(); markDay(); draft={mood:null,tags:[],emotions:[],note:"",good:""}; emoOpen=null;
+    S.demoCleared=true; save(); markDay(); award("aware", 10+(draft.emotions.length?5:0)); draft={mood:null,tags:[],emotions:[],note:"",good:""}; emoOpen=null;
     toast(good?"Запись сохранена, хорошее — в банке":"Запись сохранена"); render(); };
   const c=$("#clrDemo"); if(c) c.onclick=()=>{S.demoCleared=true; save(); render();};
   if(sub==="emo"){ sub=null; setTimeout(()=>{const e=$("#emoBlock"); if(e) e.scrollIntoView({block:"center"});},30); }
@@ -711,7 +712,7 @@ function vJar(){
 }
 function bindJar(){
   const add=()=>{ const v=$("#gIn").value.trim(); if(!v){ $("#gIn").focus(); return; }
-    S.grat.forEach(g=>delete g.fresh); S.grat.push({id:uid(), text:v, ts:Date.now(), fresh:true}); save(); markDay(); render();
+    S.grat.forEach(g=>delete g.fresh); S.grat.push({id:uid(), text:v, ts:Date.now(), fresh:true}); save(); markDay(); award("res",10); render();
     toast("Положили в банку"); };
   $("#gAdd").onclick=add; $("#gIn").onkeydown=e=>{ if(e.key==="Enter") add(); };
   const r=$("#gRand"); if(r) r.onclick=()=>{ const g=S.grat[Math.floor(Math.random()*S.grat.length)]; const s=$("#gShow"); s.hidden=false; s.innerHTML=`«${esc(g.text)}» · <span class="muted">${fmtDate(g.ts)}</span>`; };
@@ -760,7 +761,7 @@ function bindThoughts(){
   $("#tdBack").onclick=()=>{keep(); if(TD.step) TD.step--; else TD=null; render();};
   $("#tdNext").onclick=()=>{ keep();
     if(TD.step<TSTEPS.length-1){TD.step++; render(); scrollTo(0,0); return;}
-    const {step,...rec}=TD; S.thoughts.push({...rec,id:uid(),ts:Date.now()}); save(); markDay();
+    const {step,...rec}=TD; S.thoughts.push({...rec,id:uid(),ts:Date.now()}); save(); markDay(); award("self",20);
     const diff=TD.before-TD.after; TD=null; toast(diff>0?`Запись сохранена. Эмоция стала слабее на ${diff}%`:"Запись сохранена"); render();
   };
   setTimeout(()=>{const t=$("#tdIn"); if(t) t.focus();},50);
@@ -852,7 +853,7 @@ function finalBlock(p){
 function bindProgramDay(){
   const {p,k}=parseProgSub(); const data=progData(p);
   const n=$("#pNote"); if(n) n.oninput=()=>{ data.notes[k]=n.value; save(); };
-  const b=$("#pDone"); if(b) b.onclick=()=>{ data.done[k]=Date.now(); S.activeProgram=p.id; save(); markDay();
+  const b=$("#pDone"); if(b) b.onclick=()=>{ data.done[k]=Date.now(); S.activeProgram=p.id; save(); markDay(); award(PROG_SKILL[p.id]||"self",25);
     toast(k===p.days.length?"Программа пройдена":"День "+k+" выполнен"); render(); window.scrollTo(0,0); };
 }
 
@@ -870,14 +871,13 @@ function vPractices(){
     <button class="tile" data-go="diary" data-sub="emo"><span class="ico">${ico("emo")}</span><strong>Колесо эмоций</strong><span class="small muted">1 мин</span></button>
     <button class="tile" data-go="jar"><span class="ico">${ico("jar")}</span><strong>Благодарности</strong><span class="small muted">${S.grat.length?`В банке: ${S.grat.length}`:"1 мин"}</span></button>
   </div></div>
-  ${badgesRow()}
   <div class="stack-s"><span class="label">Почитать</span><div class="list">
     ${ART.map(a=>`<button class="li" data-go="article" data-sub="${a.id}"><span class="ico">${ico(S.read.includes(a.id)?"check":"book",18)}</span><span class="dt"><strong>${esc(a.title)}</strong><span class="small muted">${a.minutes} мин</span></span><span class="chev">›</span></button>`).join("")}
   </div></div>`;
 }
 function vArticle(){
   const a=ART.find(x=>x.id===sub); if(!a) return vPractices();
-  if(!S.read.includes(a.id)){ S.read.push(a.id); save(); setTimeout(checkBadges,0); }
+  if(!S.read.includes(a.id)){ S.read.push(a.id); save(); setTimeout(()=>{ checkBadges(); award("self",5); },0); }
   return `${backBtn("practices","Практики")}
   <article class="stack">
     <div class="stack-s"><span class="label">${a.minutes} мин чтения</span><h1>${esc(a.title)}</h1><p class="lead">${esc(a.lead)}</p></div>
@@ -943,7 +943,7 @@ function bindAbout(){
   $$("[data-ndel]").forEach(b=>b.onclick=()=>{S.notes=S.notes.filter(x=>x.id!==b.dataset.ndel); save(); render();});
   $("#wipe").onclick=()=>$("#wipeConfirm").hidden=false;
   $("#wipeNo").onclick=()=>$("#wipeConfirm").hidden=true;
-  $("#wipeYes").onclick=()=>{S=empty(); S.grat=[]; save(); toast("Данные удалены"); render();};
+  $("#wipeYes").onclick=()=>{S=empty(); S.grat=[]; if(typeof gInit==="function") gInit(); save(); toast("Данные удалены"); render();};
   if(sub==="book"){ sub=null; setTimeout(()=>$("#book").scrollIntoView({block:"start"}),30); }
 }
 
@@ -988,10 +988,13 @@ function render(){
 
 /* ===== Адрес страницы: #sos, #diary и т.д. ===== */
 window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(VIEWS[h] && h!==route){ go(h); } });
-const h0=(location.hash||"").slice(1);
-if(VIEWS[h0] && !["program","programs","article"].includes(h0)) route=h0;
-render();
-checkBadges();
+function boot(){
+  const h0=(location.hash||"").slice(1);
+  if(VIEWS[h0] && !["program","programs","article"].includes(h0)) route=h0;
+  render();
+  checkBadges();
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", boot); else setTimeout(boot,0);
 
 /* ===== Офлайн-режим ===== */
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
