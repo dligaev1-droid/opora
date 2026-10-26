@@ -127,3 +127,23 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 .back{border:0;background:none;color:var(--accent);font-weight:600;padding:0;align-self:flex-start}
 ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px}
 .disclaimer{font-size:.8rem;color:var(--muted);text-align:center;padding:8px 12px}
+
+/* серия и программа */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.72rem;color:var(--muted);text-transform:capitalize}
+.wd i{width:100%;max-width:34px;height:8px;border-radius:99px;background:var(--surface-2)}
+.wd.on i{background:var(--accent)}
+.wd.on{color:var(--ink);font-weight:600}
+.days{display:flex;flex-direction:column;gap:6px}
+.day,.art{border:0;background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 12px;display:flex;gap:12px;align-items:center;text-align:left;font:inherit;cursor:pointer;min-width:0}
+.art{background:transparent;padding:10px 0;border-top:1px solid var(--line);border-radius:0}
+.art:first-of-type{border-top:0}
+.day:disabled{cursor:default;opacity:.6}
+.day .dn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--surface-2);color:var(--muted);font-weight:700;font-size:.9rem}
+.day.open .dn{background:var(--accent);color:var(--accent-ink)}
+.day.done .dn{background:var(--ok);color:#fff}
+.day .dt,.art .dt{display:flex;flex-direction:column;min-width:0}
+.art .ico{width:32px;height:32px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+ul.tasks{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.lead{font-size:1.1rem;color:var(--muted)}
+article p{max-width:65ch}

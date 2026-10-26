@@ -2,9 +2,10 @@ const PSY = window.PSY;
 
 /* ===== Хранилище на устройстве ===== */
 const KEY = "opora_v1";
-const empty = () => ({moods:[], thoughts:[], tests:[], notes:[], demoCleared:false});
+const empty = () => ({moods:[], thoughts:[], tests:[], notes:[], demoCleared:false, days:[], program:{done:{}, notes:{}}});
 let S = empty();
-function load(){ try{ const raw = localStorage.getItem(KEY); if(raw) S = Object.assign(empty(), JSON.parse(raw)); }catch(e){} }
+function load(){ try{ const raw = localStorage.getItem(KEY); if(raw) S = Object.assign(empty(), JSON.parse(raw)); }catch(e){}
+  if(!S.program||!S.program.done) S.program={done:{},notes:{}}; if(!Array.isArray(S.days)) S.days=[]; }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 load();
 
@@ -20,6 +21,17 @@ function demoMoods(){
 }
 function moodsAll(){ if(!S.moods.length && !S.demoCleared) return demoMoods(); return S.moods; }
 const isDemo = () => !S.moods.length && !S.demoCleared;
+
+/* ===== Серия дней ===== */
+const dayKey = (d=new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+function markDay(){ const k=dayKey(); if(!S.days.includes(k)){ S.days.push(k); save(); } }
+function streak(){
+  const set=new Set(S.days); let n=0; const d=new Date();
+  if(!set.has(dayKey(d))) d.setDate(d.getDate()-1);
+  while(set.has(dayKey(d))){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+const plural=(n,a,b,c)=>{const m10=n%10,m100=n%100; return m10===1&&m100!==11?a:(m10>=2&&m10<=4&&(m100<12||m100>14)?b:c);};
 
 /* ===== Утилиты ===== */
 const $ = (s,el=document)=>el.querySelector(s);
@@ -48,16 +60,21 @@ const I = {
   wind:'<path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h7"/>',
   hand:'<path d="M8 13V5a1.5 1.5 0 0 1 3 0v6M11 11V4a1.5 1.5 0 0 1 3 0v7M14 11V5a1.5 1.5 0 0 1 3 0v8a7 7 0 0 1-7 7 6 6 0 0 1-5-3l-2-4a1.5 1.5 0 0 1 2.5-1.5L8 14"/>',
   heart:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
-  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  practices:'<path d="M5 19c0-8 5-14 15-15-1 10-7 15-15 15z"/><path d="M5 19c3-4 6-7 10-10"/>',
+  book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/>',
+  share:'<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/>',
+  check:'<path d="m5 12 5 5 9-10"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'
 };
 const ico = (n,sz=20)=>`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 
 /* ===== Навигация ===== */
-const TABS=[["home","Главная"],["tests","Тесты"],["diary","Дневник"],["thoughts","Мысли"],["about","Психолог"]];
+const TABS=[["home","Главная"],["tests","Тесты"],["diary","Дневник"],["practices","Практики"],["about","Психолог"]];
 let route="home", sub=null;
 function go(r, s=null){ stopBreath(); route=r; sub=s; render(); window.scrollTo(0,0); }
 function renderTabs(){
-  const main = ["sos","breath"].includes(route) ? "home" : route;
+  const main = ["sos","breath"].includes(route) ? "home" : ["thoughts","program","article"].includes(route) ? "practices" : route;
   $("#tabs").innerHTML = TABS.map(([k,t])=>`<button data-go="${k}" ${main===k?'aria-current="page"':''}>${ico(k,22)}<span>${t}</span></button>`).join("");
 }
 document.addEventListener("click", e=>{
@@ -81,6 +98,7 @@ function vHome(){
     <div class="moods">${MOODS.map(m=>`<button class="mood" data-qm="${m.v}">${face(m.v)}<span>${m.t}</span></button>`).join("")}</div>
     <p class="small muted">Нажмите — и добавьте подробности в дневнике.</p>
   </div>
+  ${homeProgress()}
   ${installCard()}
   <div class="card sos">
     <div class="stack-s"><h3>Накрыло прямо сейчас?</h3><p class="small">Дыхание, заземление и что делать при панической атаке. Займёт 2–5 минут.</p></div>
@@ -92,6 +110,7 @@ function vHome(){
     <button class="tile" data-go="thoughts" data-sub="new"><span class="ico">${ico("thoughts")}</span><strong>Разобрать мысль</strong><span class="small muted">Дневник КПТ</span></button>
     <button class="tile" data-go="about" data-sub="book"><span class="ico">${ico("cal")}</span><strong>Записаться</strong><span class="small muted">к ${esc(PSY.nameTo)}</span></button>
   </div>
+  <button class="btn quiet block" data-share>${ico("share",18)} Поделиться Опорой с другом</button>
   <p class="disclaimer">Приложение помогает между встречами и не заменяет консультацию специалиста. Ваши записи хранятся только на этом устройстве.</p>`;
 }
 
@@ -167,7 +186,7 @@ function startBreath(){
   bState={running:true, phase:0, sec:4, cycles:0}; $("#bBtn").textContent="Остановить"; applyPhase();
   bTimer=setInterval(()=>{
     bState.sec--;
-    if(bState.sec===0){ bState.phase=(bState.phase+1)%4; bState.sec=4; if(bState.phase===0){bState.cycles++; const c=$("#bCycles"); if(c) c.textContent="Кругов: "+bState.cycles;} }
+    if(bState.sec===0){ bState.phase=(bState.phase+1)%4; bState.sec=4; if(bState.phase===0){bState.cycles++; if(bState.cycles===2) markDay(); const c=$("#bCycles"); if(c) c.textContent="Кругов: "+bState.cycles;} }
     applyPhase();
   },1000);
 }
@@ -237,7 +256,7 @@ function bindTests(){
   document.querySelectorAll("[data-test]").forEach(b=>b.onclick=()=>{T={id:b.dataset.test,i:0,a:[]}; render(); scrollTo(0,0);});
   document.querySelectorAll("[data-ans]").forEach(b=>b.onclick=()=>{
     T.a[T.i]=+b.dataset.ans; T.i++;
-    if(T.i===TESTS[T.id].q.length){ S.tests.push({id:T.id, score:T.a.reduce((x,y)=>x+y,0), ts:Date.now()}); save(); }
+    if(T.i===TESTS[T.id].q.length){ S.tests.push({id:T.id, score:T.a.reduce((x,y)=>x+y,0), ts:Date.now()}); save(); markDay(); }
     render(); scrollTo(0,0);
   });
   const bk=$("#tBack"); if(bk) bk.onclick=()=>{ if(T.i>0){T.i--;} else T={id:null,i:0,a:[]}; render(); };
@@ -300,7 +319,7 @@ function vDiary(){
 function bindDiary(){
   document.querySelectorAll("[data-mood]").forEach(b=>b.onclick=()=>{draft.mood=+b.dataset.mood; keepDraft(); render();});
   document.querySelectorAll("[data-tag]").forEach(b=>b.onclick=()=>{const t=b.dataset.tag; draft.tags=draft.tags.includes(t)?draft.tags.filter(x=>x!==t):[...draft.tags,t]; keepDraft(); render();});
-  $("#mSave").onclick=()=>{ keepDraft(); S.moods.push({id:uid(),ts:Date.now(),mood:draft.mood,tags:draft.tags,note:draft.note.trim(),good:draft.good.trim()}); S.demoCleared=true; save(); draft={mood:null,tags:[],note:"",good:""}; toast("Запись сохранена"); render(); };
+  $("#mSave").onclick=()=>{ keepDraft(); S.moods.push({id:uid(),ts:Date.now(),mood:draft.mood,tags:draft.tags,note:draft.note.trim(),good:draft.good.trim()}); S.demoCleared=true; save(); markDay(); draft={mood:null,tags:[],note:"",good:""}; toast("Запись сохранена"); render(); };
   const c=$("#clrDemo"); if(c) c.onclick=()=>{S.demoCleared=true; save(); render();};
 }
 function keepDraft(){ const n=$("#mNote"), g=$("#mGood"); if(n) draft.note=n.value; if(g) draft.good=g.value; }
@@ -318,7 +337,8 @@ let TD=null;
 function vThoughts(){
   if(TD) return vThoughtStep();
   const list=S.thoughts.slice().reverse();
-  return `<div class="stack-s"><h1>Дневник мыслей</h1><p class="muted">Метод когнитивно‑поведенческой терапии: замечаем тревожную мысль, проверяем её фактами и находим более реалистичный взгляд.</p></div>
+  return `<button class="back" data-go="practices">← Практики</button>
+  <div class="stack-s"><h1>Дневник мыслей</h1><p class="muted">Метод когнитивно‑поведенческой терапии: замечаем тревожную мысль, проверяем её фактами и находим более реалистичный взгляд.</p></div>
   <div class="card soft"><h3>Когда заполнять</h3><p class="small">Когда настроение резко изменилось или накрыла тревога. Шесть коротких шагов, около 5 минут.</p><button class="btn" id="tNew">Разобрать мысль</button></div>
   <div class="card"><h3>Ваши записи</h3>
   ${list.length?list.map(r=>`<details class="entry" style="display:block"><summary style="cursor:pointer;list-style:none"><div class="row" style="justify-content:space-between"><strong style="min-width:0;overflow-wrap:anywhere">${esc(r.thought||r.situation)}</strong><span class="small muted">${fmtDate(r.ts)}</span></div><div class="small muted">${esc(r.emotion)} ${r.before}% → ${r.after}%</div></summary>
@@ -327,7 +347,7 @@ function vThoughts(){
 }
 function vThoughtStep(){
   const s=TSTEPS[TD.step], n=TSTEPS.length;
-  return `<button class="back" id="tdBack">← ${TD.step?"Назад":"К дневнику"}</button>
+  return `<button class="back" id="tdBack">← ${TD.step?"Назад":"К дневнику мыслей"}</button>
   <div class="stack-s"><span class="label">Шаг ${TD.step+1} из ${n} · ${s.t}</span><div class="progress"><i style="width:${((TD.step+1)/n)*100}%"></i></div></div>
   <div class="card">
     <h2>${s.q}</h2>
@@ -346,7 +366,7 @@ function bindThoughts(){
   $("#tdBack").onclick=()=>{keep(); if(TD.step) TD.step--; else TD=null; render();};
   $("#tdNext").onclick=()=>{ keep();
     if(TD.step<TSTEPS.length-1){TD.step++; render(); scrollTo(0,0); return;}
-    const {step,...rec}=TD; S.thoughts.push({...rec,id:uid(),ts:Date.now()}); save();
+    const {step,...rec}=TD; S.thoughts.push({...rec,id:uid(),ts:Date.now()}); save(); markDay();
     const diff=TD.before-TD.after; TD=null; toast(diff>0?`Запись сохранена. Эмоция стала слабее на ${diff}%`:"Запись сохранена"); render();
   };
   setTimeout(()=>{const t=$("#tdIn"); if(t) t.focus();},50);
@@ -384,6 +404,7 @@ function vAbout(){
     ${S.notes.length?S.notes.slice().reverse().map(n=>`<div class="entry"><input type="checkbox" data-nd="${n.id}" ${n.done?"checked":""} style="margin-top:5px;accent-color:var(--accent)" aria-label="Обсудили"><div class="body"><p class="small" style="${n.done?"text-decoration:line-through;color:var(--muted)":""}">${esc(n.text)}</p><span class="small muted">${fmtDate(n.ts)}</span></div><button class="linkbtn small" data-ndel="${n.id}">Удалить</button></div>`).join(""):`<p class="small muted">Список пуст.</p>`}
   </div>
   <div class="card">
+    <button class="btn quiet" data-share style="align-self:flex-start">${ico("share",18)} Поделиться приложением</button>
     <h3>Конфиденциальность</h3>
     <p class="small">Без регистрации и рекламы. Дневники и результаты тестов хранятся только в браузере на этом устройстве и никуда не отправляются.</p>
     <button class="linkbtn small" id="wipe" style="align-self:flex-start">Удалить все мои данные</button>
@@ -408,13 +429,122 @@ function bindAbout(){
   if(sub==="book"){ sub=null; setTimeout(()=>$("#book").scrollIntoView({block:"start"}),30); }
 }
 
+/* ===== Практики, программа, статьи ===== */
+const PR = window.PROGRAM, ART = window.ARTICLES;
+function progState(){
+  const done=S.program.done, n=PR.days.length; let next=null;
+  for(let i=1;i<=n;i++){ if(!done[i]){ next=i; break; } }
+  // новый день открывается на следующий календарный день после выполнения предыдущего
+  let lockedUntilTomorrow=false;
+  if(next && next>1 && dayKey(new Date(done[next-1]))===dayKey()) lockedUntilTomorrow=true;
+  return {done, n, next, count:Object.keys(done).length, lockedUntilTomorrow};
+}
+function dayStatus(i){
+  const st=progState();
+  if(st.done[i]) return "done";
+  if(i===st.next) return st.lockedUntilTomorrow?"tomorrow":"open";
+  return "locked";
+}
+function homeProgress(){
+  const st=progState(), s=streak();
+  const week=[]; for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); week.push({on:S.days.includes(dayKey(d)), l:d.toLocaleDateString("ru-RU",{weekday:"short"}).slice(0,2)}); }
+  const dots=`<div class="week">${week.map(w=>`<span class="wd ${w.on?"on":""}"><i></i>${w.l}</span>`).join("")}</div>`;
+  let prog;
+  if(!st.next) prog=`<p class="small"><strong>Программа «${esc(PR.title)}» пройдена.</strong> Можно перечитать дни в разделе «Практики».</p>`;
+  else {
+    const d=PR.days[st.next-1];
+    prog = st.lockedUntilTomorrow
+      ? `<div class="row" style="justify-content:space-between"><div><span class="label">Программа · день ${st.next} из ${st.n}</span><p class="small muted">Сегодняшний день выполнен. Следующий откроется завтра.</p></div></div>`
+      : `<div class="stack-s"><span class="label">Программа · день ${st.next} из ${st.n}</span><strong>${esc(d.title)}</strong><button class="btn" data-go="program" data-sub="${st.next}">${st.count?"Продолжить":"Начать программу"} · ${d.minutes} мин</button></div>`;
+  }
+  return `<div class="card">
+    <div class="row" style="justify-content:space-between"><h3>${s?`${s} ${plural(s,"день","дня","дней")} подряд`:"Начните серию"}</h3><span class="small muted">${s?"Так держать":"Любое упражнение засчитывается"}</span></div>
+    ${dots}
+    <div class="progress"><i style="width:${st.count/st.n*100}%"></i></div>
+    ${prog}
+  </div>`;
+}
+function vPractices(){
+  const st=progState();
+  return `<div class="stack-s"><h1>Практики</h1><p class="muted">Программа, упражнения и короткие статьи от ${esc(PSY.nameFrom||PSY.name)}.</p></div>
+  <div class="card soft">
+    <div class="row" style="justify-content:space-between"><h3>${esc(PR.title)}</h3><span class="tag">${st.count} из ${st.n}</span></div>
+    <p class="small">${esc(PR.subtitle)}</p>
+    <div class="days">${PR.days.map((d,i)=>{const k=i+1, ds=dayStatus(k);
+      const icon = ds==="done"?ico("check",16):ds==="open"?`<b>${k}</b>`:ico("lock",14);
+      return `<button class="day ${ds}" ${ds==="locked"||ds==="tomorrow"?"disabled":""} data-go="program" data-sub="${k}" aria-label="День ${k}: ${esc(d.title)}"><span class="dn">${icon}</span><span class="dt"><span class="small muted">День ${k}${ds==="tomorrow"?" · откроется завтра":""}</span><strong>${esc(d.title)}</strong></span></button>`;}).join("")}</div>
+  </div>
+  <div class="stack-s"><span class="label">Упражнения</span>
+  <div class="grid2">
+    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Дыхание «квадрат»</strong><span class="small muted">2 минуты</span></button>
+    <button class="tile" data-go="sos"><span class="ico">${ico("hand")}</span><strong>Заземление 5‑4‑3‑2‑1</strong><span class="small muted">Когда накрыло</span></button>
+    <button class="tile" data-go="thoughts"><span class="ico">${ico("thoughts")}</span><strong>Дневник мыслей</strong><span class="small muted">${S.thoughts.length?`Записей: ${S.thoughts.length}`:"Метод КПТ"}</span></button>
+    <button class="tile" data-go="diary"><span class="ico">${ico("diary")}</span><strong>Дневник настроения</strong><span class="small muted">10 секунд в день</span></button>
+  </div></div>
+  <div class="card"><h3>Почитать</h3>
+    ${ART.map(a=>`<button class="art" data-go="article" data-sub="${a.id}"><span class="ico">${ico("book",18)}</span><span class="dt"><strong>${esc(a.title)}</strong><span class="small muted">${a.minutes} мин чтения</span></span></button>`).join("")}
+  </div>`;
+}
+function vProgramDay(){
+  const k=+sub||progState().next||1, d=PR.days[k-1], ds=dayStatus(k);
+  if(!d || ds==="locked") return vPractices();
+  const act = d.action?`<button class="btn" data-go="${d.action.to}" ${d.action.sub?`data-sub="${d.action.sub}"`:""}>${esc(d.action.label)}</button>`:"";
+  return `<button class="back" data-go="practices">← Практики</button>
+  <div class="stack-s"><span class="label">${esc(PR.title)} · день ${k} из ${PR.days.length} · ${d.minutes} мин</span><h1>${esc(d.title)}</h1></div>
+  <div class="card">${d.text.map(t=>`<p>${esc(t)}</p>`).join("")}</div>
+  <div class="card"><h3>Задание на сегодня</h3>
+    <ul class="tasks">${d.tasks.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
+    ${act}
+  </div>
+  ${d.ask?`<div class="card"><label class="field"><span>${esc(d.ask)}</span><textarea id="pNote" placeholder="Пара предложений для себя. Можно обсудить на сессии">${esc(S.program.notes[k]||"")}</textarea></label></div>`:""}
+  ${ds==="done"
+    ? `<div class="card soft"><div class="row">${ico("check",20)}<strong>День выполнен ${fmtDate(S.program.done[k])}</strong></div>${d.final?finalBlock():""}</div>`
+    : ds==="tomorrow" ? `<p class="small muted" style="text-align:center">Этот день откроется завтра. Отдохните и закрепите вчерашнее.</p>`
+    : `<button class="btn block" id="pDone">Отметить день выполненным</button>`}`;
+}
+function finalBlock(){
+  const g=S.tests.filter(t=>t.id==="gad7"); let cmp="";
+  if(g.length>=2){ const a=g[0].score, b=g[g.length-1].score, d=a-b;
+    cmp=`<p class="small">Тревожность в начале: <strong>${a}</strong>, сейчас: <strong>${b}</strong>. ${d>0?`Снижение на ${d} ${plural(d,"балл","балла","баллов")}.`:"Результат пока не изменился, это тоже важная информация."}</p>`; }
+  return `${cmp}<p class="small">Хотите продолжить работу глубже? Обсудим ваши записи за неделю на консультации.</p><button class="btn" data-go="about" data-sub="book">Записаться к ${esc(PSY.nameTo)}</button>`;
+}
+function bindProgramDay(){
+  const k=+sub||progState().next||1;
+  const n=$("#pNote"); if(n) n.oninput=()=>{ S.program.notes[k]=n.value; save(); };
+  const b=$("#pDone"); if(b) b.onclick=()=>{ S.program.done[k]=Date.now(); save(); markDay();
+    toast(k===PR.days.length?"Программа пройдена":"День "+k+" выполнен"); render(); window.scrollTo(0,0); };
+}
+function vArticle(){
+  const a=ART.find(x=>x.id===sub); if(!a) return vPractices();
+  return `<button class="back" data-go="practices">← Практики</button>
+  <article class="stack">
+    <div class="stack-s"><span class="label">${a.minutes} мин чтения</span><h1>${esc(a.title)}</h1><p class="lead">${esc(a.lead)}</p></div>
+    ${a.body.map(t=>`<p>${esc(t)}</p>`).join("")}
+  </article>
+  <div class="card soft">
+    <div class="row"><div class="logo">${esc(PSY.name[0])}</div><strong>${esc(PSY.name)}, ${esc(PSY.role.toLowerCase())}</strong></div>
+    <p class="small">Если узнали себя в этом тексте, давайте разберём вашу ситуацию на консультации.</p>
+    <div class="row"><button class="btn" data-go="about" data-sub="book">Записаться</button><button class="btn quiet" data-share>${ico("share",18)} Поделиться</button></div>
+  </div>`;
+}
+
+/* ===== Поделиться ===== */
+document.addEventListener("click", async e=>{
+  const b=e.target.closest("[data-share]"); if(!b) return;
+  const url = PSY.siteUrl || (location.protocol.startsWith("http") ? location.origin+location.pathname : "");
+  const text = `Опора — бесплатная карманная поддержка от психолога ${PSY.name}: дыхание при тревоге, дневник настроения, тесты. Без регистрации.`;
+  try{ if(navigator.share){ await navigator.share({title:"Опора", text, url: url||undefined}); return; } }catch(err){ if(err && err.name==="AbortError") return; }
+  try{ await navigator.clipboard.writeText(url?text+" "+url:text); toast("Ссылка скопирована. Отправьте её другу"); }
+  catch(err){ toast("Не удалось скопировать ссылку"); }
+});
+
 /* ===== Рендер ===== */
 function render(){
-  const v={home:vHome,sos:vSOS,breath:vBreath,tests:vTests,diary:vDiary,thoughts:vThoughts,about:vAbout}[route]||vHome;
+  const v={home:vHome,sos:vSOS,breath:vBreath,tests:vTests,diary:vDiary,thoughts:vThoughts,about:vAbout,practices:vPractices,program:vProgramDay,article:vArticle}[route]||vHome;
   if(route==="thoughts" && sub==="new"){ TD={step:0,before:70,after:40}; sub=null; }
   $("#app").innerHTML=`<main class="view">${v()}</main>`;
   renderTabs();
-  ({home:bindHome,sos:bindSOS,breath:bindBreath,tests:bindTests,diary:bindDiary,thoughts:bindThoughts,about:bindAbout}[route]||(()=>{}))();
+  ({home:bindHome,sos:bindSOS,breath:bindBreath,tests:bindTests,diary:bindDiary,thoughts:bindThoughts,about:bindAbout,practices:()=>{},program:bindProgramDay,article:()=>{}}[route]||(()=>{}))();
 }
 function bindHome(){
   document.querySelectorAll("[data-qm]").forEach(b=>b.onclick=()=>{draft.mood=+b.dataset.qm; go("diary");});
@@ -439,7 +569,7 @@ function installCard(){
 }
 
 /* ===== Адрес страницы: #sos, #diary и т.д. ===== */
-const ROUTES=["home","sos","breath","tests","diary","thoughts","about"];
+const ROUTES=["home","sos","breath","tests","diary","thoughts","about","practices"];
 const _go=go;
 go=function(r,s=null){ _go(r,s); try{ history.replaceState(null,"", r==="home"?location.pathname:"#"+r); }catch(e){} };
 window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(ROUTES.includes(h) && h!==route){ _go(h); } });
