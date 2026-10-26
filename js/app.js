@@ -230,6 +230,7 @@ function vHome(){
     <button class="tile" data-go="sounds"><span class="ico">${ico("moon")}</span><strong>Звуки для сна</strong><span class="small muted">Дождь, море, лес</span></button>
     <button class="tile" data-go="about" data-sub="book"><span class="ico">${ico("cal")}</span><strong>Записаться</strong><span class="small muted">к ${esc(PSY.nameTo)}</span></button>
   </div>
+  ${window.loveBanner?loveBanner():""}
   ${S.days.length>=2?installCard():""}
   <p class="disclaimer">Не заменяет консультацию специалиста. Данные хранятся только у вас.</p>`;
 }
@@ -873,6 +874,7 @@ function bindProgramDay(){
 function vPractices(){
   return `<div class="stack-s"><h1>Практики</h1></div>
   <div class="stack-s"><span class="label">Программы</span><div class="carousel">${PROGRAMS.map(programCard).join("")}</div></div>
+  ${window.loveBanner?loveBanner():""}
   <button class="banner card" data-go="cards"><span class="mak-thumb">${typeof cardBack==="function"?cardBack():""}</span><span class="bt"><strong>Метафорические карты</strong><span class="small muted">Карта дня и расклады</span></span><span class="chev">›</span></button>
   <button class="banner card" data-go="sounds"><span class="bi">${ico("moon",20)}</span><span class="bt"><strong>Звуки для сна</strong><span class="small muted">Дождь, море, лес, костёр, поющая чаша</span></span><span class="chev">›</span></button>
   <div class="stack-s"><span class="label">Упражнения</span>
@@ -999,6 +1001,8 @@ const VIEWS={home:[vHome,bindHome], sos:[vSOS,null], ground:[vGround,bindGround]
 function render(){
   if(route==="thoughts" && sub==="new"){ TD={step:0,before:70,after:40}; sub=null; }
   const [v,b]=VIEWS[route]||VIEWS.home;
+  const room=window.ROOM_OF?ROOM_OF(route):"";
+  if((document.documentElement.dataset.room||"")!==room){ if(room) document.documentElement.dataset.room=room; else delete document.documentElement.dataset.room; }
   $("#app").innerHTML=`<main class="view">${v()}</main>`;
   renderTabs();
   if(b) b();

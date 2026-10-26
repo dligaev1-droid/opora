@@ -391,3 +391,49 @@ a.phone,.tap{display:inline-flex;align-items:center;min-height:44px;color:var(--
 .snd-pill .sp-stop{background:rgba(127,127,127,.25);width:40px;padding:0;justify-content:center}
 @media (prefers-reduced-motion:reduce){.snd,.snd-t .ico{transition:none}}
 a.btn{text-decoration:none}
+
+/* v12: комната «Отношения» — тёплые тона */
+body{transition:background-color .5s ease}
+:root[data-room="love"]{
+  --bg:#F8EFEA; --surface:#FFFFFF; --surface-2:#F2E3DC; --ink:#2B2023; --muted:#6B5659;
+  --accent:#A84B5A; --accent-ink:#FFFFFF; --accent-soft:#F7DFDD; --line:#EBD9D1; --nav:rgba(255,250,248,.88)}
+@media (prefers-color-scheme: dark){:root[data-room="love"]:not([data-theme="light"]){
+  --bg:#1A1315; --surface:#251B1E; --surface-2:#33262A; --ink:#F2E7E8; --muted:#B89FA3;
+  --accent:#E8949E; --accent-ink:#1A1012; --accent-soft:#40262C; --line:#3A2B2F; --nav:rgba(37,27,30,.88)}}
+:root[data-theme="dark"][data-room="love"]{
+  --bg:#1A1315; --surface:#251B1E; --surface-2:#33262A; --ink:#F2E7E8; --muted:#B89FA3;
+  --accent:#E8949E; --accent-ink:#1A1012; --accent-soft:#40262C; --line:#3A2B2F; --nav:rgba(37,27,30,.88)}
+.love-hero{display:flex;flex-direction:column;gap:6px}
+.love-art{width:100%;max-width:260px;height:auto;margin:0 auto -6px;display:block}
+@media (prefers-reduced-motion:no-preference){.love-art circle:nth-child(n+3){animation:breathe 6s ease-in-out infinite;transform-origin:80px 46px}.love-art circle:nth-child(4){animation-delay:-3s}}
+@keyframes breathe{50%{transform:scale(1.05)}}
+.plus-tag{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 10px;font-size:.75rem;font-weight:700;letter-spacing:.02em;background:var(--accent-soft);color:var(--accent);white-space:nowrap;flex:none}
+.plus-tag.sm{padding:6px;margin-left:auto}
+.plus-tag.on{background:var(--accent);color:var(--accent-ink)}
+.love-banner{background:linear-gradient(120deg,#F7DFDD,#F6E6D6);color:#2B2023}
+.love-banner .bi{background:#A84B5A;color:#fff}
+.love-banner .small.muted{color:#6B5659}
+.love-banner .plus-tag{background:rgba(255,255,255,.7);color:#A84B5A}
+.love-banner .chev{color:#6B5659}
+.plus-banner .bi{background:var(--accent);color:var(--accent-ink)}
+.plus-lock{align-items:center;text-align:center}
+.plus-lock .pl-ico{width:48px;height:48px;border-radius:16px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.plus-lock .pl-ico svg{width:22px;height:22px}
+.plus-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.plus-list li{display:flex;gap:10px;align-items:flex-start}
+.plus-list svg{color:var(--accent);flex:none;margin-top:2px}
+.day-dots{display:flex;gap:8px;flex-wrap:wrap}
+.dd{width:40px;height:40px;border-radius:50%;border:0;background:var(--surface);color:var(--muted);font-weight:700;display:grid;place-items:center}
+.dd.done{background:var(--accent-soft);color:var(--accent)}
+.dd.cur{box-shadow:inset 0 0 0 2px var(--accent);color:var(--ink)}
+.seg3{grid-template-columns:repeat(3,1fr)}
+.seg3 button{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:.82rem;line-height:1.2}
+.q-card{min-height:220px;justify-content:space-between}
+.q-text{font-family:var(--f-display);font-size:1.35rem;font-weight:600;line-height:1.35;text-wrap:balance}
+.att-map{width:100%;max-width:300px;margin:0 auto;display:block}
+.att-map .q{fill:var(--surface-2);stroke:var(--surface);stroke-width:3}
+.att-map text{fill:var(--muted);font-size:10px;text-anchor:middle;font-family:var(--f-body)}
+.att-map .ax{font-size:9px}
+.att-map .dot{fill:var(--accent);stroke:var(--surface);stroke-width:3}
+.att-map .q.me{fill:var(--accent-soft)}
+.att-map text.me{fill:var(--accent);font-weight:700}
