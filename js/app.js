@@ -119,6 +119,8 @@ function go(r, s=null){
   if(!go._pop){ try{ history.pushState({r,s}, "", r==="home"?location.pathname+location.search:"#"+r); }catch(e){} }
 }
 function renderTabs(){
+  if(window.ROOM_OF && ROOM_OF(route)==="love" && window.ROOM_NAV){ $("#tabs").innerHTML=ROOM_NAV(route); $("#tabs").closest("nav").setAttribute("aria-label","Для пары"); return; }
+  $("#tabs").closest("nav").setAttribute("aria-label","Разделы");
   const main = TAB_OF[route] || route;
   $("#tabs").innerHTML = TABS.map(([k,t])=>`<button data-go="${k}" ${main===k?'aria-current="page"':''}>${ico(k,22)}<span>${t}</span></button>`).join("");
 }
@@ -129,7 +131,7 @@ const backBtn = (to, label) => `<button class="back" data-go="${to}">← ${label
 const backPrev = () => backBtn(prevRoute==="sos"?"sos":prevRoute==="home"?"home":"practices", prevRoute==="sos"?"Быстрая помощь":prevRoute==="home"?"Главная":"Практики");
 
 function header(){
-  return `<div class="top"><div class="brand"><div class="logo">О</div><div><div style="font-weight:700">Опора</div><div class="small muted">с психологом ${esc(PSY.nameWith)}</div></div></div><button class="sos-pill" data-go="sos">SOS</button></div>`;
+  return `<div class="top"><div class="brand"><div class="logo">О</div><div><div style="font-weight:700">Опора</div><div class="small muted">с психологом ${esc(PSY.nameWith)}</div></div></div><div class="top-r">${window.modeSwitch?modeSwitch("me"):""}<button class="sos-pill" data-go="sos">SOS</button></div></div>`;
 }
 
 /* ===== Достижения ===== */

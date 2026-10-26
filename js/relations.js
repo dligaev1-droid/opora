@@ -95,41 +95,75 @@ const LA=[
 
 /* ---------- Общие куски ---------- */
 let loveFrom="home";
-const ROOM_ROUTES=["love","lovep","lovet","loveq","lovef","lovea","plus"];
-const back = () => `<button class="back" data-go="love">← Отношения</button>`;
+const ROOM_ROUTES=["lovetog","lovepath","lovepsy","love","lovep","lovet","loveq","lovef","lovea","plus"];
+const BACKL={love:"Сегодня",lovetog:"Вместе",loveid:"Свидания",lovepath:"Путь",lovepsy:"Психолог"};
+const back = () => { if(["love","lovetog","loveid","lovepath","lovepsy","lovewl"].includes(route)) return ""; const p={lovew:"love",lovemd:"love",lovedt:"love",loved:"love",lovex:"love",lovem:"lovetog",lovekn:"lovetog",lovelw:"lovetog",loveq:"lovetog",lovee:"lovetog",lovep:"lovepath",lovet:"lovepath",lovef:"lovepath",lovek:"lovepath",lovea:"lovepath",plus:"lovepsy"}[route]||"love"; return `<button class="back" data-go="${p}">← ${BACKL[p]}</button>`; };
 const lockCard = (what) => `<div class="card plus-lock"><span class="pl-ico">${LOCK}</span><h3>${what}</h3><p class="small muted">Доступно в Опора+</p><button class="btn" data-go="plus">Подробнее</button></div>`;
 const HERO=`<svg viewBox="0 0 160 90" class="love-art" aria-hidden="true"><defs><radialGradient id="lg1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".55"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></radialGradient><radialGradient id="lg2"><stop offset="0" stop-color="#E7B58E" stop-opacity=".7"/><stop offset="1" stop-color="#E7B58E" stop-opacity="0"/></radialGradient></defs><circle cx="62" cy="46" r="40" fill="url(#lg1)"/><circle cx="98" cy="44" r="40" fill="url(#lg2)"/><circle cx="64" cy="46" r="20" fill="none" stroke="var(--accent)" stroke-width="1.6" opacity=".8"/><circle cx="96" cy="46" r="20" fill="none" stroke="var(--accent)" stroke-width="1.6" opacity=".8"/></svg>`;
 const li = (go, sb, icoSvg, title, small, locked) => `<button class="li" data-go="${go}"${sb?` data-sub="${sb}"`:""}><span class="ico">${icoSvg}</span><span class="dt"><strong>${title}</strong><span class="small muted">${small}</span></span>${locked?`<span class="plus-tag sm">${LOCK}</span>`:`<span class="chev">›</span>`}</button>`;
 
-/* ---------- Главный экран раздела ---------- */
+/* ---------- Режим «Для пары»: своё меню из 5 вкладок ---------- */
+const NAVI={
+  love:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  lovetog:'<circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/>',
+  loveid:'<rect x="3" y="9" width="18" height="12" rx="2"/><path d="M12 9v12M3 13h18M12 9c-1.5-4-6-4.5-6-2s4 2 6 2zM12 9c1.5-4 6-4.5 6-2s-4 2-6 2z"/>',
+  lovepath:'<path d="M5 20c5 0 3-7 8-7s3-7 7-7"/><circle cx="5" cy="20" r="1.6"/><circle cx="20" cy="6" r="1.6"/>',
+  lovepsy:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>'
+};
+const NAV=[["love","Сегодня"],["lovetog","Вместе"],["loveid","Свидания"],["lovepath","Путь"],["lovepsy","Психолог"]];
+const PARENT={lovew:"love",lovemd:"love",lovedt:"love",loved:"love",lovex:"love", lovem:"lovetog",lovekn:"lovetog",lovelw:"lovetog",loveq:"lovetog",lovee:"lovetog", lovewl:"loveid", lovep:"lovepath",lovet:"lovepath",lovef:"lovepath",lovek:"lovepath",lovea:"lovepath", plus:"lovepsy"};
+const TAB_ROOT=["love","lovetog","loveid","lovepath","lovepsy","lovewl"];
+const nico = (k,sz=22) => `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAVI[k]}</svg>`;
+window.ROOM_NAV = r => { const cur=TAB_ROOT.includes(r)?(r==="lovewl"?"loveid":r):(PARENT[r]||"love"); return NAV.map(([k,t])=>`<button data-go="${k}" ${cur===k?'aria-current="page"':''}>${nico(k)}<span>${t}</span></button>`).join(""); };
+window.modeSwitch = cur => `<div class="mode-sw" role="group" aria-label="Режим"><button data-go="home" aria-pressed="${cur==="me"}">Я</button><button data-go="love" aria-pressed="${cur==="we"}">Мы</button></div>`;
+const roomHead = () => `<div class="top"><div class="brand"><div class="logo love-logo">${ico("heart",18)}</div><div><div style="font-weight:700">Опора</div><div class="small muted">для пары</div></div></div><div class="top-r">${modeSwitch("we")}<button class="sos-pill" data-go="sos">SOS</button></div></div>`;
+const tileL = (go, icon, t, s) => `<button class="tile" data-go="${go}"><span class="ico">${icon}</span><strong>${t}</strong><span class="small muted">${s}</span></button>`;
+
+/* Сегодня */
 function vLove(){
-  if(!ROOM_ROUTES.includes(prevRoute)) loveFrom=prevRoute==="practices"?"practices":"home";
-  const l=L(), last=l.tests[l.tests.length-1];
-  return `${backBtn(loveFrom, loveFrom==="practices"?"Практики":"Главная")}
-  <div class="love-hero">${HERO}<div class="stack-s"><div class="row" style="justify-content:space-between"><h1>Отношения</h1>${plus()?`<span class="plus-tag on">Опора+</span>`:""}</div><p class="muted">Близость, ссоры, расставания — бережно и по шагам</p></div></div>
-  <div class="stack-s"><span class="label">Программы</span><div class="carousel">${Object.entries(LP).map(([id,p])=>{ const n=doneCount(id); return `<button class="card prog-card" data-go="lovep" data-sub="${id}:${Math.min(n+1,p.days.length)}"><span class="stack-s"><strong style="font-size:1.05rem">${p.t}</strong><span class="small muted">${p.d}</span></span><span class="stack-s"><span class="small">${n?`Пройдено ${n} из ${p.days.length}`:"День 1 бесплатно"}</span><span class="progress"><i style="width:${n/p.days.length*100}%"></i></span></span></button>`; }).join("")}</div></div>
+  const h=new Date().getHours(), hi=h<6?"Доброй ночи":h<12?"Доброе утро":h<18?"Добрый день":"Добрый вечер";
+  return `${roomHead()}
+  <div class="stack-s"><h1>${hi}</h1><p class="muted">Минутка друг для друга</p></div>
   ${T()?T().dqCard():""}
-  <div class="row quick2"><button class="btn quiet" data-go="lovemd">${ico("heart",18)} Как ты сейчас?</button><button class="btn quiet" data-go="lovedt">${ico("cal",18)} Наши даты</button></div>
+  <div class="quick2"><button class="btn quiet" data-go="lovemd">${ico("heart",18)} Как ты сейчас?</button><button class="btn quiet" data-go="lovedt">${ico("cal",18)} Наши даты</button></div>
   ${T()?T().datesCard():""}
   ${wxCard()}
-  ${plus()&&C()?C().report(false):""}
-  <div class="stack-s"><span class="label">Вдвоём</span><div class="list">
-    ${li("lovem",null,ico("heart",18),"Совпадаем ли мы","Тест для пары на одном телефоне",false)}
-    ${li("lovee",null,ico("moon",18),"Вечера для двоих","Готовые сценарии на час",false)}
-    ${li("loveq",null,ico("thoughts",18),"Вопросы для двоих","36 вопросов, чтобы стать ближе",false)}
-    ${li("lovekn",null,ico("star",18),"Насколько ты меня знаешь","Квиз: загадайте о себе, партнёр угадывает",false)}
-    ${li("lovelw",null,ico("heart",18),"Как мы чувствуем любовь","Слова, время, помощь, подарки, прикосновения",false)}
-    ${li("loveid",null,ico("moon",18),"Свидания-сюрпризы","40 свиданий под стираемым слоем",false)}
-    ${li("lovewl",null,ico("check",18),"Хотим вместе","Общий список желаний",false)}
-  </div></div>
-  <div class="stack-s"><span class="label">Для себя</span><div class="list">
+  ${plus()&&C()?C().report(false):""}`;
+}
+/* Вместе */
+function vTog(){
+  return `<div class="stack-s"><h1>Вместе</h1><p class="muted">Игры и тесты для двоих</p></div>
+  <button class="card feat" data-go="lovem"><span class="label">Тест для пары</span><strong class="feat-t">Совпадаем ли мы</strong><span class="small">10 тем — деньги, быт, родители, доверие. Отвечаете по очереди на одном телефоне.</span><span class="feat-go">Начать →</span></button>
+  <div class="grid2">
+    ${tileL("lovekn",ico("star"),"Насколько ты меня знаешь","Квиз по ссылке")}
+    ${tileL("lovelw",ico("heart"),"Как мы чувствуем любовь","Тест вдвоём")}
+    ${tileL("loveq",ico("thoughts"),"Вопросы для двоих","36 вопросов")}
+    ${tileL("lovee",ico("moon"),"Вечера для двоих","Сценарии на час")}
+  </div>`;
+}
+/* Путь */
+function vPath(){
+  const l=L(), last=l.tests[l.tests.length-1];
+  return `<div class="stack-s"><h1>Путь</h1><p class="muted">Разобраться в себе и в отношениях</p></div>
+  <div class="stack-s"><span class="label">Программы</span><div class="carousel">${Object.entries(LP).map(([id,p])=>{ const n=doneCount(id); return `<button class="card prog-card" data-go="lovep" data-sub="${id}:${Math.min(n+1,p.days.length)}"><span class="stack-s"><strong style="font-size:1.05rem">${p.t}</strong><span class="small muted">${p.d}</span></span><span class="stack-s"><span class="small">${n?`Пройдено ${n} из ${p.days.length}`:"День 1 бесплатно"}</span><span class="progress"><i style="width:${n/p.days.length*100}%"></i></span></span></button>`; }).join("")}</div></div>
+  <div class="stack-s"><span class="label">Разобраться</span><div class="list">
     ${li("lovet",null,ico("star",18),"Мой стиль привязанности",last?ASTY[last.s].t:"Тест · 2 минуты",false)}
     ${li("lovef",null,ico("hand",18),"Разбор ссоры","Понять себя и сказать без упрёков",!plus() && l.fights.length>=1)}
     ${li("lovek",null,ico("book",18),"Трудные разговоры","Деньги, родители, ревность, близость",false)}
   </div></div>
-  <div class="stack-s"><span class="label">Почитать</span><div class="list">${LA.map((a,i)=>li("lovea",a.id,ico("book",18),a.t,`${a.m} мин`,i>0 && !plus())).join("")}</div></div>
-  ${plus()?"":`<button class="banner card plus-banner" data-go="plus"><span class="bi">${LOCK}</span><span class="bt"><strong>Открыть всё — Опора+</strong><span class="small muted">Всё для пары: программы, вечера, график отношений</span></span><span class="chev">›</span></button>`}
-  <div class="card soft"><p class="small">Сложно разобраться самим? Можно прийти на консультацию одному или вдвоём.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к ${esc(PSY.nameTo)}</button></div>`;
+  <div class="stack-s"><span class="label">Почитать</span><div class="list">${LA.map((a,i)=>li("lovea",a.id,ico("book",18),a.t,`${a.m} мин`,i>0 && !plus())).join("")}</div></div>`;
+}
+/* Психолог */
+function vPsy(){
+  return `<div class="card">
+    <div class="row" style="gap:16px;flex-wrap:nowrap"><div class="avatar">${esc(PSY.name[0])}</div><div class="stack-s" style="min-width:0"><h2>${esc(PSY.name)}</h2><p class="small muted">${esc(PSY.role)}</p></div></div>
+    <p>Когда самим не получается договориться, помогает взгляд со стороны. Можно прийти одному или вдвоём: ссоры, ревность, доверие, расставание.</p>
+    <button class="btn" data-go="about" data-sub="book">Записаться на консультацию</button>
+  </div>
+  ${plus()?`<button class="banner card plus-banner" data-go="plus"><span class="bi">${ico("check",20)}</span><span class="bt"><strong>Опора+ подключена</strong><span class="small muted">Всё открыто</span></span><span class="chev">›</span></button>`
+  :`<button class="banner card plus-banner" data-go="plus"><span class="bi">${LOCK}</span><span class="bt"><strong>Открыть всё — Опора+</strong><span class="small muted">Программы, свидания, график отношений</span></span><span class="chev">›</span></button>`}
+  <button class="btn quiet block" data-go="home">← Вернуться в Опору для себя</button>
+  <p class="disclaimer">Если в отношениях есть насилие или угрозы — это не тема для упражнений. Откройте SOS или позвоните 112.</p>`;
 }
 
 /* «Погода в паре» на главном экране раздела */
@@ -288,7 +322,7 @@ function bindPlus(){
 
 /* ---------- Регистрация ---------- */
 window.LOVE={L, plus, back, lockCard, LOCK, li, ROOM_ROUTES};
-Object.assign(VIEWS,{love:[vLove,null], lovep:[vLoveProg,bindLoveProg], lovet:[vLoveTest,bindLoveTest], loveq:[vLoveQ,bindLoveQ], lovef:[vLoveF,bindLoveF], lovea:[vLoveA,null], plus:[vPlus,bindPlus]});
+Object.assign(VIEWS,{lovetog:[vTog,null], lovepath:[vPath,null], lovepsy:[vPsy,null], love:[vLove,null], lovep:[vLoveProg,bindLoveProg], lovet:[vLoveTest,bindLoveTest], loveq:[vLoveQ,bindLoveQ], lovef:[vLoveF,bindLoveF], lovea:[vLoveA,null], plus:[vPlus,bindPlus]});
 ROOM_ROUTES.forEach(r=>TAB_OF[r]="practices");
 window.ROOM_OF = r => ROOM_ROUTES.includes(r) ? "love" : "";
 window.loveBanner = () => `<button class="banner card love-banner" data-go="love"><span class="bi">${ico("heart",20)}</span><span class="bt"><strong>Отношения</strong><span class="small muted">Близость, ссоры, расставания</span></span>${plus()?"":`<span class="plus-tag">Опора+</span>`}<span class="chev">›</span></button>`;

@@ -200,6 +200,7 @@ const ID=[
   ["Поехать на природу с термосом и бутербродами","out",1,240],["Пройти квест-комнату вдвоём","out",2,90],["Записать «капсулу времени»: письма себе через год","home",0,45],["Устроить дегустацию: сыры, чаи или шоколад","home",2,90],["Вместе сделать доброе дело: приют для животных, помощь соседям","out",0,120],["Вечер мечтаний: где мы будем через 5 лет","home",0,60],
   ["Нарисовать портреты друг друга, даже если не умеете","home",0,45],["Сходить в планетарий или на обсерваторию","out",2,120],["Устроить «день да»: один предлагает, другой соглашается","out",1,480],["Ужин при свечах дома в нарядной одежде","home",1,120]
 ];
+const dSeg = cur => `<div class="seg" role="tablist"><button role="tab" data-go="loveid" aria-selected="${cur==="id"}">Сюрпризы</button><button role="tab" data-go="lovewl" aria-selected="${cur==="wl"}">Хотим вместе</button></div>`;
 const FREE_IDEAS=8;
 const SC = () => { const l=L(); if(!l.scr || typeof l.scr!=="object") l.scr={open:[], done:[]}; ["open","done"].forEach(k=>{ if(!Array.isArray(l.scr[k])) l.scr[k]=[]; }); return l.scr; };
 const canOpen = i => plus() || i<FREE_IDEAS;
@@ -214,8 +215,8 @@ function vIdeas(){
     if(!canOpen(i)) return `<button class="sc-tile lock" data-go="plus" aria-label="Свидание ${i+1}, доступно в Опора+"><span class="sc-big">${i+1}</span>${LOCK}</button>`;
     return `<button class="sc-tile cover${i===next?" next":""}" data-sc="${i}" aria-label="Свидание ${i+1}, закрыто"><span class="sc-big">${i+1}</span><span class="small">${i===next?"Следующее":"?"}</span></button>`;
   };
-  return `${back()}
-  <div class="stack-s"><h1>Свидания-сюрпризы</h1>
+  return `<div class="stack-s"><h1>Свидания</h1></div>${dSeg("id")}
+  <div class="stack-s">
     <p class="muted small">${ID.length} свиданий под защитным слоем. Открывайте по очереди — одно за раз, так интереснее. Но если не терпится, можно стереть и все сразу.</p></div>
   <div class="row small muted"><span>Открыто ${s.open.length} из ${ID.length}</span><span>·</span><span>Провели ${s.done.length}</span></div>
   <div class="sc-grid">${ID.map((_,i)=>tile(i)).join("")}</div>
@@ -288,13 +289,13 @@ function wishAdd(t){
 function vWish(){
   const w=WL(), left=w.filter(x=>!x.done), done=w.filter(x=>x.done);
   const row=x=>`<div class="entry wish"><input type="checkbox" data-wd="${x.id}" ${x.done?"checked":""} aria-label="Сделано: ${esc(x.t)}"><p class="small" style="flex:1;${x.done?"text-decoration:line-through;color:var(--muted)":""}">${esc(x.t)}</p><button class="linkbtn small" data-wx="${x.id}" aria-label="Удалить">✕</button></div>`;
-  return `${back()}<div class="stack-s"><h1>Хотим вместе</h1><p class="muted small">Места, поездки, дела — всё, что хочется сделать вдвоём</p></div>
+  return `<div class="stack-s"><h1>Свидания</h1></div>${dSeg("wl")}<p class="muted small">Места, поездки, дела — всё, что хочется сделать вдвоём</p>
   <div class="card"><div class="row" style="flex-wrap:nowrap"><input type="text" id="wIn" placeholder="Например: увидеть море" aria-label="Новое желание" maxlength="120" style="flex:1;min-width:0"><button class="btn" id="wAdd" aria-label="Добавить">+</button></div>
     ${left.length?left.map(row).join(""):`<p class="small muted">Пока пусто. Загляните в «Свидания-сюрпризы» — открытое свидание можно добавить сюда.</p>`}
     ${done.length?`<details class="more"><summary>Сделали · ${done.length}</summary><div>${done.map(row).join("")}</div></details>`:""}
     ${!plus()?`<p class="small muted">${w.length} из ${FREE_WISH} · без ограничений в <button class="linkbtn small" data-go="plus" style="display:inline-flex;min-height:0">Опора+</button></p>`:""}</div>
   ${w.length?`<div class="row"><button class="btn quiet" id="wSend">Отправить список партнёру</button></div>`:""}
-  <button class="btn quiet block" data-go="loveid">Свидания-сюрпризы</button>`;
+`;
 }
 function bindWish(){
   const add=()=>{ const i=$("#wIn"); if(wishAdd(i.value)) render(); };

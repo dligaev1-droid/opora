@@ -525,3 +525,26 @@ input[type=date]{font:inherit;color:var(--ink);background:var(--surface-2);borde
 .sc-act{display:flex;flex-direction:column;gap:8px}
 @media (prefers-reduced-motion:reduce){.sc-sheet{animation:none}.sc-canvas{transition:none}}
 .sc-modal ~ .xp-pop{display:none}
+
+/* v16: режим «Для пары» */
+.top-r{display:flex;align-items:center;gap:8px;flex:none}
+.brand{min-width:0}
+.brand>div:last-child{min-width:0}
+.brand .small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mode-sw{display:flex;background:var(--surface);border-radius:999px;padding:3px;box-shadow:inset 0 0 0 1px var(--line)}
+.mode-sw button{border:0;background:none;color:var(--muted);font-weight:700;min-width:40px;height:34px;border-radius:999px;padding:0 12px;transition:background .25s,color .25s}
+.mode-sw button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.love-logo{background:linear-gradient(135deg,#B85A69,#E3A88A)!important;color:#fff!important}
+.feat{border:0;font:inherit;text-align:left;cursor:pointer;width:100%;gap:8px;color:#2B2023;background:linear-gradient(135deg,#F3CFCF,#F6E1CF 60%,#EFD3D9);min-height:170px;justify-content:flex-end;position:relative;overflow:hidden}
+.feat::before{content:"";position:absolute;width:180px;height:180px;right:-40px;top:-60px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.7),transparent 70%)}
+.feat .label{color:#8E4352}
+.feat-t{font-family:var(--f-display);font-size:1.6rem;font-weight:700;line-height:1.15}
+.feat-go{font-weight:700;color:#A84B5A}
+:root[data-room="love"] .tile .ico{background:var(--accent-soft);color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.mode-sw button{transition:none}}
+.feat .feat-t,.feat .small{color:#2B2023}
+@media (prefers-color-scheme: dark){:root[data-room="love"]:not([data-theme="light"]) .feat{background:linear-gradient(135deg,#4A2730,#5C3A31 60%,#44262E);color:#F2E7E8}
+  :root[data-room="love"]:not([data-theme="light"]) .feat .feat-t,:root[data-room="love"]:not([data-theme="light"]) .feat .small{color:#F2E7E8}
+  :root[data-room="love"]:not([data-theme="light"]) .feat .label,:root[data-room="love"]:not([data-theme="light"]) .feat-go{color:#F0A7B0}
+  :root[data-room="love"]:not([data-theme="light"]) .feat::before{background:radial-gradient(circle,rgba(255,255,255,.12),transparent 70%)}}
+.quick2 .btn{white-space:nowrap;font-size:.9rem;padding:12px 8px;gap:6px}
