@@ -200,24 +200,80 @@ const ID=[
   ["Поехать на природу с термосом и бутербродами","out",1,240],["Пройти квест-комнату вдвоём","out",2,90],["Записать «капсулу времени»: письма себе через год","home",0,45],["Устроить дегустацию: сыры, чаи или шоколад","home",2,90],["Вместе сделать доброе дело: приют для животных, помощь соседям","out",0,120],["Вечер мечтаний: где мы будем через 5 лет","home",0,60],
   ["Нарисовать портреты друг друга, даже если не умеете","home",0,45],["Сходить в планетарий или на обсерваторию","out",2,120],["Устроить «день да»: один предлагает, другой соглашается","out",1,480],["Ужин при свечах дома в нарядной одежде","home",1,120]
 ];
-let IF={h:"", free:false, fast:false}, ISP=null;
+const FREE_IDEAS=8;
+const SC = () => { const l=L(); if(!l.scr || typeof l.scr!=="object") l.scr={open:[], done:[]}; ["open","done"].forEach(k=>{ if(!Array.isArray(l.scr[k])) l.scr[k]=[]; }); return l.scr; };
+const canOpen = i => plus() || i<FREE_IDEAS;
+const cost=c=>["бесплатно","недорого","с бюджетом"][c], dur=m=>m<60?m+" мин":m<=180?(Math.round(m/60*2)/2+" ч").replace(".",","):"на весь день";
+const meta = i => `${ID[i][1]==="home"?"Дома":"Вне дома"} · ${cost(ID[i][2])} · ${dur(ID[i][3])}`;
+let SCI=null;
 function vIdeas(){
-  const all=ID.map((x,i)=>({i,t:x[0],h:x[1],c:x[2],m:x[3]}));
-  const ok=x=>(!IF.h||x.h===IF.h)&&(!IF.free||x.c===0)&&(!IF.fast||x.m<=60);
-  const list=all.filter(ok), open=plus()?list:list.filter(x=>x.i<8);
-  const cost=c=>["бесплатно","недорого","с бюджетом"][c], dur=m=>m<60?m+" мин":m<=180?Math.round(m/60*2)/2+" ч":"на весь день";
-  const chip=(k,v,t)=>`<button class="chip" data-if="${k}" data-iv="${v}" aria-pressed="${IF[k]===v||(v===true&&IF[k]===true)}">${t}</button>`;
-  return `${back()}<div class="stack-s"><h1>Идеи свиданий</h1><p class="muted small">${ID.length} идей — дома и вне дома, бесплатных и не очень</p></div>
-  <div class="chips">${chip("h","home","Дома")}${chip("h","out","Вне дома")}${chip("free",true,"Бесплатно")}${chip("fast",true,"До часа")}</div>
-  <button class="btn block" id="iRnd">Удиви меня</button>
-  ${ISP!=null?`<div class="card soft idea-pick"><span class="label">Сегодня</span><p class="q-text">${ID[ISP][0]}</p><span class="small muted">${ID[ISP][1]==="home"?"Дома":"Вне дома"} · ${cost(ID[ISP][2])} · ${dur(ID[ISP][3])}</span></div>`:""}
-  <div class="list">${open.map(x=>`<div class="li idea"><span class="dt"><strong>${x.t}</strong><span class="small muted">${x.h==="home"?"Дома":"Вне дома"} · ${cost(x.c)} · ${dur(x.m)}</span></span><button class="icon-btn" data-wadd="${x.i}" aria-label="В список «Хотим вместе»">+</button></div>`).join("")||`<p class="small muted" style="padding:12px 0">Под эти фильтры идей нет</p>`}</div>
-  ${!plus()&&list.length>open.length?lockCard(`Ещё ${list.length-open.length} идей`):""}`;
+  const s=SC(), next=ID.findIndex((_,i)=>!s.open.includes(i));
+  const tile=i=>{
+    const o=s.open.includes(i), d=s.done.includes(i);
+    if(o) return `<button class="sc-tile open${d?" done":""}" data-sc="${i}"><span class="sc-n">${i+1}${d?` · ${ico("check",14)} были`:""}</span><span class="sc-t">${ID[i][0]}</span></button>`;
+    if(!canOpen(i)) return `<button class="sc-tile lock" data-go="plus" aria-label="Свидание ${i+1}, доступно в Опора+"><span class="sc-big">${i+1}</span>${LOCK}</button>`;
+    return `<button class="sc-tile cover${i===next?" next":""}" data-sc="${i}" aria-label="Свидание ${i+1}, закрыто"><span class="sc-big">${i+1}</span><span class="small">${i===next?"Следующее":"?"}</span></button>`;
+  };
+  return `${back()}
+  <div class="stack-s"><h1>Свидания-сюрпризы</h1>
+    <p class="muted small">${ID.length} свиданий под защитным слоем. Открывайте по очереди — одно за раз, так интереснее. Но если не терпится, можно стереть и все сразу.</p></div>
+  <div class="row small muted"><span>Открыто ${s.open.length} из ${ID.length}</span><span>·</span><span>Провели ${s.done.length}</span></div>
+  <div class="sc-grid">${ID.map((_,i)=>tile(i)).join("")}</div>
+  ${!plus()?lockCard(`Ещё ${ID.length-FREE_IDEAS} свиданий`):""}
+  ${ID.some((_,i)=>canOpen(i)&&!s.open.includes(i))?`<button class="linkbtn small" id="scAll" style="align-self:center">Не терпится? Открыть все сразу</button>`:""}`;
+}
+function scModal(i){
+  SCI=i; const s=SC(), opened=s.open.includes(i);
+  const m=document.createElement("div"); m.className="sc-modal"; m.setAttribute("role","dialog"); m.setAttribute("aria-modal","true"); m.setAttribute("aria-label",`Свидание ${i+1}`);
+  m.innerHTML=`<div class="sc-sheet">
+    <div class="sc-card"><div class="sc-under"><span class="label">Свидание ${i+1}</span><p class="sc-text">${ID[i][0]}</p><span class="small muted">${meta(i)}</span></div>${opened?"":`<canvas class="sc-canvas" aria-hidden="true"></canvas>`}</div>
+    <p class="small muted sc-hint" ${opened?"hidden":""}>Сотрите слой пальцем</p>
+    <div class="sc-act" ${opened?"":"hidden"}>
+      <button class="btn" id="scDone">${s.done.includes(i)?"Отметить, что ещё не были":"Мы провели это свидание"}</button>
+      <button class="btn quiet" id="scWish">В «Хотим вместе»</button>
+    </div>
+    <div class="row" style="justify-content:space-between"><button class="linkbtn small" id="scSkip" ${opened?"hidden":""}>Открыть без стирания</button><button class="linkbtn small" id="scClose" style="margin-left:auto">Закрыть</button></div>
+  </div>`;
+  document.body.appendChild(m); document.body.style.overflow="hidden";
+  const close=()=>{ m.remove(); document.body.style.overflow=""; SCI=null; render(); };
+  m.onclick=e=>{ if(e.target===m) close(); };
+  m.querySelector("#scClose").onclick=close;
+  m.addEventListener("keydown",e=>{ if(e.key==="Escape") close(); });
+  m.querySelector("#scDone").onclick=()=>{ const s=SC(); if(s.done.includes(i)) s.done=s.done.filter(x=>x!==i); else { s.done.push(i); markDay(); award("self",20); toast("Здорово, что вы нашли время друг для друга"); } save(); close(); };
+  m.querySelector("#scWish").onclick=()=>{ if(wishAdd(ID[i][0])) toast("Добавлено в «Хотим вместе»"); };
+  const reveal=()=>{
+    const s=SC(); if(!s.open.includes(i)){ s.open.push(i); save(); award("self",3); if(window.SND) SND.cue("done"); }
+    const cv=m.querySelector(".sc-canvas"); if(cv){ cv.classList.add("gone"); setTimeout(()=>cv.remove(),600); }
+    m.querySelector(".sc-hint").hidden=true; m.querySelector("#scSkip").hidden=true; m.querySelector(".sc-act").hidden=false;
+  };
+  m.querySelector("#scSkip").onclick=reveal;
+  const cv=m.querySelector(".sc-canvas"); if(cv) paintCover(cv, i, reveal);
+  setTimeout(()=>(m.querySelector("#scSkip:not([hidden])")||m.querySelector("#scClose")).focus(),50);
+}
+function paintCover(cv, i, onDone){
+  const r=cv.getBoundingClientRect(), dpr=Math.min(2, window.devicePixelRatio||1);
+  cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr);
+  const x=cv.getContext("2d"); x.scale(dpr,dpr); const W=r.width, H=r.height;
+  const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,"#C97F8B"); g.addColorStop(.5,"#E3B49B"); g.addColorStop(1,"#B86A7A");
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  for(let k=0;k<260;k++){ x.fillStyle=`rgba(255,255,255,${Math.random()*.35})`; x.beginPath(); x.arc(Math.random()*W, Math.random()*H, Math.random()*1.6, 0, 7); x.fill(); }
+  x.strokeStyle="rgba(255,255,255,.45)"; x.lineWidth=1.5; x.strokeRect(10.5,10.5,W-21,H-21);
+  x.fillStyle="rgba(255,255,255,.95)"; x.textAlign="center"; x.textBaseline="middle";
+  x.font=`700 ${Math.round(W*.28)}px ${getComputedStyle(document.body).fontFamily}`; x.fillText(String(i+1), W/2, H*.44);
+  x.font=`600 15px ${getComputedStyle(document.body).fontFamily}`; x.fillText("сотрите, чтобы открыть", W/2, H*.44+W*.2);
+  x.globalCompositeOperation="destination-out"; x.strokeStyle="#000"; x.fillStyle="#000";
+  let down=false, last=null, moves=0, done=false;
+  const pt=e=>{ const b=cv.getBoundingClientRect(); return [e.clientX-b.left, e.clientY-b.top]; };
+  const dot=(a,b)=>{ x.lineWidth=40; x.lineCap="round"; x.beginPath(); x.moveTo(a[0],a[1]); x.lineTo(b[0],b[1]); x.stroke(); };
+  const check=()=>{ const d=x.getImageData(0,0,cv.width,cv.height).data; let clear=0, n=0; for(let k=3;k<d.length;k+=4*24){ n++; if(d[k]<40) clear++; } if(!done && clear/n>.5){ done=true; onDone(); } };
+  cv.addEventListener("pointerdown",e=>{ down=true; last=pt(e); dot(last,last); try{ cv.setPointerCapture(e.pointerId); }catch(_){} e.preventDefault(); });
+  cv.addEventListener("pointermove",e=>{ if(!down) return; const p=pt(e); dot(last,p); last=p; if(++moves%8===0) check(); e.preventDefault(); });
+  const up=()=>{ if(down){ down=false; check(); } };
+  cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",up);
 }
 function bindIdeas(){
-  $$("[data-if]").forEach(b=>b.onclick=()=>{ const k=b.dataset.if, v=b.dataset.iv==="true"?true:b.dataset.iv; IF[k]=IF[k]===v?(k==="h"?"":false):v; render(); });
-  $("#iRnd").onclick=()=>{ const pool=ID.map((x,i)=>i).filter(i=>(plus()||i<8)&&(!IF.h||ID[i][1]===IF.h)&&(!IF.free||ID[i][2]===0)&&(!IF.fast||ID[i][3]<=60)); if(!pool.length){ toast("Снимите фильтры"); return; } let n; do{ n=pool[Math.floor(Math.random()*pool.length)]; }while(pool.length>1 && n===ISP); ISP=n; render(); };
-  $$("[data-wadd]").forEach(b=>b.onclick=()=>{ if(wishAdd(ID[+b.dataset.wadd][0])) toast("Добавлено в «Хотим вместе»"); });
+  $$("[data-sc]").forEach(b=>b.onclick=()=>scModal(+b.dataset.sc));
+  const all=$("#scAll"); if(all) all.onclick=()=>{ const s=SC(); ID.forEach((_,i)=>{ if(canOpen(i) && !s.open.includes(i)) s.open.push(i); }); save(); toast("Все свидания открыты"); render(); };
 }
 
 /* ---------- Хотим вместе ---------- */
@@ -234,11 +290,11 @@ function vWish(){
   const row=x=>`<div class="entry wish"><input type="checkbox" data-wd="${x.id}" ${x.done?"checked":""} aria-label="Сделано: ${esc(x.t)}"><p class="small" style="flex:1;${x.done?"text-decoration:line-through;color:var(--muted)":""}">${esc(x.t)}</p><button class="linkbtn small" data-wx="${x.id}" aria-label="Удалить">✕</button></div>`;
   return `${back()}<div class="stack-s"><h1>Хотим вместе</h1><p class="muted small">Места, поездки, дела — всё, что хочется сделать вдвоём</p></div>
   <div class="card"><div class="row" style="flex-wrap:nowrap"><input type="text" id="wIn" placeholder="Например: увидеть море" aria-label="Новое желание" maxlength="120" style="flex:1;min-width:0"><button class="btn" id="wAdd" aria-label="Добавить">+</button></div>
-    ${left.length?left.map(row).join(""):`<p class="small muted">Пока пусто. Загляните в «Идеи свиданий» — там есть кнопка «+».</p>`}
+    ${left.length?left.map(row).join(""):`<p class="small muted">Пока пусто. Загляните в «Свидания-сюрпризы» — открытое свидание можно добавить сюда.</p>`}
     ${done.length?`<details class="more"><summary>Сделали · ${done.length}</summary><div>${done.map(row).join("")}</div></details>`:""}
     ${!plus()?`<p class="small muted">${w.length} из ${FREE_WISH} · без ограничений в <button class="linkbtn small" data-go="plus" style="display:inline-flex;min-height:0">Опора+</button></p>`:""}</div>
   ${w.length?`<div class="row"><button class="btn quiet" id="wSend">Отправить список партнёру</button></div>`:""}
-  <button class="btn quiet block" data-go="loveid">Идеи свиданий</button>`;
+  <button class="btn quiet block" data-go="loveid">Свидания-сюрпризы</button>`;
 }
 function bindWish(){
   const add=()=>{ const i=$("#wIn"); if(wishAdd(i.value)) render(); };
@@ -304,3 +360,4 @@ Object.assign(VIEWS,{loved:[vDay,bindDay], lovemd:[vMood,bindMood], lovedt:[vDat
 ["loved","lovemd","lovedt","lovekn","lovelw","loveid","lovewl","lovex"].forEach(r=>{ TAB_OF[r]="practices"; window.LOVE.ROOM_ROUTES.push(r); });
 window.LOVE.together={dqCard, datesCard};
 })();
+window.addEventListener("popstate",()=>{ const m=document.querySelector(".sc-modal"); if(m){ m.remove(); document.body.style.overflow=""; } });

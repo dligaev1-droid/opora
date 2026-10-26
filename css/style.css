@@ -495,3 +495,33 @@ input[type=date]{font:inherit;color:var(--ink);background:var(--surface-2);borde
 .wish{display:flex;gap:10px;align-items:center}
 .wish input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);flex:none}
 .k-ok{color:var(--ok);font-weight:600}
+
+/* v15: свидания-сюрпризы (скретч) */
+.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (min-width:480px){.sc-grid{grid-template-columns:repeat(4,1fr)}}
+.sc-tile{aspect-ratio:3/4;border:0;border-radius:16px;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;text-align:center;position:relative;overflow:hidden}
+.sc-tile.cover{background:linear-gradient(135deg,#C97F8B,#E3B49B 55%,#B86A7A);color:#fff}
+.sc-tile.cover::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.35),transparent 40%)}
+.sc-tile .sc-big{font-family:var(--f-display);font-size:1.9rem;font-weight:700;line-height:1}
+.sc-tile.next{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent)}
+@media (prefers-reduced-motion:no-preference){.sc-tile.next{animation:scPulse 2.4s ease-in-out infinite}}
+@keyframes scPulse{50%{transform:scale(1.04)}}
+.sc-tile.lock{background:var(--surface-2);color:var(--muted)}
+.sc-tile.lock svg{opacity:.8}
+.sc-tile.open{background:var(--surface);justify-content:flex-start;align-items:flex-start;text-align:left;padding:10px}
+.sc-tile.open .sc-n{font-size:.72rem;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:3px}
+.sc-tile.open .sc-t{font-size:.8rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.sc-tile.done{background:var(--accent-soft)}
+.sc-modal{position:fixed;inset:0;z-index:30;background:rgba(20,10,14,.55);display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+@media (min-width:560px){.sc-modal{align-items:center}}
+.sc-sheet{background:var(--bg);border-radius:24px;padding:18px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px;animation:scUp .25s ease-out}
+@keyframes scUp{from{transform:translateY(24px);opacity:0}}
+.sc-card{position:relative;aspect-ratio:4/5;max-height:55vh;width:100%;border-radius:20px;overflow:hidden;background:var(--surface)}
+.sc-under{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:24px}
+.sc-text{font-family:var(--f-display);font-size:1.35rem;font-weight:600;line-height:1.35;text-wrap:balance}
+.sc-canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;transition:opacity .5s}
+.sc-canvas.gone{opacity:0}
+.sc-hint{text-align:center}
+.sc-act{display:flex;flex-direction:column;gap:8px}
+@media (prefers-reduced-motion:reduce){.sc-sheet{animation:none}.sc-canvas{transition:none}}
+.sc-modal ~ .xp-pop{display:none}

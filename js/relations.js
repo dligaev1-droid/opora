@@ -119,7 +119,7 @@ function vLove(){
     ${li("loveq",null,ico("thoughts",18),"Вопросы для двоих","36 вопросов, чтобы стать ближе",false)}
     ${li("lovekn",null,ico("star",18),"Насколько ты меня знаешь","Квиз: загадайте о себе, партнёр угадывает",false)}
     ${li("lovelw",null,ico("heart",18),"Как мы чувствуем любовь","Слова, время, помощь, подарки, прикосновения",false)}
-    ${li("loveid",null,ico("moon",18),"Идеи свиданий","40 идей и кнопка «Удиви меня»",false)}
+    ${li("loveid",null,ico("moon",18),"Свидания-сюрпризы","40 свиданий под стираемым слоем",false)}
     ${li("lovewl",null,ico("check",18),"Хотим вместе","Общий список желаний",false)}
   </div></div>
   <div class="stack-s"><span class="label">Для себя</span><div class="list">
@@ -269,7 +269,7 @@ function vPlus(){
     <li>${ico("check",18)}<span>Тест для пары «Совпадаем ли мы» с темами для разговора</span></li>
     <li>${ico("check",18)}<span>Вечера для двоих и скрипты трудных разговоров</span></li>
     <li>${ico("check",18)}<span>График «Погода в паре» и отчёт месяца</span></li>
-    <li>${ico("check",18)}<span>40 идей свиданий и список «Хотим вместе» без ограничений</span></li>
+    <li>${ico("check",18)}<span>40 свиданий-сюрпризов и список «Хотим вместе» без ограничений</span></li>
     <li>${ico("check",18)}<span>Полный профиль «Как мы чувствуем любовь» с советами</span></li>
     <li>${ico("check",18)}<span>Все статьи и новые материалы каждый месяц</span></li>
     ${PSY.plusDiscount?`<li>${ico("check",18)}<span><strong>Скидка ${+PSY.plusDiscount}% на консультации у ${esc(PSY.nameFrom||PSY.nameTo)}</strong></span></li>`:""}
