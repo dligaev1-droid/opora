@@ -211,6 +211,7 @@ function vHome(){
   <div class="card">
     <div class="moods">${MOODS.map(m=>`<button class="mood" data-qm="${m.v}" ${today&&today.mood===m.v?'aria-pressed="true"':''}>${face(m.v)}<span>${m.t}</span></button>`).join("")}</div>
   </div>
+  ${typeof homeCard==="function"?homeCard():""}
   ${typeof homeTree==="function"?homeTree():""}
   <div class="card tip">
     <div class="row"><span class="ico">${ico("bulb",18)}</span><span class="label">Совет дня</span></div>
@@ -861,6 +862,7 @@ function bindProgramDay(){
 function vPractices(){
   return `<div class="stack-s"><h1>Практики</h1></div>
   <div class="stack-s"><span class="label">Программы</span><div class="carousel">${PROGRAMS.map(programCard).join("")}</div></div>
+  <button class="banner card" data-go="cards"><span class="mak-thumb">${typeof cardBack==="function"?cardBack():""}</span><span class="bt"><strong>Метафорические карты</strong><span class="small muted">Карта дня и расклады</span></span><span class="chev">›</span></button>
   <div class="stack-s"><span class="label">Упражнения</span>
   ${reliefStats()}
   <div class="grid2">
