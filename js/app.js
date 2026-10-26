@@ -148,7 +148,7 @@ function badgesRow(){
 }
 function vBadges(){
   return `${backBtn("practices","Практики")}
-  <div class="stack-s"><h1>Достижения</h1><p class="muted">Маленькие отметки того, что вы заботитесь о себе.</p></div>
+  <div class="stack-s"><h1>Достижения</h1></div>
   <div class="grid2">${BADGES.map(b=>{const on=S.badges.includes(b.id); return `<div class="tile badge ${on?"on":""}"><span class="ico">${ico(on?"star":"lock",18)}</span><strong>${esc(b.t)}</strong><span class="small muted">${esc(b.d)}</span></div>`;}).join("")}</div>`;
 }
 
@@ -159,19 +159,18 @@ function reliefBefore(ex){
   if(RL && RL.ex===ex && RL.stage!=="before") return "";
   const v = RL && RL.ex===ex ? RL.before : 6;
   return `<div class="card relief">
-    <label class="field"><span>Насколько вы напряжены прямо сейчас? <strong id="rbV" class="rv">${v}</strong></span>
+    <label class="field"><span>Напряжение сейчас <strong id="rbV" class="rv">${v}</strong></span>
     <input type="range" id="rbR" min="0" max="10" step="1" value="${v}" aria-label="Напряжение до упражнения, от 0 до 10"></label>
-    <div class="scale-lbl small muted"><span>0 · спокойно</span><span>10 · очень сильно</span></div>
+    <div class="scale-lbl small muted"><span>спокойно</span><span>очень сильно</span></div>
   </div>`;
 }
 function reliefAfter(ex){
   if(!RL || RL.ex!==ex || RL.stage!=="after") return "";
   return `<div class="card relief soft" id="relAfter">
-    <h3>Как вы теперь?</h3>
-    <label class="field"><span>Напряжение после упражнения: <strong id="raV" class="rv">${RL.after}</strong></span>
+    <label class="field"><span>А теперь? <strong id="raV" class="rv">${RL.after}</strong></span>
     <input type="range" id="raR" min="0" max="10" step="1" value="${RL.after}" aria-label="Напряжение после упражнения, от 0 до 10"></label>
-    <div class="scale-lbl small muted"><span>0 · спокойно</span><span>10 · очень сильно</span></div>
-    <button class="btn" id="raSave">Сохранить результат</button>
+    <div class="scale-lbl small muted"><span>спокойно</span><span>очень сильно</span></div>
+    <button class="btn" id="raSave">Готово</button>
   </div>`;
 }
 function reliefDone(ex){
@@ -179,7 +178,7 @@ function reliefDone(ex){
   const d=RL.before-RL.after;
   return `<div class="card soft">
     <div class="relief-res"><span class="big-num">${RL.before}</span><span class="arrow">→</span><span class="big-num" style="color:var(--ok)">${RL.after}</span></div>
-    <p>${d>0?`Напряжение снизилось на ${d} ${plural(d,"пункт","пункта","пунктов")}. Отличная работа.`:d===0?"Напряжение не изменилось. Так бывает: попробуйте другое упражнение или повторите позже.":"Напряжение выросло. Если вам плохо, откройте быструю помощь или поговорите с близким."}</p>
+    <p>${d>0?`Минус ${d} ${plural(d,"пункт","пункта","пунктов")} напряжения. Отлично.`:d===0?"Без изменений. Попробуйте другое упражнение.":"Стало тяжелее. Откройте быструю помощь или позвоните близкому."}</p>
     <div class="row"><button class="btn quiet" id="rlAgain">Ещё раз</button>${d<=0?`<button class="btn quiet" data-go="sos">Быстрая помощь</button>`:""}</div>
   </div>`;
 }
@@ -195,7 +194,7 @@ function reliefStats(){
   if(S.relief.length<2) return "";
   const avg = S.relief.reduce((a,r)=>a+(r.before-r.after),0)/S.relief.length;
   if(avg<=0) return "";
-  return `<p class="small">Упражнения снижают ваше напряжение в среднем на <strong>${avg.toFixed(1).replace(".",",")}</strong> из 10. Выполнено с оценкой: ${S.relief.length}.</p>`;
+  return `<p class="small">Упражнения снижают ваше напряжение в среднем на <strong>${avg.toFixed(1).replace(".",",")}</strong> из 10</p>`;
 }
 
 /* ===== Главная ===== */
@@ -210,28 +209,23 @@ function vHome(){
   return `${header()}
   <div class="stack-s"><h1>${hi}</h1><p class="muted">Как вы себя чувствуете сейчас?</p></div>
   <div class="card">
-    ${today?`<div class="row">${face(today.mood)}<div><strong>Сегодня: ${MOODS[today.mood-1].t.toLowerCase()}</strong><div class="small muted">Отметка в ${new Date(today.ts).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}. Можно добавить ещё одну.</div></div></div>`:""}
-    <div class="moods">${MOODS.map(m=>`<button class="mood" data-qm="${m.v}">${face(m.v)}<span>${m.t}</span></button>`).join("")}</div>
-    <p class="small muted">Нажмите и добавьте подробности в дневнике.</p>
+    <div class="moods">${MOODS.map(m=>`<button class="mood" data-qm="${m.v}" ${today&&today.mood===m.v?'aria-pressed="true"':''}>${face(m.v)}<span>${m.t}</span></button>`).join("")}</div>
   </div>
   <div class="card tip">
-    <div class="row"><span class="ico">${ico("bulb",18)}</span><span class="label">Совет дня от ${esc(PSY.nameFrom||PSY.name)}</span></div>
+    <div class="row"><span class="ico">${ico("bulb",18)}</span><span class="label">Совет дня</span></div>
     <p>${esc(tipOfDay())}</p>
   </div>
   ${homeProgress()}
-  <div class="card sos">
-    <div class="stack-s"><h3>Накрыло прямо сейчас?</h3><p class="small">Дыхание, заземление и что делать при панической атаке. Займёт 2–5 минут.</p></div>
-    <button class="btn sosb" data-go="sos">Открыть быструю помощь</button>
-  </div>
+  <button class="banner sos-banner" data-go="sos"><span class="bi">${ico("heart",20)}</span><span class="bt"><strong>Накрыло?</strong><span class="small muted">Помощь за 2 минуты</span></span><span class="chev">›</span></button>
   <div class="grid2">
-    <button class="tile" data-go="tests" data-sub="cbi"><span class="ico">${ico("tests")}</span><strong>Тест на выгорание</strong><span class="small muted">6 вопросов</span></button>
-    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Снять напряжение</strong><span class="small muted">Дыхание, 2 минуты</span></button>
-    <button class="tile" data-go="jar"><span class="ico">${ico("jar")}</span><strong>Банка благодарностей</strong><span class="small muted">${S.grat.length?`Уже ${S.grat.length}`:"Начните сегодня"}</span></button>
+    <button class="tile" data-go="tests" data-sub="cbi"><span class="ico">${ico("tests")}</span><strong>Тест на выгорание</strong><span class="small muted">1 минута</span></button>
+    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Снять напряжение</strong><span class="small muted">2 минуты</span></button>
+    <button class="tile" data-go="jar"><span class="ico">${ico("jar")}</span><strong>Благодарности</strong><span class="small muted">${S.grat.length?`В банке: ${S.grat.length}`:"Банка пуста"}</span></button>
     <button class="tile" data-go="about" data-sub="book"><span class="ico">${ico("cal")}</span><strong>Записаться</strong><span class="small muted">к ${esc(PSY.nameTo)}</span></button>
   </div>
   ${installCard()}
-  <button class="btn quiet block" data-share>${ico("share",18)} Поделиться Опорой с другом</button>
-  <p class="disclaimer">Приложение помогает между встречами и не заменяет консультацию специалиста. Ваши записи хранятся только на этом устройстве.</p>`;
+  <button class="btn quiet block" data-share>${ico("share",18)} Поделиться с другом</button>
+  <p class="disclaimer">Не заменяет консультацию специалиста. Данные хранятся только у вас.</p>`;
 }
 function bindHome(){
   $$("[data-qm]").forEach(b=>b.onclick=()=>{draft.mood=+b.dataset.qm; go("diary");});
@@ -242,13 +236,13 @@ function bindHome(){
 /* ===== SOS ===== */
 function vSOS(){
   return `${backBtn("home","Главная")}
-  <div class="stack-s"><h1>Быстрая помощь</h1><p class="muted">Вы в безопасности. Выберите одно упражнение и делайте по шагу.</p></div>
+  <div class="stack-s"><h1>Быстрая помощь</h1><p class="muted">Вы в безопасности. Выберите одно.</p></div>
   <div class="grid2">
-    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Дыхание «квадрат»</strong><span class="small muted">2 минуты</span></button>
-    <button class="tile" data-go="ground"><span class="ico">${ico("hand")}</span><strong>Заземление 5‑4‑3‑2‑1</strong><span class="small muted">Когда «уносит»</span></button>
+    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Дыхание</strong><span class="small muted">2 минуты</span></button>
+    <button class="tile" data-go="ground"><span class="ico">${ico("hand")}</span><strong>Заземление</strong><span class="small muted">5‑4‑3‑2‑1</span></button>
   </div>
-  <div class="card">
-    <h3>Если это паническая атака</h3>
+  <details class="more">
+    <summary>Если это паническая атака</summary>
     <ol class="steps small">
       <li>Скажите себе: «Это паническая атака. Она неприятна, но не опасна и пройдёт». Пик обычно наступает в первые 10 минут, затем волна спадает.</li>
       <li>Не боритесь с ощущениями. Позвольте им быть и наблюдайте, как они меняются.</li>
@@ -256,10 +250,10 @@ function vSOS(){
       <li>Упритесь стопами в пол, сожмите и разожмите кулаки 5 раз.</li>
       <li>Когда станет легче, запишите, что случилось перед атакой. Обсудим это на сессии.</li>
     </ol>
-  </div>
+  </details>
   <div class="card sos">
-    <h3>Если вам угрожает опасность</h3>
-    <p class="small">Если есть мысли причинить себе вред или вы не справляетесь, обратитесь за помощью сейчас.</p>
+    <h3>Если есть мысли навредить себе</h3>
+    <p class="small">Обратитесь за помощью сейчас.</p>
     <div class="stack-s">
       <div><div class="label">Экстренные службы</div><div class="phone">112</div></div>
       <div><div class="label">Детский телефон доверия, бесплатно</div><div class="phone">8 800 2000 122</div></div>
@@ -281,7 +275,7 @@ function vGround(){
   const doing = RL && RL.ex==="ground" && RL.stage==="doing";
   const g=GROUND[Math.max(0,groundStep)];
   return `${backPrev()}
-  <div class="stack-s"><h1>Заземление 5‑4‑3‑2‑1</h1><p class="muted">Возвращает внимание в настоящий момент через органы чувств. 2–3 минуты.</p></div>
+  <div class="stack-s"><h1>Заземление</h1><p class="muted">Вернуться в «здесь и сейчас» через 5 чувств</p></div>
   ${reliefBefore("ground")}
   ${doing?`<div class="card">
     <div class="row" style="justify-content:space-between"><span class="label">Шаг ${groundStep+1} из 5</span></div>
@@ -305,14 +299,14 @@ let bTimer=null, bState={running:false, phase:0, sec:4, cycles:0};
 function vBreath(){
   const showRun = !(RL && RL.ex==="breath" && (RL.stage==="after"||RL.stage==="done"));
   return `${backPrev()}
-  <div class="stack-s"><h1>Дыхание «квадрат»</h1><p class="muted">Вдох, пауза, выдох, пауза — по 4 секунды. Сделайте 4–6 кругов.</p></div>
+  <div class="stack-s"><h1>Дыхание</h1><p class="muted">Вдох · пауза · выдох · пауза — по 4 секунды</p></div>
   ${reliefBefore("breath")}
   ${showRun?`<div class="card">
     <div class="breath-wrap"><div class="breath"><div class="ring"></div><div class="ball" id="ball"></div><div class="txt"><div class="phase" id="bPhase">Готовы?</div><div class="count" id="bCount">4</div></div></div></div>
-    <p class="small muted" style="text-align:center" id="bCycles">Кругов: 0 из 5</p>
+    <p class="small muted" style="text-align:center" id="bCycles">0 из 5 кругов</p>
     <button class="btn block" id="bBtn">Начать</button>
   </div>
-  <p class="disclaimer">Если кружится голова, вернитесь к обычному дыханию.</p>`:""}
+  <p class="disclaimer">Кружится голова — дышите как обычно</p>`:""}
   ${reliefAfter("breath")}${reliefDone("breath")}`;
 }
 function bindBreath(){
@@ -330,7 +324,7 @@ function startBreath(){
   bTimer=setInterval(()=>{
     bState.sec--;
     if(bState.sec===0){ bState.phase=(bState.phase+1)%4; bState.sec=4;
-      if(bState.phase===0){ bState.cycles++; const c=$("#bCycles"); if(c) c.textContent=`Кругов: ${bState.cycles} из 5`; if(bState.cycles>=5){ finishBreath(); return; } } }
+      if(bState.phase===0){ bState.cycles++; const c=$("#bCycles"); if(c) c.textContent=`${bState.cycles} из 5 кругов`; if(bState.cycles>=5){ finishBreath(); return; } } }
     applyPhase();
   },1000);
 }
@@ -373,14 +367,14 @@ function vPmr(){
   const hideRun = RL && RL.ex==="pmr" && (RL.stage==="after"||RL.stage==="done");
   const cur=PMR[pmrS.i];
   return `${backPrev()}
-  <div class="stack-s"><h1>Расслабление мышц</h1><p class="muted">Метод Джекобсона: напрягаем группу мышц на ${TENSE} секунд, потом расслабляем на ${RELAX}. Около 3 минут. Сядьте удобно.</p></div>
+  <div class="stack-s"><h1>Расслабление мышц</h1><p class="muted">Напрячь ${TENSE} сек · расслабить ${RELAX} сек · 3 минуты</p></div>
   ${reliefBefore("pmr")}
   ${hideRun?"":`<div class="card pmr">
     <div class="pmr-wrap">${figure(doing?cur.p:null)}
       <div class="stack-s pmr-txt">
         <span class="label">${doing?`Шаг ${pmrS.i+1} из ${PMR.length} · ${esc(cur.t)}`:"Готовы?"}</span>
         <div class="phase" id="pPhase">${doing?(pmrS.phase==="tense"?"Напрягите":"Расслабьте"):"8 групп мышц"}</div>
-        <p class="small" id="pHint">${doing?(pmrS.phase==="tense"?esc(cur.tense):"Отпустите напряжение и почувствуйте разницу"):"Не напрягайте мышцы до боли. Если где‑то болит, пропустите эту группу."}</p>
+        <p class="small" id="pHint">${doing?(pmrS.phase==="tense"?esc(cur.tense):"Почувствуйте разницу"):"Без боли. Если где‑то больно — пропустите."}</p>
         <div class="count" id="pCount">${doing?pmrS.sec:""}</div>
       </div>
     </div>
@@ -411,7 +405,7 @@ function stopPmr(){ clearInterval(pmrT); pmrT=null; pmrS.running=false; }
 /* ===== Тесты ===== */
 const FREQ4=[["Ни разу",0],["Несколько дней",1],["Больше половины дней",2],["Почти каждый день",3]];
 const TESTS={
-  cbi:{title:"Выгорание", code:"CBI", desc:"6 вопросов о том, насколько вы истощены. Копенгагенский опросник выгорания. 1 минута.",
+  cbi:{title:"Выгорание", code:"CBI", min:1, icon:"wind", desc:"6 вопросов о том, насколько вы истощены. Копенгагенский опросник выгорания. 1 минута.",
     intro:"Как часто в последнее время:", max:100, unit:"из 100", score:"mean",
     opts:[["Всегда",100],["Часто",75],["Иногда",50],["Редко",25],["Никогда или почти никогда",0]],
     q:["Вы чувствуете усталость","Вы чувствуете физическое истощение","Вы чувствуете эмоциональное истощение","Вы думаете: «Я больше не могу»","Вы чувствуете себя вымотанным(-ой)","Вы чувствуете слабость и уязвимость к болезням"],
@@ -419,7 +413,7 @@ const TESTS={
             [74,"Умеренное выгорание","m2","Ресурс заметно просел. Это сигнал остановиться и пересобрать нагрузку, пока усталость не стала хронической. Попробуйте программу «Выход из выгорания» и обсудите ситуацию со специалистом."],
             [100,"Высокое выгорание","m1","Вы очень истощены. В таком состоянии трудно справляться самостоятельно, и это не ваша слабость. Рекомендую консультацию: вместе разберём, что забирает силы и как их вернуть."]],
     program:"burnout7"},
-  gad7:{title:"Тревожность", code:"GAD‑7", desc:"7 вопросов о тревоге за последние 2 недели. Около 2 минут.",
+  gad7:{title:"Тревожность", code:"GAD‑7", min:2, icon:"heart", desc:"7 вопросов о тревоге за последние 2 недели. Около 2 минут.",
     intro:"Как часто за последние 2 недели вас беспокоило:", max:21, unit:"из 21", score:"sum", opts:FREQ4,
     q:["Нервозность, тревога или ощущение, что вы «на грани»","Неспособность остановить или контролировать беспокойство","Чрезмерное беспокойство о разных вещах","Трудно расслабиться","Такое беспокойство, что трудно усидеть на месте","Лёгкая раздражительность или вспыльчивость","Страх, что может случиться что‑то ужасное"],
     levels:[[4,"Минимальная тревожность","ok","Уровень тревоги сейчас в пределах обычного. Продолжайте замечать своё состояние и пользоваться дыхательными практиками, когда нужно."],
@@ -427,14 +421,14 @@ const TESTS={
             [14,"Умеренная тревожность","m2","Тревога ощутимо влияет на жизнь. Это частый запрос, и с ним хорошо работает когнитивно‑поведенческая терапия. Рекомендую консультацию."],
             [21,"Выраженная тревожность","m1","Тревога сильная и, скорее всего, сильно мешает. Пожалуйста, не оставайтесь с этим в одиночку: запишитесь на консультацию к психологу или к врачу‑психиатру."]],
     program:"calm7"},
-  rse:{title:"Самооценка", code:"Розенберг", desc:"10 утверждений о том, как вы к себе относитесь. Шкала самооценки Розенберга. 2 минуты.",
+  rse:{title:"Самооценка", code:"Розенберг", min:2, icon:"star", desc:"10 утверждений о том, как вы к себе относитесь. Шкала самооценки Розенберга. 2 минуты.",
     intro:"Насколько вы согласны с утверждением:", max:30, unit:"из 30", score:"sum",
     opts:[["Полностью согласен(-на)",3],["Согласен(-на)",2],["Не согласен(-на)",1],["Совсем не согласен(-на)",0]],
     q:["В целом я доволен(-льна) собой",{t:"Иногда мне кажется, что я ни на что не годен(-дна)",r:1},"Я считаю, что у меня есть ряд хороших качеств","Я способен(-на) делать что‑то не хуже большинства людей",{t:"Мне кажется, мне особо нечем гордиться",r:1},{t:"Иногда я чувствую себя бесполезным(-ой)",r:1},"Я чувствую, что я ценный человек, по крайней мере не хуже других",{t:"Хотелось бы больше уважать себя",r:1},{t:"В целом я склонен(-нна) считать себя неудачником(-цей)",r:1},"Я отношусь к себе положительно"],
     levels:[[14,"Сниженная самооценка","m1","Вы часто бываете к себе строги и недооцениваете себя. С этим можно работать: научиться замечать свои сильные стороны и говорить с собой бережнее. Это хорошая тема для консультаций."],
             [25,"Нормальная самооценка","ok","В целом вы относитесь к себе ровно и принимаете себя. Бывают моменты сомнений, и это нормально."],
             [30,"Высокая самооценка","ok","Вы уверены в себе и цените себя. Это хороший ресурс, на который можно опираться в трудные периоды."]]},
-  phq9:{title:"Настроение", code:"PHQ‑9", desc:"9 вопросов о настроении за последние 2 недели. Около 3 минут.",
+  phq9:{title:"Настроение", code:"PHQ‑9", min:3, icon:"emo", desc:"9 вопросов о настроении за последние 2 недели. Около 3 минут.",
     intro:"Как часто за последние 2 недели вас беспокоило:", max:27, unit:"из 27", score:"sum", opts:FREQ4,
     q:["Мало интереса или удовольствия от привычных занятий","Подавленность, уныние или безнадёжность","Трудности с засыпанием, прерывистый сон или слишком много сна","Усталость или упадок сил","Плохой аппетит или переедание","Плохое мнение о себе: ощущение, что вы неудачник или подвели себя или близких","Трудно сосредоточиться, например на чтении или фильме","Вы двигаетесь или говорите так медленно, что это заметно окружающим. Или наоборот: суетливость, не можете усидеть на месте","Мысли, что лучше было бы умереть, или мысли причинить себе вред"],
     levels:[[4,"Минимальное снижение настроения","ok","Признаков сниженного настроения почти нет. Поддерживайте то, что вам помогает: сон, движение, общение."],
@@ -459,9 +453,10 @@ function vTests(){
   if(T.id && T.i < TESTS[T.id].q.length) return vQuestion();
   if(T.id) return vResult();
   const hist=S.tests.slice().reverse().slice(0,8);
-  return `<div class="stack-s"><h1>Проверить состояние</h1><p class="muted">Короткие опросники, которыми пользуются психологи. Результат не диагноз, а повод внимательнее посмотреть на себя.</p></div>
-  ${Object.entries(TESTS).map(([k,t])=>{ const last=S.tests.filter(r=>r.id===k).pop(); return `<div class="card"><div class="row" style="justify-content:space-between"><h3>${t.title}</h3><span class="tag">${esc(t.code)}</span></div><p class="small muted">${t.desc}</p>${last?`<p class="small">Последний результат: <strong style="color:${lvlColor(level(k,last.score))}">${level(k,last.score)[1].toLowerCase()}</strong>, ${fmtDate(last.ts)}</p>`:""}<button class="btn" data-test="${k}">${last?"Пройти ещё раз":"Пройти тест"}</button></div>`;}).join("")}
-  ${hist.length?`<div class="card"><h3>История</h3>${hist.map(r=>{const t=TESTS[r.id]; if(!t) return ""; const l=level(r.id,r.score); return `<div class="entry"><span class="dot" style="background:${lvlColor(l)}"></span><div class="body"><strong>${t.title}: ${r.score} ${t.unit}</strong><span class="small muted">${l[1]} · ${fmtDate(r.ts)}</span></div></div>`}).join("")}</div>`:""}`;
+  return `<div class="stack-s"><h1>Тесты</h1><p class="muted">Не диагноз, а повод присмотреться к себе</p></div>
+  <div class="list">${Object.entries(TESTS).map(([k,t])=>{ const last=S.tests.filter(r=>r.id===k).pop(); const l=last?level(k,last.score):null;
+    return `<button class="li" data-test="${k}"><span class="ico">${ico(t.icon||"tests",20)}</span><span class="dt"><strong>${t.title}</strong><span class="small muted">${l?`<span style="color:${lvlColor(l)}">${l[1]}</span>`:`${t.q.length} вопросов · ${t.min} мин`}</span></span><span class="chev">›</span></button>`;}).join("")}</div>
+  ${hist.length?`<details class="more"><summary>История</summary><div>${hist.map(r=>{const t=TESTS[r.id]; if(!t) return ""; const l=level(r.id,r.score); return `<div class="entry"><span class="dot" style="background:${lvlColor(l)}"></span><div class="body"><strong>${t.title}: ${r.score} ${t.unit}</strong><span class="small muted">${l[1]} · ${fmtDate(r.ts)}</span></div></div>`}).join("")}</div></details>`:""}`;
 }
 function vQuestion(){
   const t=TESTS[T.id], n=t.q.length;
@@ -489,17 +484,13 @@ function vResult(){
   </div>
   ${risk?`<div class="card sos"><h3>Вы отметили мысли о смерти или вреде себе</h3><p class="small">Это важно. Пожалуйста, поговорите с кем‑то уже сегодня: с близким человеком, специалистом или по телефону экстренной помощи 112.</p><button class="btn sosb" data-go="sos">Где получить помощь</button></div>`:""}
   <div class="card soft">
-    <div class="row"><div class="logo">${esc(PSY.name[0])}</div><strong>Комментарий психолога</strong></div>
+    <div class="row"><div class="logo">${esc(PSY.name[0])}</div><strong>${esc(PSY.name)}</strong></div>
     <p>${l[3]}</p>
-    <button class="btn" data-go="about" data-sub="book">Обсудить результат с ${esc(PSY.nameWith)}</button>
+    <button class="btn" data-go="about" data-sub="book">Обсудить на консультации</button>
   </div>
-  ${prog && l[2]!=="ok"?`<div class="card"><span class="label">Что попробовать самостоятельно</span><h3>Программа «${esc(prog.title)}»</h3><p class="small muted">${esc(prog.subtitle)}</p><button class="btn ghost" data-go="programs" data-sub="${prog.id}">Открыть программу</button></div>`:""}
-  ${risk?"":`<div class="card story-cta">
-    <div class="row">${ico("image",20)}<strong>Поделиться результатом</strong></div>
-    <p class="small muted">Красивая карточка для сторис. Без баллов и личных данных, только общий итог и ссылка на тест.</p>
-    <button class="btn quiet" id="storyBtn">Создать карточку</button>
-  </div>`}
-  <p class="disclaimer">Опросник помогает оценить состояние, но не ставит диагноз. Диагноз может поставить только врач.</p>`;
+  ${prog && l[2]!=="ok"?`<button class="banner card" data-go="programs" data-sub="${prog.id}"><span class="bi" style="background:var(--accent-soft);color:var(--accent)">${ico("practices",20)}</span><span class="bt"><strong>${esc(prog.title)}</strong><span class="small muted">Программа на ${prog.days.length} ${plural(prog.days.length,"день","дня","дней")}</span></span><span class="chev">›</span></button>`:""}
+  ${risk?"":`<button class="btn quiet block" id="storyBtn">${ico("image",18)} Карточка для сторис</button>`}
+  <p class="disclaimer">Опросник не ставит диагноз</p>`;
 }
 function bindTests(){
   $$("[data-test]").forEach(b=>b.onclick=()=>{T={id:b.dataset.test,i:0,a:[]}; render(); scrollTo(0,0);});
@@ -524,28 +515,28 @@ async function storyCard(t, l){
   try{ await document.fonts.ready; }catch(e){}
   const W=1080, H=1920, c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d");
   const colors={ok:"#2E8A63", m1:"#C2453B", m2:"#D9823B", m3:"#B9A43A"};
-  const lc=colors[l[2]]||"#4351C2";
-  const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,"#4351C2"); g.addColorStop(1,"#1E2560");
+  const lc=colors[l[2]]||"#3577B8";
+  const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,"#3F86C8"); g.addColorStop(1,"#1C4670");
   x.fillStyle=g; x.fillRect(0,0,W,H);
   // мягкие круги
   x.globalAlpha=.12; x.fillStyle="#fff"; [[880,260,260],[140,1500,320],[980,1650,180]].forEach(([a,b,r])=>{x.beginPath();x.arc(a,b,r,0,Math.PI*2);x.fill();}); x.globalAlpha=1;
-  const disp='"Literata", Georgia, serif', body='"Golos Text", system-ui, sans-serif';
+  const disp='"Onest", system-ui, sans-serif', body='"Onest", system-ui, sans-serif';
   // лого
   x.fillStyle="#fff"; x.beginPath(); x.roundRect ? x.roundRect(90,140,110,110,30) : x.rect(90,140,110,110); x.fill();
-  x.fillStyle="#4351C2"; x.font=`600 72px ${disp}`; x.textAlign="center"; x.textBaseline="middle"; x.fillText("О",145,198);
+  x.fillStyle="#3577B8"; x.font=`800 72px ${disp}`; x.textAlign="center"; x.textBaseline="middle"; x.fillText("О",145,198);
   x.textAlign="left"; x.textBaseline="alphabetic"; x.fillStyle="#fff"; x.font=`700 54px ${body}`; x.fillText("Опора",230,190);
   x.globalAlpha=.75; x.font=`400 34px ${body}`; x.fillText(`с психологом ${PSY.nameWith}`,230,238); x.globalAlpha=1;
   // карточка
   const cx=90, cy=520, cw=W-180, ch=820;
   x.fillStyle="#fff"; x.beginPath(); x.roundRect ? x.roundRect(cx,cy,cw,ch,48) : x.rect(cx,cy,cw,ch); x.fill();
   x.fillStyle="#5B6478"; x.font=`600 34px ${body}`; x.fillText(`Я ПРОШЁЛ(-ЛА) ТЕСТ «${t.title.toUpperCase()}»`, cx+70, cy+110);
-  x.fillStyle="#1A2233"; x.font=`600 92px ${disp}`;
+  x.fillStyle="#1F2630"; x.font=`800 92px ${disp}`;
   const lines=wrapText(x, l[1], cw-140); lines.forEach((ln,i)=>x.fillText(ln, cx+70, cy+250+i*110));
   // шкала
   const sy=cy+250+lines.length*110+30, sw=cw-140; let sx=cx+70;
   const total=t.levels[t.levels.length-1][0]+1;
   t.levels.forEach((lv,i)=>{ const prev=i?t.levels[i-1][0]+1:0; const w=(lv[0]+1-prev)/total*sw-8;
-    x.globalAlpha= lv===l?1:.25; x.fillStyle=colors[lv[2]]||"#4351C2"; x.beginPath(); x.roundRect ? x.roundRect(sx,sy,w,26,13) : x.rect(sx,sy,w,26); x.fill(); sx+=w+8; });
+    x.globalAlpha= lv===l?1:.25; x.fillStyle=colors[lv[2]]||"#3577B8"; x.beginPath(); x.roundRect ? x.roundRect(sx,sy,w,26,13) : x.rect(sx,sy,w,26); x.fill(); sx+=w+8; });
   x.globalAlpha=1;
   x.fillStyle="#5B6478"; x.font=`400 40px ${body}`;
   wrapText(x, "Тест занимает пару минут. Проверьте себя тоже.", cw-140).forEach((ln,i)=>x.fillText(ln, cx+70, sy+130+i*54));
@@ -624,7 +615,7 @@ function insights(list){
     const rows=Object.entries(by).filter(([,v])=>v.length>=2).map(([t,v])=>[t,v.reduce((a,b)=>a+b,0)/v.length]);
     if(rows.length){ rows.sort((a,b)=>b[1]-a[1]); const best=rows[0], worst=rows[rows.length-1];
       if(best[1]-avg>=0.3) lines.push(`В дни с тегом «${best[0]}» настроение выше среднего: ${best[1].toFixed(1)} против ${avg.toFixed(1)}.`);
-      if(avg-worst[1]>=0.3) lines.push(`В дни с тегом «${worst[0]}» настроение ниже: ${worst[1].toFixed(1)}. Можно обсудить это на сессии.`); }
+      if(avg-worst[1]>=0.3) lines.push(`В дни с тегом «${worst[0]}» настроение ниже: ${worst[1].toFixed(1)}.`); }
   }
   const cnt={}; list.forEach(m=>(m.emotions||[]).forEach(e=>{const k=e.split("/")[0]; cnt[k]=(cnt[k]||0)+1;}));
   const total=Object.values(cnt).reduce((a,b)=>a+b,0);
@@ -635,35 +626,35 @@ function insights(list){
     lines.push(`Чаще всего вы отмечали: ${rows[0][0].toLowerCase()}.`);
   }
   if(!lines.length) return "";
-  return `<div class="card soft"><h3>Что видно по записям</h3>${lines.map(l=>`<p class="small">${l}</p>`).join("")}${bars}</div>`;
+  return `<div class="card soft"><h3>Наблюдения</h3>${lines.map(l=>`<p class="small">${l}</p>`).join("")}${bars}</div>`;
 }
 function vDiary(){
   const list=moodsAll().slice().sort((a,b)=>b.ts-a.ts);
   const avg = list.length? (list.slice(0,7).reduce((a,b)=>a+b.mood,0)/Math.min(7,list.length)).toFixed(1):"—";
   const open = emoOpen!=null ? EMO[emoOpen] : null;
-  return `<div class="stack-s"><h1>Дневник настроения</h1><p class="muted">Минута в день, чтобы увидеть, что на вас влияет.</p></div>
+  return `<div class="stack-s"><h1>Дневник</h1></div>
   <div class="card" id="newMood">
     <h3>Как вы сейчас?</h3>
     <div class="moods">${MOODS.map(m=>`<button class="mood" data-mood="${m.v}" aria-pressed="${draft.mood===m.v}">${face(m.v)}<span>${m.t}</span></button>`).join("")}</div>
-    <div class="stack-s" id="emoBlock"><span class="small muted">Назовите эмоцию точнее: нажмите на сектор колеса</span>
+    <div class="stack-s" id="emoBlock"><span class="small muted">Какая эмоция?</span>
       <div class="wheel-wrap">${wheelSVG()}</div>
       ${open?`<div class="chips">${open.n.map(n=>{const v=open.k+"/"+n; return `<button class="chip" data-emoval="${esc(v)}" aria-pressed="${draft.emotions.includes(v)}" style="--ec:${open.c}">${n}</button>`;}).join("")}</div>`:""}
       ${draft.emotions.length?`<div class="row">${draft.emotions.map(e=>`<span class="etag" style="--ec:${emoColor(e)}">${esc(e.split("/")[1])}</span>`).join("")}</div>`:""}
     </div>
-    <div class="stack-s"><span class="small muted">С чем это связано?</span><div class="chips">${TAGS.map(t=>`<button class="chip" data-tag="${t}" aria-pressed="${draft.tags.includes(t)}">${t}</button>`).join("")}</div></div>
-    <label class="field"><span>Пара слов о дне</span><textarea id="mNote" placeholder="Что происходило, что чувствовали">${esc(draft.note)}</textarea></label>
-    <label class="field"><span>Что сегодня было хорошего?</span><input type="text" id="mGood" placeholder="Попадёт в банку благодарностей" value="${esc(draft.good)}"></label>
+    <div class="stack-s"><span class="small muted">С чем связано?</span><div class="chips">${TAGS.map(t=>`<button class="chip" data-tag="${t}" aria-pressed="${draft.tags.includes(t)}">${t}</button>`).join("")}</div></div>
+    <textarea id="mNote" placeholder="Пара слов о дне (необязательно)" aria-label="Заметка">${esc(draft.note)}</textarea>
+    <input type="text" id="mGood" placeholder="Что было хорошего? → в банку" aria-label="Что было хорошего" value="${esc(draft.good)}">
     <button class="btn" id="mSave" ${draft.mood?"":"disabled"}>Сохранить запись</button>
   </div>
   <div class="card">
-    <div class="row" style="justify-content:space-between"><h3>Последние 14 дней</h3><span class="small muted">Среднее за 7 записей: <strong style="color:var(--ink)">${avg}</strong></span></div>
-    ${isDemo()?`<div class="demo-note"><span>Сейчас показаны примеры. Они исчезнут после вашей первой записи.</span><button class="linkbtn" id="clrDemo">Убрать</button></div>`:""}
+    <div class="row" style="justify-content:space-between"><h3>14 дней</h3><span class="small muted">среднее <strong style="color:var(--ink)">${avg}</strong></span></div>
+    ${isDemo()?`<div class="demo-note"><span>Это пример</span><button class="linkbtn" id="clrDemo">Убрать</button></div>`:""}
     ${chartSVG(list)}
   </div>
   ${insights(list)}
-  <div class="card"><h3>Записи</h3>
-    ${list.length?list.slice(0,20).map(m=>`<div class="entry"><span class="dot" style="background:${moodColor(m.mood)}"></span><div class="body"><div class="row" style="justify-content:space-between"><strong>${MOODS[m.mood-1].t}</strong><span class="small muted">${fmtDT(m.ts)}</span></div>${(m.emotions||[]).length?`<div class="row">${m.emotions.map(e=>`<span class="etag" style="--ec:${emoColor(e)}">${esc(e.split("/")[1])}</span>`).join("")}</div>`:""}${m.note?`<p class="small">${esc(m.note)}</p>`:""}${m.good?`<p class="small muted">Хорошее: ${esc(m.good)}</p>`:""}${m.tags.length?`<div class="row">${m.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}</div></div>`).join(""):`<p class="small muted">Записей пока нет. Отметьте настроение выше.</p>`}
-  </div>`;
+  <details class="more"><summary>Записи${list.length?` · ${list.length}`:""}</summary><div>
+    ${list.length?list.slice(0,20).map(m=>`<div class="entry"><span class="dot" style="background:${moodColor(m.mood)}"></span><div class="body"><div class="row" style="justify-content:space-between"><strong>${MOODS[m.mood-1].t}</strong><span class="small muted">${fmtDT(m.ts)}</span></div>${(m.emotions||[]).length?`<div class="row">${m.emotions.map(e=>`<span class="etag" style="--ec:${emoColor(e)}">${esc(e.split("/")[1])}</span>`).join("")}</div>`:""}${m.note?`<p class="small">${esc(m.note)}</p>`:""}${m.good?`<p class="small muted">Хорошее: ${esc(m.good)}</p>`:""}${m.tags.length?`<div class="row">${m.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}</div></div>`).join(""):`<p class="small muted">Пока пусто</p>`}
+  </div></details>`;
 }
 function bindDiary(){
   $$("[data-mood]").forEach(b=>b.onclick=()=>{draft.mood=+b.dataset.mood; keepDraft(); render();});
@@ -702,7 +693,7 @@ function vJar(){
     return `<circle class="ball-g ${g.fresh?"drop":""}" cx="${p.x}" cy="${p.y}" r="${p.r}" fill="${col}" style="--dy:${-(p.y+40)}px" data-gid="${g.id}"><title>${esc(g.text)}</title></circle>`; }).join("");
   const fill = Math.min(1, list.length/70);
   return `${backBtn("practices","Практики")}
-  <div class="stack-s"><h1>Банка благодарностей</h1><p class="muted">Каждый день кладите в банку что‑то хорошее, даже мелочь. В трудный день загляните сюда и перечитайте.</p></div>
+  <div class="stack-s"><h1>Благодарности</h1><p class="muted">Одна хорошая вещь в день</p></div>
   <div class="card jar-card">
     <svg class="jar" viewBox="0 0 240 340" role="img" aria-label="Банка: ${list.length} ${plural(list.length,"благодарность","благодарности","благодарностей")}">
       <defs><clipPath id="jarClip"><path d="M58 70 Q40 90 40 120 L40 300 Q40 330 70 330 L170 330 Q200 330 200 300 L200 120 Q200 90 182 70 Z"/></clipPath></defs>
@@ -713,10 +704,10 @@ function vJar(){
       <path d="M58 110 Q54 200 60 290" class="shine"/>
     </svg>
     <p class="jar-count"><strong>${list.length}</strong> ${plural(list.length,"благодарность","благодарности","благодарностей")}</p>
-    <div class="row" style="flex-wrap:nowrap;width:100%"><input type="text" id="gIn" placeholder="За что я благодарен(-на) сегодня" style="flex:1;min-width:0" maxlength="140"><button class="btn" id="gAdd">В банку</button></div>
+    <div class="row" style="flex-wrap:nowrap;width:100%"><input type="text" id="gIn" placeholder="Что было хорошего?" style="flex:1;min-width:0" maxlength="140"><button class="btn" id="gAdd">В банку</button></div>
     ${list.length?`<button class="btn quiet" id="gRand">Достать случайную</button><p class="small" id="gShow" hidden></p>`:""}
   </div>
-  ${list.length?`<div class="card"><h3>Последние</h3>${list.slice().reverse().slice(0,10).map(g=>`<div class="entry"><span class="dot" style="background:${JAR_COLORS[list.indexOf(g)%JAR_COLORS.length]}"></span><div class="body"><p class="small">${esc(g.text)}</p><span class="small muted">${fmtDate(g.ts)}</span></div></div>`).join("")}</div>`:""}`;
+  ${list.length?`<details class="more"><summary>Все записи · ${list.length}</summary><div>${list.slice().reverse().slice(0,10).map(g=>`<div class="entry"><span class="dot" style="background:${JAR_COLORS[list.indexOf(g)%JAR_COLORS.length]}"></span><div class="body"><p class="small">${esc(g.text)}</p><span class="small muted">${fmtDate(g.ts)}</span></div></div>`).join("")}</div></details>`:""}`;
 }
 function bindJar(){
   const add=()=>{ const v=$("#gIn").value.trim(); if(!v){ $("#gIn").focus(); return; }
@@ -741,11 +732,11 @@ function vThoughts(){
   if(TD) return vThoughtStep();
   const list=S.thoughts.slice().reverse();
   return `${backBtn("practices","Практики")}
-  <div class="stack-s"><h1>Дневник мыслей</h1><p class="muted">Метод когнитивно‑поведенческой терапии: замечаем тревожную мысль, проверяем её фактами и находим более реалистичный взгляд.</p></div>
-  <div class="card soft"><h3>Когда заполнять</h3><p class="small">Когда настроение резко изменилось или накрыла тревога. Шесть коротких шагов, около 5 минут.</p><button class="btn" id="tNew">Разобрать мысль</button></div>
-  <div class="card"><h3>Ваши записи</h3>
+  <div class="stack-s"><h1>Дневник мыслей</h1><p class="muted">Проверить тревожную мысль фактами · 6 шагов</p></div>
+  <button class="btn block" id="tNew">Разобрать мысль</button>
+  <div class="card"><h3>Записи</h3>
   ${list.length?list.map(r=>`<details class="entry" style="display:block"><summary style="cursor:pointer;list-style:none"><div class="row" style="justify-content:space-between"><strong style="min-width:0;overflow-wrap:anywhere">${esc(r.thought||r.situation)}</strong><span class="small muted">${fmtDate(r.ts)}</span></div><div class="small muted">${esc(r.emotion)} ${r.before}% → ${r.after}%</div></summary>
-  <div class="stack-s small" style="padding-top:10px">${TSTEPS.map(s=>r[s.k]?`<div><span class="label">${s.t}</span><p style="overflow-wrap:anywhere">${esc(r[s.k])}</p></div>`:"").join("")}</div></details>`).join(""):`<p class="small muted">Пока пусто. Первая запись займёт 5 минут.</p>`}
+  <div class="stack-s small" style="padding-top:10px">${TSTEPS.map(s=>r[s.k]?`<div><span class="label">${s.t}</span><p style="overflow-wrap:anywhere">${esc(r[s.k])}</p></div>`:"").join("")}</div></details>`).join(""):`<p class="small muted">Пока пусто</p>`}
   </div>`;
 }
 function vThoughtStep(){
@@ -797,17 +788,17 @@ function homeProgress(){
   const p = PROGRAMS.find(x=>x.id===S.activeProgram);
   let prog;
   if(!p){
-    prog=`<div class="stack-s"><span class="label">Программы на неделю</span><div class="chips">${PROGRAMS.map(x=>`<button class="chip" data-go="programs" data-sub="${x.id}">${esc(x.short)}</button>`).join("")}</div><p class="small muted">Выберите тему, и каждый день будет открываться новое короткое задание.</p></div>`;
+    prog=`<div class="stack-s"><span class="label">Начать программу</span><div class="chips">${PROGRAMS.map(x=>`<button class="chip" data-go="programs" data-sub="${x.id}">${esc(x.short)}</button>`).join("")}</div></div>`;
   } else {
     const st=progState(p);
     if(!st.next) prog=`<p class="small"><strong>Программа «${esc(p.title)}» пройдена.</strong> <button class="linkbtn" data-go="practices">Выбрать следующую</button></p>`;
     else { const d=p.days[st.next-1];
       prog = `<div class="progress"><i style="width:${st.count/st.n*100}%"></i></div>` + (st.lockedUntilTomorrow
-        ? `<div><span class="label">${esc(p.title)} · день ${st.next} из ${st.n}</span><p class="small muted">Сегодняшний день выполнен. Следующий откроется завтра.</p></div>`
+        ? `<div><span class="label">${esc(p.title)} · день ${st.next} из ${st.n}</span><p class="small muted">Следующий день откроется завтра</p></div>`
         : `<div class="stack-s"><span class="label">${esc(p.title)} · день ${st.next} из ${st.n}</span><strong>${esc(d.title)}</strong><button class="btn" data-go="program" data-sub="${p.id}:${st.next}">${st.count?"Продолжить":"Начать"} · ${d.minutes} мин</button></div>`); }
   }
   return `<div class="card">
-    <div class="row" style="justify-content:space-between"><h3>${s?`${s} ${plural(s,"день","дня","дней")} подряд`:"Начните серию"}</h3><span class="small muted">${s?"Так держать":"Любое упражнение засчитывается"}</span></div>
+    <div class="row" style="justify-content:space-between"><h3>${s?`${s} ${plural(s,"день","дня","дней")} подряд`:"Ваша неделя"}</h3>${s?`<span class="tag">серия</span>`:""}</div>
     ${dots}
     ${prog}
   </div>`;
@@ -815,8 +806,8 @@ function homeProgress(){
 function programCard(p){
   const st=progState(p);
   return `<button class="card prog-card ${S.activeProgram===p.id?"active":""}" data-go="programs" data-sub="${p.id}">
-    <span class="row" style="justify-content:space-between;width:100%"><strong class="ct">${esc(p.title)}</strong><span class="tag">${st.count} из ${st.n}</span></span>
-    <span class="small muted">${esc(p.subtitle)}</span>
+    <span class="pc-top"><span class="tag" style="align-self:flex-start">${st.n} ${plural(st.n,"день","дня","дней")}</span><strong class="ct">${esc(p.title)}</strong></span>
+    <span class="small muted">${st.count?`Пройдено ${st.count} из ${st.n}`:"Не начата"}</span>
     <span class="progress" style="width:100%;display:block"><i style="width:${st.count/st.n*100}%"></i></span>
   </button>`;
 }
@@ -824,13 +815,13 @@ function vPrograms(){
   const p=PROGRAMS.find(x=>x.id===sub); if(!p) return vPractices();
   const st=progState(p);
   return `${backBtn("practices","Практики")}
-  <div class="stack-s"><span class="label">Программа · ${p.days.length} ${plural(p.days.length,"день","дня","дней")}</span><h1>${esc(p.title)}</h1><p class="muted">${esc(p.subtitle)}</p></div>
+  <div class="stack-s"><span class="label">${p.days.length} ${plural(p.days.length,"день","дня","дней")}</span><h1>${esc(p.title)}</h1><p class="muted">${esc(p.subtitle)}</p></div>
   <div class="card soft">
     <div class="days">${p.days.map((d,i)=>{const k=i+1, ds=dayStatus(p,k);
       const icon = ds==="done"?ico("check",16):ds==="open"?`<b>${k}</b>`:ico("lock",14);
       return `<button class="day ${ds}" ${ds==="locked"||ds==="tomorrow"?"disabled":""} data-go="program" data-sub="${p.id}:${k}" aria-label="День ${k}: ${esc(d.title)}"><span class="dn">${icon}</span><span class="dt"><span class="small muted">День ${k} · ${d.minutes} мин${ds==="tomorrow"?" · откроется завтра":""}</span><strong>${esc(d.title)}</strong></span></button>`;}).join("")}</div>
   </div>
-  ${st.count===0?`<p class="small muted">Первый день открыт. Новые дни открываются по одному в сутки, чтобы было время закрепить навык.</p>`:""}`;
+  ${st.count===0?`<p class="disclaimer">Новый день открывается раз в сутки</p>`:""}`;
 }
 function parseProgSub(){ const [id,k]=String(sub||"").split(":"); const p=PROGRAMS.find(x=>x.id===id)||PROGRAMS[0]; return {p, k:+k||progState(p).next||1}; }
 function vProgramDay(){
@@ -841,22 +832,22 @@ function vProgramDay(){
   return `<button class="back" data-go="programs" data-sub="${p.id}">← ${esc(p.title)}</button>
   <div class="stack-s"><span class="label">День ${k} из ${p.days.length} · ${d.minutes} мин</span><h1>${esc(d.title)}</h1></div>
   <div class="card">${d.text.map(t=>`<p>${esc(t)}</p>`).join("")}</div>
-  <div class="card"><h3>Задание на сегодня</h3>
+  <div class="card"><h3>Задание</h3>
     <ul class="tasks">${d.tasks.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
     ${act}
   </div>
-  ${d.ask?`<div class="card"><label class="field"><span>${esc(d.ask)}</span><textarea id="pNote" placeholder="Пара предложений для себя. Можно обсудить на сессии">${esc(notes[k]||"")}</textarea></label></div>`:""}
+  ${d.ask?`<div class="card"><label class="field"><span>${esc(d.ask)}</span><textarea id="pNote" placeholder="Для себя">${esc(notes[k]||"")}</textarea></label></div>`:""}
   ${ds==="done"
     ? `<div class="card soft"><div class="row">${ico("check",20)}<strong>День выполнен ${fmtDate(progData(p).done[k])}</strong></div>${d.final?finalBlock(p):""}</div>`
-    : ds==="tomorrow" ? `<p class="small muted" style="text-align:center">Этот день откроется завтра. Отдохните и закрепите вчерашнее.</p>`
-    : `<button class="btn block" id="pDone">Отметить день выполненным</button>`}`;
+    : ds==="tomorrow" ? `<p class="disclaimer">Откроется завтра</p>`
+    : `<button class="btn block" id="pDone">${ico("check",18)} Готово</button>`}`;
 }
 function finalBlock(p){
   let cmp="";
   if(p.compareTest){ const t=TESTS[p.compareTest]; const g=S.tests.filter(x=>x.id===p.compareTest);
     if(g.length>=2){ const a=g[0].score, b=g[g.length-1].score, d=a-b;
       cmp=`<p class="small">${t.title} в начале: <strong>${a}</strong>, сейчас: <strong>${b}</strong> ${t.unit}. ${d>0?`Снижение на ${d} ${plural(d,"балл","балла","баллов")}.`:"Результат пока не изменился, это тоже важная информация."}</p>`; } }
-  return `${cmp}<p class="small">Хотите продолжить работу глубже? Обсудим ваши записи на консультации.</p><button class="btn" data-go="about" data-sub="book">Записаться к ${esc(PSY.nameTo)}</button>`;
+  return `${cmp}<button class="btn" data-go="about" data-sub="book">Обсудить итоги с ${esc(PSY.nameWith)}</button>`;
 }
 function bindProgramDay(){
   const {p,k}=parseProgSub(); const data=progData(p);
@@ -867,22 +858,22 @@ function bindProgramDay(){
 
 /* ===== Практики и статьи ===== */
 function vPractices(){
-  return `<div class="stack-s"><h1>Практики</h1><p class="muted">Программы, упражнения и короткие статьи от ${esc(PSY.nameFrom||PSY.name)}.</p></div>
-  ${badgesRow()}
-  <div class="stack-s"><span class="label">Программы</span>${PROGRAMS.map(programCard).join("")}</div>
+  return `<div class="stack-s"><h1>Практики</h1></div>
+  <div class="stack-s"><span class="label">Программы</span><div class="carousel">${PROGRAMS.map(programCard).join("")}</div></div>
   <div class="stack-s"><span class="label">Упражнения</span>
   ${reliefStats()}
   <div class="grid2">
-    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Дыхание «квадрат»</strong><span class="small muted">2 минуты</span></button>
-    <button class="tile" data-go="pmr"><span class="ico">${ico("body")}</span><strong>Расслабление мышц</strong><span class="small muted">По Джекобсону, 3 минуты</span></button>
-    <button class="tile" data-go="ground"><span class="ico">${ico("hand")}</span><strong>Заземление 5‑4‑3‑2‑1</strong><span class="small muted">Когда «уносит»</span></button>
-    <button class="tile" data-go="thoughts"><span class="ico">${ico("thoughts")}</span><strong>Дневник мыслей</strong><span class="small muted">${S.thoughts.length?`Записей: ${S.thoughts.length}`:"Метод КПТ"}</span></button>
-    <button class="tile" data-go="diary" data-sub="emo"><span class="ico">${ico("emo")}</span><strong>Колесо эмоций</strong><span class="small muted">Назвать, что чувствую</span></button>
-    <button class="tile" data-go="jar"><span class="ico">${ico("jar")}</span><strong>Банка благодарностей</strong><span class="small muted">${S.grat.length?`В банке: ${S.grat.length}`:"Пока пустая"}</span></button>
+    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Дыхание</strong><span class="small muted">2 мин</span></button>
+    <button class="tile" data-go="pmr"><span class="ico">${ico("body")}</span><strong>Расслабление мышц</strong><span class="small muted">3 мин</span></button>
+    <button class="tile" data-go="ground"><span class="ico">${ico("hand")}</span><strong>Заземление</strong><span class="small muted">2 мин</span></button>
+    <button class="tile" data-go="thoughts"><span class="ico">${ico("thoughts")}</span><strong>Дневник мыслей</strong><span class="small muted">5 мин</span></button>
+    <button class="tile" data-go="diary" data-sub="emo"><span class="ico">${ico("emo")}</span><strong>Колесо эмоций</strong><span class="small muted">1 мин</span></button>
+    <button class="tile" data-go="jar"><span class="ico">${ico("jar")}</span><strong>Благодарности</strong><span class="small muted">${S.grat.length?`В банке: ${S.grat.length}`:"1 мин"}</span></button>
   </div></div>
-  <div class="card"><h3>Почитать</h3>
-    ${ART.map(a=>`<button class="art" data-go="article" data-sub="${a.id}"><span class="ico">${ico(S.read.includes(a.id)?"check":"book",18)}</span><span class="dt"><strong>${esc(a.title)}</strong><span class="small muted">${a.minutes} мин чтения${S.read.includes(a.id)?" · прочитано":""}</span></span></button>`).join("")}
-  </div>`;
+  ${badgesRow()}
+  <div class="stack-s"><span class="label">Почитать</span><div class="list">
+    ${ART.map(a=>`<button class="li" data-go="article" data-sub="${a.id}"><span class="ico">${ico(S.read.includes(a.id)?"check":"book",18)}</span><span class="dt"><strong>${esc(a.title)}</strong><span class="small muted">${a.minutes} мин</span></span><span class="chev">›</span></button>`).join("")}
+  </div></div>`;
 }
 function vArticle(){
   const a=ART.find(x=>x.id===sub); if(!a) return vPractices();
@@ -894,7 +885,7 @@ function vArticle(){
   </article>
   <div class="card soft">
     <div class="row"><div class="logo">${esc(PSY.name[0])}</div><strong>${esc(PSY.name)}, ${esc(PSY.role.toLowerCase())}</strong></div>
-    <p class="small">Если узнали себя в этом тексте, давайте разберём вашу ситуацию на консультации.</p>
+    <p class="small">Узнали себя? Разберём вашу ситуацию.</p>
     <div class="row"><button class="btn" data-go="about" data-sub="book">Записаться</button><button class="btn quiet" data-share>${ico("share",18)} Поделиться</button></div>
   </div>`;
 }
@@ -910,7 +901,7 @@ function vAbout(){
   </div>
   <div class="card" id="book">
     <h3>Записаться на консультацию</h3>
-    <p class="small muted">Заполните заявку, скопируйте текст и отправьте ${esc(PSY.nameTo)} в мессенджер.</p>
+    <p class="small muted">Заполните, скопируйте и отправьте в Telegram</p>
     <form id="bForm" class="stack-s" novalidate>
       <label class="field"><span>Как к вам обращаться</span><input type="text" id="bName" required value="${esc(BK.name)}"></label>
       <label class="field"><span>Формат</span><select id="bFmt">${["Онлайн","Очно","Пока не знаю"].map(o=>`<option ${BK.fmt===o?"selected":""}>${o}</option>`).join("")}</select></label>
@@ -926,14 +917,14 @@ function vAbout(){
   </div>
   <div class="card">
     <h3>Что обсудить на сессии</h3>
-    <p class="small muted">Записывайте мысли между встречами, чтобы ничего не забыть.</p>
+    
     <div class="row" style="flex-wrap:nowrap"><input type="text" id="nIn" placeholder="Например: почему я злюсь на брата" style="flex:1;min-width:0"><button class="btn" id="nAdd" aria-label="Добавить">+</button></div>
     ${S.notes.length?S.notes.slice().reverse().map(n=>`<div class="entry"><input type="checkbox" data-nd="${n.id}" ${n.done?"checked":""} style="margin-top:5px;accent-color:var(--accent)" aria-label="Обсудили"><div class="body"><p class="small" style="${n.done?"text-decoration:line-through;color:var(--muted)":""}">${esc(n.text)}</p><span class="small muted">${fmtDate(n.ts)}</span></div><button class="linkbtn small" data-ndel="${n.id}">Удалить</button></div>`).join(""):`<p class="small muted">Список пуст.</p>`}
   </div>
   <div class="card">
     <button class="btn quiet" data-share style="align-self:flex-start">${ico("share",18)} Поделиться приложением</button>
     <h3>Конфиденциальность</h3>
-    <p class="small">Без регистрации и рекламы. Дневники и результаты тестов хранятся только в браузере на этом устройстве и никуда не отправляются.</p>
+    <p class="small">Без регистрации и рекламы. Записи хранятся только на этом устройстве.</p>
     <button class="linkbtn small" id="wipe" style="align-self:flex-start">Удалить все мои данные</button>
     <div id="wipeConfirm" hidden class="demo-note"><span>Удалить все записи без возможности восстановить?</span><span class="row"><button class="btn quiet" id="wipeNo">Отмена</button><button class="btn sosb" id="wipeYes">Удалить</button></span></div>
   </div>`;
@@ -977,9 +968,9 @@ function installCard(){
   const how = installEvt
     ? `<button class="btn" id="installBtn">Установить</button>`
     : isIOS()
-      ? `<p class="small">В Safari нажмите «Поделиться» внизу экрана, затем «На экран Домой».</p>`
-      : `<p class="small">Откройте меню браузера (⋮) и выберите «Установить приложение» или «Добавить на главный экран».</p>`;
-  return `<div class="card soft"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h3>Поставьте Опору на телефон</h3><button class="linkbtn small" id="installHide">Скрыть</button></div><p class="small muted">Значок на экране, запуск в одно касание и работа без интернета.</p>${how}</div>`;
+      ? `<p class="small">Safari → «Поделиться» → «На экран Домой»</p>`
+      : `<p class="small">Меню браузера ⋮ → «Добавить на главный экран»</p>`;
+  return `<div class="card soft"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h3>Установить на телефон</h3><button class="linkbtn small" id="installHide">Скрыть</button></div>${how}</div>`;
 }
 
 /* ===== Рендер ===== */

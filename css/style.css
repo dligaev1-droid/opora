@@ -6,25 +6,30 @@ img{max-width:100%}
 button,a{-webkit-tap-highlight-color:transparent}
 
 /* Layout: одна колонка шириной с телефон, нижняя панель вкладок, SOS всегда под рукой */
+/* Палитра «Небо и песок»: тёплый песочный фон, спокойный небесно-синий акцент.
+   Стиль: минимализм, крупная типографика без засечек, плавающее нижнее меню */
 :root{
-  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#E4E8F3; --ink:#1A2233; --muted:#5B6478;
-  --accent:#4351C2; --accent-ink:#FFFFFF; --accent-soft:#DFE3F8; --line:#D5DAE6;
-  --sos:#C2453B; --sos-soft:#F8E3E0; --ok:#2E8A63; --warn:#B7791F;
-  --m1:#C2453B; --m2:#D9823B; --m3:#B9A43A; --m4:#5E9E62; --m5:#2E8A63;
-  --f-display:"Literata", Georgia, "Times New Roman", serif;
-  --f-body:"Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --r:16px;
+  --bg:#F5F2EC; --surface:#FFFFFF; --surface-2:#EEE9E0; --ink:#1F2630; --muted:#68707A;
+  --accent:#3577B8; --accent-ink:#FFFFFF; --accent-soft:#E1EDF8; --line:#E5DED2;
+  --sos:#C9483D; --sos-soft:#F8E6E2; --ok:#2E8A63; --warn:#C28A2C;
+  --m1:#C9483D; --m2:#DB8740; --m3:#C2AA3E; --m4:#5E9E62; --m5:#2E8A63;
+  --nav:rgba(255,255,255,.86);
+  --f-display:"Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-body:"Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r:20px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#11141B; --surface:#1A1E28; --surface-2:#242A37; --ink:#E8EBF3; --muted:#9AA3B6;
-  --accent:#8F9BF2; --accent-ink:#11141B; --accent-soft:#2A3058; --line:#2E3443;
-  --sos:#EE7A6F; --sos-soft:#3A2224; --ok:#5CC28F; --warn:#E0A84E;
-  --m1:#EE7A6F; --m2:#F0A160; --m3:#D8C65E; --m4:#84C287; --m5:#5CC28F; color-scheme:dark}}
+  --bg:#11151B; --surface:#1A2028; --surface-2:#242B35; --ink:#E9EDF2; --muted:#98A2AF;
+  --accent:#6FA8E0; --accent-ink:#0E1319; --accent-soft:#1E3247; --line:#2B333E;
+  --sos:#EF7B70; --sos-soft:#3A2326; --ok:#5CC28F; --warn:#E0AE57;
+  --m1:#EF7B70; --m2:#F0A160; --m3:#D8C65E; --m4:#84C287; --m5:#5CC28F;
+  --nav:rgba(26,32,40,.86); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#11141B; --surface:#1A1E28; --surface-2:#242A37; --ink:#E8EBF3; --muted:#9AA3B6;
-  --accent:#8F9BF2; --accent-ink:#11141B; --accent-soft:#2A3058; --line:#2E3443;
-  --sos:#EE7A6F; --sos-soft:#3A2224; --ok:#5CC28F; --warn:#E0A84E;
-  --m1:#EE7A6F; --m2:#F0A160; --m3:#D8C65E; --m4:#84C287; --m5:#5CC28F; color-scheme:dark}
+  --bg:#11151B; --surface:#1A2028; --surface-2:#242B35; --ink:#E9EDF2; --muted:#98A2AF;
+  --accent:#6FA8E0; --accent-ink:#0E1319; --accent-soft:#1E3247; --line:#2B333E;
+  --sos:#EF7B70; --sos-soft:#3A2326; --ok:#5CC28F; --warn:#E0AE57;
+  --m1:#EF7B70; --m2:#F0A160; --m3:#D8C65E; --m4:#84C287; --m5:#5CC28F;
+  --nav:rgba(26,32,40,.86); color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -211,3 +216,69 @@ button.card:hover{background:var(--surface-2)}
 .modal-in img{width:100%;border-radius:12px;display:block}
 .modal-in a.btn{text-decoration:none}
 @media (prefers-reduced-motion:reduce){.ball-g.drop{animation:none}.wheel .seg path,.fp{transition:none}}
+
+/* ===== v6: минимализм ===== */
+body{font-size:16px;line-height:1.45;letter-spacing:-.005em}
+h1,h2,h3,.ct{font-family:var(--f-display);font-weight:700;letter-spacing:-.02em}
+h1{font-size:2rem;line-height:1.1}
+h2{font-size:1.4rem}
+h3,.ct{font-size:1.08rem;font-weight:650}
+.view{gap:16px}
+.app{padding-block:20px 130px}
+.card{padding:18px;gap:12px;border-radius:var(--r)}
+.label{letter-spacing:.06em;font-size:.72rem}
+.btn{border-radius:14px;min-height:48px;padding:12px 20px}
+.btn.quiet{background:var(--surface-2)}
+.tile{min-height:104px;border-radius:var(--r);gap:4px}
+.tile .ico{width:38px;height:38px;border-radius:12px;margin-bottom:6px}
+.tile strong{font-size:.98rem;line-height:1.25}
+.logo{border-radius:12px;font-family:var(--f-display);font-weight:800}
+.big-num{font-family:var(--f-display);font-weight:800;letter-spacing:-.03em}
+.breath .phase,.pmr .phase{font-family:var(--f-display);font-weight:700}
+.tip p{font-family:var(--f-body);font-size:1.02rem;font-weight:500;line-height:1.4}
+.mood{border-radius:16px;font-size:.72rem;padding:10px 2px}
+input[type=text],textarea,select{border-radius:14px;border-width:1px;background:var(--surface-2);border-color:transparent}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+.disclaimer{font-size:.75rem;padding:4px 8px}
+.chev{margin-left:auto;color:var(--muted);font-size:1.3rem;line-height:1}
+
+/* плавающее нижнее меню */
+nav.tabs{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:4px;border:0;border-radius:24px;
+  background:var(--nav);-webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);
+  box-shadow:0 8px 30px rgba(20,30,45,.12), inset 0 0 0 1px var(--line);max-width:536px;margin:0 auto;
+  padding-left:4px;padding-right:4px}
+nav.tabs .in{max-width:none}
+nav.tabs button{padding:8px 2px;border-radius:18px;font-size:.68rem}
+nav.tabs button[aria-current="page"]{background:var(--accent-soft)}
+.toast{bottom:calc(96px + env(safe-area-inset-bottom,0px));border-radius:14px}
+
+/* баннер SOS на главной */
+.banner{display:flex;align-items:center;gap:14px;border:0;border-radius:var(--r);padding:14px 16px;font:inherit;text-align:left;cursor:pointer;width:100%}
+.banner .bi{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
+.banner .bt{display:flex;flex-direction:column;min-width:0}
+.sos-banner{background:var(--sos-soft);color:var(--ink)}
+.sos-banner .bi{background:var(--sos);color:#fff}
+
+/* компактные списки */
+.list{display:flex;flex-direction:column;background:var(--surface);border-radius:var(--r);padding:4px 16px}
+.li{display:flex;align-items:center;gap:14px;padding:13px 0;border:0;border-top:1px solid var(--line);background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%}
+.li:first-child{border-top:0}
+.li .ico{width:38px;height:38px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.li .dt{display:flex;flex-direction:column;min-width:0}
+.li .dt strong{font-weight:600}
+
+/* карусель программ */
+.carousel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin-inline:-16px;padding:2px 16px 6px;scrollbar-width:none}
+.carousel::-webkit-scrollbar{display:none}
+.carousel .prog-card{flex:0 0 78%;scroll-snap-align:start;min-height:150px;justify-content:space-between}
+.prog-card .pc-top{display:flex;flex-direction:column;gap:6px}
+
+/* свернуть подробности */
+details.more{background:var(--surface);border-radius:var(--r);padding:16px 18px}
+details.more summary{cursor:pointer;font-weight:650;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.more summary::after{content:"+";font-size:1.3rem;color:var(--muted)}
+details.more[open] summary::after{content:"−"}
+details.more summary::-webkit-details-marker{display:none}
+details.more > *:not(summary){margin-top:12px}
+.banner.card{flex-direction:row;align-items:center;padding:14px 16px}
+.carousel .prog-card{align-items:stretch}
