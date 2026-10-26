@@ -97,7 +97,7 @@ const LA=[
 let loveFrom="home";
 const ROOM_ROUTES=["lovetog","lovepath","lovepsy","love","lovep","lovet","loveq","lovef","lovea","plus"];
 const BACKL={love:"Сегодня",lovetog:"Вместе",loveid:"Свидания",lovepath:"Путь",lovepsy:"Психолог"};
-const back = () => { if(["love","lovetog","loveid","lovepath","lovepsy","lovewl"].includes(route)) return ""; const p={lovew:"love",lovemd:"love",lovedt:"love",loved:"love",lovex:"love",lovem:"lovetog",lovekn:"lovetog",lovelw:"lovetog",loveq:"lovetog",lovee:"lovetog",lovep:"lovepath",lovet:"lovepath",lovef:"lovepath",lovek:"lovepath",lovea:"lovepath",plus:"lovepsy"}[route]||"love"; return `<button class="back" data-go="${p}">← ${BACKL[p]}</button>`; };
+const back = () => { if(["love","lovetog","loveid","lovepath","lovepsy","lovewl"].includes(route)) return ""; const p={lovew:"love",lovemd:"love",lovedt:"love",loved:"love",lovex:"love",lovegd:"love",lovem:"lovetog",lovekn:"lovetog",lovelw:"lovetog",loveq:"lovetog",lovee:"lovetog",lovep:"lovepath",lovet:"lovepath",lovef:"lovepath",lovek:"lovepath",lovea:"lovepath",plus:"lovepsy"}[route]||"love"; return `<button class="back" data-go="${p}">← ${BACKL[p]}</button>`; };
 const lockCard = (what) => `<div class="card plus-lock"><span class="pl-ico">${LOCK}</span><h3>${what}</h3><p class="small muted">Доступно в Опора+</p><button class="btn" data-go="plus">Подробнее</button></div>`;
 const HERO=`<svg viewBox="0 0 160 90" class="love-art" aria-hidden="true"><defs><radialGradient id="lg1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".55"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></radialGradient><radialGradient id="lg2"><stop offset="0" stop-color="#E7B58E" stop-opacity=".7"/><stop offset="1" stop-color="#E7B58E" stop-opacity="0"/></radialGradient></defs><circle cx="62" cy="46" r="40" fill="url(#lg1)"/><circle cx="98" cy="44" r="40" fill="url(#lg2)"/><circle cx="64" cy="46" r="20" fill="none" stroke="var(--accent)" stroke-width="1.6" opacity=".8"/><circle cx="96" cy="46" r="20" fill="none" stroke="var(--accent)" stroke-width="1.6" opacity=".8"/></svg>`;
 const li = (go, sb, icoSvg, title, small, locked) => `<button class="li" data-go="${go}"${sb?` data-sub="${sb}"`:""}><span class="ico">${icoSvg}</span><span class="dt"><strong>${title}</strong><span class="small muted">${small}</span></span>${locked?`<span class="plus-tag sm">${LOCK}</span>`:`<span class="chev">›</span>`}</button>`;
@@ -111,7 +111,7 @@ const NAVI={
   lovepsy:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>'
 };
 const NAV=[["love","Сегодня"],["lovetog","Вместе"],["loveid","Свидания"],["lovepath","Путь"],["lovepsy","Психолог"]];
-const PARENT={lovew:"love",lovemd:"love",lovedt:"love",loved:"love",lovex:"love", lovem:"lovetog",lovekn:"lovetog",lovelw:"lovetog",loveq:"lovetog",lovee:"lovetog", lovewl:"loveid", lovep:"lovepath",lovet:"lovepath",lovef:"lovepath",lovek:"lovepath",lovea:"lovepath", plus:"lovepsy"};
+const PARENT={lovew:"love",lovemd:"love",lovedt:"love",loved:"love",lovex:"love",lovegd:"love", lovem:"lovetog",lovekn:"lovetog",lovelw:"lovetog",loveq:"lovetog",lovee:"lovetog", lovewl:"loveid", lovep:"lovepath",lovet:"lovepath",lovef:"lovepath",lovek:"lovepath",lovea:"lovepath", plus:"lovepsy"};
 const TAB_ROOT=["love","lovetog","loveid","lovepath","lovepsy","lovewl"];
 const nico = (k,sz=22) => `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAVI[k]}</svg>`;
 window.ROOM_NAV = r => { const cur=TAB_ROOT.includes(r)?(r==="lovewl"?"loveid":r):(PARENT[r]||"love"); return NAV.map(([k,t])=>`<button data-go="${k}" ${cur===k?'aria-current="page"':''}>${nico(k)}<span>${t}</span></button>`).join(""); };
@@ -127,6 +127,7 @@ function vLove(){
   ${T()?T().dqCard():""}
   <div class="quick2"><button class="btn quiet" data-go="lovemd">${ico("heart",18)} Как ты сейчас?</button><button class="btn quiet" data-go="lovedt">${ico("cal",18)} Наши даты</button></div>
   ${T()?T().datesCard():""}
+  ${window.LOVE.garden?LOVE.garden.card():""}
   ${wxCard()}
   ${plus()&&C()?C().report(false):""}`;
 }

@@ -548,3 +548,19 @@ input[type=date]{font:inherit;color:var(--ink);background:var(--surface-2);borde
   :root[data-room="love"]:not([data-theme="light"]) .feat .label,:root[data-room="love"]:not([data-theme="light"]) .feat-go{color:#F0A7B0}
   :root[data-room="love"]:not([data-theme="light"]) .feat::before{background:radial-gradient(circle,rgba(255,255,255,.12),transparent 70%)}}
 .quick2 .btn{white-space:nowrap;font-size:.9rem;padding:12px 8px;gap:6px}
+
+/* v17: наш сад */
+.garden-card{border:0;font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%;padding:0 0 14px;overflow:hidden;gap:10px}
+.garden-card>.row{padding:0 16px}
+.garden-mini,.garden-big{display:block;line-height:0}
+.garden-mini svg{width:100%;height:150px;display:block}
+.garden-big svg{width:100%;height:auto;display:block;border-radius:var(--r)}
+.g-legend{display:flex;flex-direction:column;gap:8px}
+.g-row{display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:center}
+.g-row b{color:var(--accent);font-family:var(--f-display)}
+.g-ico{width:14px;height:14px;border-radius:50%;display:inline-block}
+.g-grass{background:#7FA36A;border-radius:2px 2px 8px 8px}.g-flower{background:#E58FA0}.g-tree{background:#6E9C64}.g-bush{background:#9DBF84;border-radius:7px 7px 4px 4px}
+.g-stone{background:#B9AFA5;border-radius:50%/60%}.g-fly{background:#B9A2D8}.g-lamp{background:#FFD58A;box-shadow:0 0 6px #FFD58A}.g-star{background:#FFE3A8;box-shadow:0 0 6px #FFE3A8}
+.g-ms{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:6px 12px;font-size:.82rem;background:var(--surface-2);color:var(--muted)}
+.g-ms.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.garden-mini{width:100%;align-self:stretch}
