@@ -108,12 +108,19 @@ function vLove(){
   return `${backBtn(loveFrom, loveFrom==="practices"?"Практики":"Главная")}
   <div class="love-hero">${HERO}<div class="stack-s"><div class="row" style="justify-content:space-between"><h1>Отношения</h1>${plus()?`<span class="plus-tag on">Опора+</span>`:""}</div><p class="muted">Близость, ссоры, расставания — бережно и по шагам</p></div></div>
   <div class="stack-s"><span class="label">Программы</span><div class="carousel">${Object.entries(LP).map(([id,p])=>{ const n=doneCount(id); return `<button class="card prog-card" data-go="lovep" data-sub="${id}:${Math.min(n+1,p.days.length)}"><span class="stack-s"><strong style="font-size:1.05rem">${p.t}</strong><span class="small muted">${p.d}</span></span><span class="stack-s"><span class="small">${n?`Пройдено ${n} из ${p.days.length}`:"День 1 бесплатно"}</span><span class="progress"><i style="width:${n/p.days.length*100}%"></i></span></span></button>`; }).join("")}</div></div>
+  ${T()?T().dqCard():""}
+  <div class="row quick2"><button class="btn quiet" data-go="lovemd">${ico("heart",18)} Как ты сейчас?</button><button class="btn quiet" data-go="lovedt">${ico("cal",18)} Наши даты</button></div>
+  ${T()?T().datesCard():""}
   ${wxCard()}
   ${plus()&&C()?C().report(false):""}
   <div class="stack-s"><span class="label">Вдвоём</span><div class="list">
     ${li("lovem",null,ico("heart",18),"Совпадаем ли мы","Тест для пары на одном телефоне",false)}
     ${li("lovee",null,ico("moon",18),"Вечера для двоих","Готовые сценарии на час",false)}
     ${li("loveq",null,ico("thoughts",18),"Вопросы для двоих","36 вопросов, чтобы стать ближе",false)}
+    ${li("lovekn",null,ico("star",18),"Насколько ты меня знаешь","Квиз: загадайте о себе, партнёр угадывает",false)}
+    ${li("lovelw",null,ico("heart",18),"Как мы чувствуем любовь","Слова, время, помощь, подарки, прикосновения",false)}
+    ${li("loveid",null,ico("moon",18),"Идеи свиданий","40 идей и кнопка «Удиви меня»",false)}
+    ${li("lovewl",null,ico("check",18),"Хотим вместе","Общий список желаний",false)}
   </div></div>
   <div class="stack-s"><span class="label">Для себя</span><div class="list">
     ${li("lovet",null,ico("star",18),"Мой стиль привязанности",last?ASTY[last.s].t:"Тест · 2 минуты",false)}
@@ -127,6 +134,7 @@ function vLove(){
 
 /* «Погода в паре» на главном экране раздела */
 const C = () => window.LOVE && window.LOVE.couple;
+const T = () => window.LOVE && window.LOVE.together;
 function wxCard(){
   if(!C()) return "";
   const list=C().wxList(), cur=list.find(x=>x.w===C().weekKey(Date.now())), last=list[list.length-1];
@@ -261,6 +269,8 @@ function vPlus(){
     <li>${ico("check",18)}<span>Тест для пары «Совпадаем ли мы» с темами для разговора</span></li>
     <li>${ico("check",18)}<span>Вечера для двоих и скрипты трудных разговоров</span></li>
     <li>${ico("check",18)}<span>График «Погода в паре» и отчёт месяца</span></li>
+    <li>${ico("check",18)}<span>40 идей свиданий и список «Хотим вместе» без ограничений</span></li>
+    <li>${ico("check",18)}<span>Полный профиль «Как мы чувствуем любовь» с советами</span></li>
     <li>${ico("check",18)}<span>Все статьи и новые материалы каждый месяц</span></li>
     ${PSY.plusDiscount?`<li>${ico("check",18)}<span><strong>Скидка ${+PSY.plusDiscount}% на консультации у ${esc(PSY.nameFrom||PSY.nameTo)}</strong></span></li>`:""}
   </ul></div>
