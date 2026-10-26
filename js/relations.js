@@ -108,14 +108,31 @@ function vLove(){
   return `${backBtn(loveFrom, loveFrom==="practices"?"Практики":"Главная")}
   <div class="love-hero">${HERO}<div class="stack-s"><div class="row" style="justify-content:space-between"><h1>Отношения</h1>${plus()?`<span class="plus-tag on">Опора+</span>`:""}</div><p class="muted">Близость, ссоры, расставания — бережно и по шагам</p></div></div>
   <div class="stack-s"><span class="label">Программы</span><div class="carousel">${Object.entries(LP).map(([id,p])=>{ const n=doneCount(id); return `<button class="card prog-card" data-go="lovep" data-sub="${id}:${Math.min(n+1,p.days.length)}"><span class="stack-s"><strong style="font-size:1.05rem">${p.t}</strong><span class="small muted">${p.d}</span></span><span class="stack-s"><span class="small">${n?`Пройдено ${n} из ${p.days.length}`:"День 1 бесплатно"}</span><span class="progress"><i style="width:${n/p.days.length*100}%"></i></span></span></button>`; }).join("")}</div></div>
-  <div class="list">
-    ${li("lovet",null,ico("heart",18),"Мой стиль привязанности",last?ASTY[last.s].t:"Тест · 2 минуты",false)}
+  ${wxCard()}
+  ${plus()&&C()?C().report(false):""}
+  <div class="stack-s"><span class="label">Вдвоём</span><div class="list">
+    ${li("lovem",null,ico("heart",18),"Совпадаем ли мы","Тест для пары на одном телефоне",false)}
+    ${li("lovee",null,ico("moon",18),"Вечера для двоих","Готовые сценарии на час",false)}
     ${li("loveq",null,ico("thoughts",18),"Вопросы для двоих","36 вопросов, чтобы стать ближе",false)}
+  </div></div>
+  <div class="stack-s"><span class="label">Для себя</span><div class="list">
+    ${li("lovet",null,ico("star",18),"Мой стиль привязанности",last?ASTY[last.s].t:"Тест · 2 минуты",false)}
     ${li("lovef",null,ico("hand",18),"Разбор ссоры","Понять себя и сказать без упрёков",!plus() && l.fights.length>=1)}
-  </div>
+    ${li("lovek",null,ico("book",18),"Трудные разговоры","Деньги, родители, ревность, близость",false)}
+  </div></div>
   <div class="stack-s"><span class="label">Почитать</span><div class="list">${LA.map((a,i)=>li("lovea",a.id,ico("book",18),a.t,`${a.m} мин`,i>0 && !plus())).join("")}</div></div>
-  ${plus()?"":`<button class="banner card plus-banner" data-go="plus"><span class="bi">${LOCK}</span><span class="bt"><strong>Открыть всё — Опора+</strong><span class="small muted">Программы целиком, все вопросы и статьи</span></span><span class="chev">›</span></button>`}
+  ${plus()?"":`<button class="banner card plus-banner" data-go="plus"><span class="bi">${LOCK}</span><span class="bt"><strong>Открыть всё — Опора+</strong><span class="small muted">Всё для пары: программы, вечера, график отношений</span></span><span class="chev">›</span></button>`}
   <div class="card soft"><p class="small">Сложно разобраться самим? Можно прийти на консультацию одному или вдвоём.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к ${esc(PSY.nameTo)}</button></div>`;
+}
+
+/* «Погода в паре» на главном экране раздела */
+const C = () => window.LOVE && window.LOVE.couple;
+function wxCard(){
+  if(!C()) return "";
+  const list=C().wxList(), cur=list.find(x=>x.w===C().weekKey(Date.now())), last=list[list.length-1];
+  return `<button class="card wx-card" data-go="lovew"><span class="stack-s" style="min-width:0"><span class="label">Погода в паре</span>
+    ${last?`<span class="wx-now"><span>Близость <b>${last.c}</b></span><span>Поддержка <b>${last.s}</b></span><span>Напряжение <b>${last.t}</b></span></span>`:`<strong>Как у вас дела на этой неделе?</strong>`}
+    <span class="small muted">${cur?"Неделя отмечена · смотреть динамику":"30 секунд, раз в неделю"}</span></span><span class="chev">›</span></button>`;
 }
 
 /* ---------- День программы ---------- */
@@ -241,7 +258,11 @@ function vPlus(){
     <li>${ico("check",18)}<span>Советы для вашего стиля привязанности</span></li>
     <li>${ico("check",18)}<span>Все 36 вопросов для двоих</span></li>
     <li>${ico("check",18)}<span>Разборы ссор без ограничений</span></li>
+    <li>${ico("check",18)}<span>Тест для пары «Совпадаем ли мы» с темами для разговора</span></li>
+    <li>${ico("check",18)}<span>Вечера для двоих и скрипты трудных разговоров</span></li>
+    <li>${ico("check",18)}<span>График «Погода в паре» и отчёт месяца</span></li>
     <li>${ico("check",18)}<span>Все статьи и новые материалы каждый месяц</span></li>
+    ${PSY.plusDiscount?`<li>${ico("check",18)}<span><strong>Скидка ${+PSY.plusDiscount}% на консультации у ${esc(PSY.nameFrom||PSY.nameTo)}</strong></span></li>`:""}
   </ul></div>
   ${plus()?`<div class="card soft"><p><strong>Опора+ подключена</strong></p><p class="small muted">Спасибо, что поддерживаете проект.</p><button class="linkbtn small" id="plusOff" style="align-self:flex-start">Отключить на этом устройстве</button></div>`:
   `<div class="card soft"><p><strong>Подписка скоро появится</strong></p><p class="small">Хотите получить доступ одним из первых — напишите ${esc(PSY.nameTo)}.</p>${PSY.telegram?`<a class="btn" href="https://t.me/${encodeURIComponent(PSY.telegram)}" target="_blank" rel="noopener" style="align-self:flex-start">Написать в Telegram</a>`:""}</div>
@@ -256,6 +277,7 @@ function bindPlus(){
 }
 
 /* ---------- Регистрация ---------- */
+window.LOVE={L, plus, back, lockCard, LOCK, li, ROOM_ROUTES};
 Object.assign(VIEWS,{love:[vLove,null], lovep:[vLoveProg,bindLoveProg], lovet:[vLoveTest,bindLoveTest], loveq:[vLoveQ,bindLoveQ], lovef:[vLoveF,bindLoveF], lovea:[vLoveA,null], plus:[vPlus,bindPlus]});
 ROOM_ROUTES.forEach(r=>TAB_OF[r]="practices");
 window.ROOM_OF = r => ROOM_ROUTES.includes(r) ? "love" : "";
