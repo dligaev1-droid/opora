@@ -48,7 +48,7 @@ p{margin:0}
 .card.soft{background:var(--accent-soft)}
 .card.sos{background:var(--sos-soft)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media (max-width:380px){.grid2{grid-template-columns:1fr}}
+@media (max-width:330px){.grid2{grid-template-columns:1fr}}
 .tile{background:var(--surface);border-radius:var(--r);padding:16px;border:0;text-align:left;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-height:112px}
 .tile:hover{background:var(--surface-2)}
 .tile .ico{width:32px;height:32px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
@@ -354,3 +354,11 @@ blockquote.q.sm::before{font-size:1.8rem}
 .qcard{gap:10px}
 .locked{display:flex;gap:10px;align-items:center;justify-content:center;color:var(--muted);padding:6px 10px;text-align:center}
 .chip svg{vertical-align:-2px}
+
+/* v10: исправления */
+.day{width:100%;justify-content:flex-start}
+.day .dt{align-items:flex-start;text-align:left}
+.xp-pop{top:auto;bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+.moods{gap:6px}.mood{min-width:0}.mood span{overflow-wrap:anywhere;hyphens:auto}
+.stg small{overflow-wrap:anywhere}
+.back{min-height:44px}

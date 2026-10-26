@@ -4,7 +4,7 @@ const PROGRAMS = window.PROGRAMS, ART = window.ARTICLES, TIPS = window.TIPS;
 /* ===== Хранилище на устройстве ===== */
 const KEY = "opora_v1";
 const empty = () => ({moods:[], thoughts:[], tests:[], notes:[], demoCleared:false, days:[],
-  programs:{}, activeProgram:null, relief:[], grat:null, badges:[], read:[]});
+  programs:{}, activeProgram:null, relief:[], grat:null, badges:[], read:[], cardLog:[]});
 let S = empty();
 function load(){
   try{ const raw = localStorage.getItem(KEY); if(raw) S = Object.assign(empty(), JSON.parse(raw)); }catch(e){}
@@ -14,7 +14,13 @@ function load(){
   if(S.program && S.program.done){ S.programs.calm7 = S.program; if(Object.keys(S.program.done).length) S.activeProgram="calm7"; delete S.program; }
   // банка благодарностей: забираем «хорошее» из старых записей дневника
   if(!Array.isArray(S.grat)){ S.grat = S.moods.filter(m=>m.good).map(m=>({id:uid(), text:m.good, ts:m.ts})); }
-  ["relief","badges","read"].forEach(k=>{ if(!Array.isArray(S[k])) S[k]=[]; });
+  ["relief","badges","read","moods","thoughts","tests","notes","cardLog"].forEach(k=>{ if(!Array.isArray(S[k])) S[k]=[]; });
+  if(!Array.isArray(S.grat)) S.grat=[];
+  if(!S.programs||typeof S.programs!=="object") S.programs={};
+  if(S.xp && (typeof S.xp!=="object" || ["calm","res","aware","self"].some(k=>typeof S.xp[k]!=="number"))) S.xp=null;
+  S.moods=S.moods.filter(m=>m && m.mood>=1 && m.mood<=5).map(m=>Object.assign({}, m, {tags:Array.isArray(m.tags)?m.tags:[], emotions:Array.isArray(m.emotions)?m.emotions:[]}));
+  S.tests=S.tests.filter(t=>t && ["gad7","phq9","cbi","rse"].includes(t.id) && typeof t.score==="number");
+  S.grat=S.grat.filter(g=>g && typeof g.text==="string");
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 
@@ -104,7 +110,7 @@ function go(r, s=null){
   if(r!==route && !["breath","ground","pmr"].includes(route)) prevRoute=route;
   if(["breath","ground","pmr"].includes(r)){ RL=null; groundStep=-1; }
   route=r; sub=s; render(); window.scrollTo(0,0);
-  try{ history.replaceState(null,"", r==="home"?location.pathname+location.search:"#"+r); }catch(e){}
+  if(!go._pop){ try{ history.pushState({r,s}, "", r==="home"?location.pathname+location.search:"#"+r); }catch(e){} }
 }
 function renderTabs(){
   const main = TAB_OF[route] || route;
@@ -484,7 +490,7 @@ function vResult(){
     <button class="btn" data-go="about" data-sub="book">Обсудить на консультации</button>
   </div>
   ${prog && l[2]!=="ok"?`<button class="banner card" data-go="programs" data-sub="${prog.id}"><span class="bi" style="background:var(--accent-soft);color:var(--accent)">${ico("practices",20)}</span><span class="bt"><strong>${esc(prog.title)}</strong><span class="small muted">Программа на ${prog.days.length} ${plural(prog.days.length,"день","дня","дней")}</span></span><span class="chev">›</span></button>`:""}
-  ${risk?"":`<button class="btn quiet block" id="storyBtn">${ico("image",18)} Карточка для сторис</button>`}
+  ${risk||l[2]==="m1"?"":`<button class="btn quiet block" id="storyBtn">${ico("image",18)} Карточка для сторис</button>`}
   <p class="disclaimer">Опросник не ставит диагноз</p>`;
 }
 function bindTests(){
@@ -982,7 +988,7 @@ function render(){
 }
 
 /* ===== Адрес страницы: #sos, #diary и т.д. ===== */
-window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(VIEWS[h] && h!==route){ go(h); } });
+window.addEventListener("popstate",e=>{ const st=e.state||{}; const h=st.r||location.hash.slice(1)||"home"; go._pop=true; try{ go(VIEWS[h]?h:"home", st.s||null); } finally { go._pop=false; } });
 function boot(){
   const h0=(location.hash||"").slice(1);
   if(VIEWS[h0] && !["program","programs","article"].includes(h0)) route=h0;
