@@ -202,7 +202,7 @@ function homeTree(){
     <span class="tc-body">
       <span class="label">Мой рост</span>
       <strong class="ct">${STAGES[st-1]}</strong>
-      <span class="small muted">Уровень ${lv} из ${MAX_LV}</span>
+      <span class="small muted">${t?`Уровень ${lv} из ${MAX_LV}`:"Сделайте первое упражнение — и оно прорастёт"}</span>
       <span class="progress" style="display:block"><i style="width:${pct}%"></i></span>
     </span>
     <span class="chev">›</span>

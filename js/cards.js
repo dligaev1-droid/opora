@@ -64,8 +64,9 @@ function cardFront(i){
   return CARD_FILES[i] ? `<img class="cart" src="cards/${encodeURI(CARD_FILES[i])}" alt="Метафорическая карта ${i+1}" loading="lazy">` : cardArt(i);
 }
 function cardBack(){
-  return `<svg viewBox="0 0 200 300" class="cart" aria-hidden="true"><defs><linearGradient id="cbk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3F86C8"/><stop offset="1" stop-color="#1C4670"/></linearGradient></defs>
-    <rect width="200" height="300" fill="url(#cbk)"/><rect x="10" y="10" width="180" height="280" rx="12" fill="none" stroke="#fff" stroke-opacity=".35"/>
+  const gid="cbk"+(cardBack.n=(cardBack.n||0)+1);
+  return `<svg viewBox="0 0 200 300" class="cart" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3F86C8"/><stop offset="1" stop-color="#1C4670"/></linearGradient></defs>
+    <rect width="200" height="300" fill="url(#${gid})"/><rect x="10" y="10" width="180" height="280" rx="12" fill="none" stroke="#fff" stroke-opacity=".35"/>
     ${[70,52,34].map(r=>`<circle cx="100" cy="150" r="${r}" fill="none" stroke="#fff" stroke-opacity=".22"/>`).join("")}
     <text x="100" y="166" text-anchor="middle" font-family="Onest, system-ui, sans-serif" font-weight="800" font-size="44" fill="#fff">О</text></svg>`;
 }

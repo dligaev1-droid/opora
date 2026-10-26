@@ -32,7 +32,12 @@ const uid = () => Math.random().toString(36).slice(2,10);
 const fmtDate = ts => new Date(ts).toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
 const fmtDT = ts => new Date(ts).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
 const plural=(n,a,b,c)=>{const m10=n%10,m100=n%100; return m10===1&&m100!==11?a:(m10>=2&&m10<=4&&(m100<12||m100>14)?b:c);};
-function toast(t){ const el=$("#toast"); el.textContent=t; el.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>el.hidden=true,2600); }
+function toast(t){
+  const q=toast.q||(toast.q=[]);
+  if(toast._busy && toast._busy!==t){ if(q.length<2 && !q.includes(t)) q.push(t); return; }
+  const el=$("#toast"); el.textContent=t; el.hidden=false; toast._busy=t; clearTimeout(toast._t);
+  toast._t=setTimeout(()=>{ el.hidden=true; toast._busy=null; const n=q.shift(); if(n) setTimeout(()=>toast(n),200); },2600);
+}
 async function copy(text, el){
   try{ await navigator.clipboard.writeText(text); toast("Скопировано"); }
   catch(e){ if(el){ const r=document.createRange(); r.selectNodeContents(el); const s=getSelection(); s.removeAllRanges(); s.addRange(r);} toast("Выделено — скопируйте вручную"); }
@@ -81,6 +86,7 @@ const I = {
   diary:'<path d="M4 19V5a1 1 0 0 1 1-1h11l4 4v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M8 14l3-3 2 2 3-4"/>',
   thoughts:'<path d="M12 3a7 7 0 0 0-4 12.7V19h8v-3.3A7 7 0 0 0 12 3z"/><path d="M10 22h4"/>',
   about:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
   wind:'<path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h7"/>',
   hand:'<path d="M8 13V5a1.5 1.5 0 0 1 3 0v6M11 11V4a1.5 1.5 0 0 1 3 0v7M14 11V5a1.5 1.5 0 0 1 3 0v8a7 7 0 0 1-7 7 6 6 0 0 1-5-3l-2-4a1.5 1.5 0 0 1 2.5-1.5L8 14"/>',
   heart:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
@@ -221,11 +227,10 @@ function vHome(){
   <div class="grid2">
     <button class="tile" data-go="tests" data-sub="cbi"><span class="ico">${ico("tests")}</span><strong>Тест на выгорание</strong><span class="small muted">1 минута</span></button>
     <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Снять напряжение</strong><span class="small muted">2 минуты</span></button>
-    <button class="tile" data-go="jar"><span class="ico">${ico("jar")}</span><strong>Благодарности</strong><span class="small muted">${S.grat.length?`В банке: ${S.grat.length}`:"Банка пуста"}</span></button>
+    <button class="tile" data-go="sounds"><span class="ico">${ico("moon")}</span><strong>Звуки для сна</strong><span class="small muted">Дождь, море, лес</span></button>
     <button class="tile" data-go="about" data-sub="book"><span class="ico">${ico("cal")}</span><strong>Записаться</strong><span class="small muted">к ${esc(PSY.nameTo)}</span></button>
   </div>
-  ${installCard()}
-  <button class="btn quiet block" data-share>${ico("share",18)} Поделиться с другом</button>
+  ${S.days.length>=2?installCard():""}
   <p class="disclaimer">Не заменяет консультацию специалиста. Данные хранятся только у вас.</p>`;
 }
 function bindHome(){
@@ -256,8 +261,9 @@ function vSOS(){
     <h3>Если есть мысли навредить себе</h3>
     <p class="small">Обратитесь за помощью сейчас.</p>
     <div class="stack-s">
-      <div><div class="label">Экстренные службы</div><div class="phone">112</div></div>
-      <div><div class="label">Детский телефон доверия, бесплатно</div><div class="phone">8 800 2000 122</div></div>
+      <div><div class="label">Экстренные службы</div><a class="phone" href="tel:112">112</a></div>
+      <div><div class="label">Психологическая помощь МЧС, круглосуточно</div><a class="phone" href="tel:+74959895050">8 495 989‑50‑50</a></div>
+      <div><div class="label">Телефон доверия для подростков и родителей, бесплатно</div><a class="phone" href="tel:88002000122">8 800 2000‑122</a></div>
       <div><div class="label">Психологическая помощь МЧС онлайн</div><a href="https://psi.mchs.gov.ru/" target="_blank" rel="noopener" style="color:var(--ink);font-weight:600">psi.mchs.gov.ru</a></div>
     </div>
   </div>`;
@@ -306,6 +312,7 @@ function vBreath(){
     <div class="breath-wrap"><div class="breath"><div class="ring"></div><div class="ball" id="ball"></div><div class="txt"><div class="phase" id="bPhase">Готовы?</div><div class="count" id="bCount">4</div></div></div></div>
     <p class="small muted" style="text-align:center" id="bCycles">0 из 5 кругов</p>
     <button class="btn block" id="bBtn">Начать</button>
+    ${window.SND?SND.cueBtn():""}
   </div>
   <p class="disclaimer">Кружится голова — дышите как обычно</p>`:""}
   ${reliefAfter("breath")}${reliefDone("breath")}`;
@@ -313,10 +320,12 @@ function vBreath(){
 function bindBreath(){
   bindRelief("breath");
   const b=$("#bBtn"); if(b) b.onclick=()=> bState.running?finishBreath():startBreath();
+  if(window.SND) SND.bindCue();
 }
 function applyPhase(){
   const [t,s]=PHASES[bState.phase]; const b=$("#ball"); if(!b) return;
   $("#bPhase").textContent=t; $("#bCount").textContent=bState.sec; b.style.transform=`scale(${s})`;
+  if(bState.running && bState.sec===4 && window.SND) SND.cue("breath", bState.phase);
 }
 function startBreath(){
   reliefStart("breath");
@@ -332,7 +341,7 @@ function startBreath(){
 function stopBreath(){ clearInterval(bTimer); bTimer=null; bState.running=false; }
 function finishBreath(){
   const cyc=bState.cycles; stopBreath();
-  if(cyc>=1){ reliefFinish("breath"); }
+  if(cyc>=1){ if(window.SND) SND.cue("done"); reliefFinish("breath"); }
   else { RL=null; render(); }
 }
 
@@ -381,21 +390,24 @@ function vPmr(){
     </div>
     <div class="progress"><i style="width:${doing?(pmrS.i/PMR.length*100):0}%"></i></div>
     <button class="btn block" id="pmrBtn">${doing?"Закончить":"Начать"}</button>
+    ${window.SND?SND.cueBtn():""}
   </div>`}
   ${reliefAfter("pmr")}${reliefDone("pmr")}`;
 }
 function bindPmr(){
   bindRelief("pmr");
+  if(window.SND) SND.bindCue();
   const b=$("#pmrBtn"); if(b) b.onclick=()=>{ if(pmrS.running){ const done=pmrS.i; stopPmr(); if(done>=2) reliefFinish("pmr"); else { RL=null; render(); } } else startPmr(); };
 }
 function startPmr(){
   reliefStart("pmr");
   pmrS={i:0, phase:"tense", sec:TENSE, running:true}; render();
+  const cue=n=>{ if(window.SND) SND.cue(n); }; cue("tense");
   pmrT=setInterval(()=>{
     pmrS.sec--;
     if(pmrS.sec<=0){
-      if(pmrS.phase==="tense"){ pmrS.phase="relax"; pmrS.sec=RELAX; }
-      else { pmrS.i++; if(pmrS.i>=PMR.length){ stopPmr(); reliefFinish("pmr"); return; } pmrS.phase="tense"; pmrS.sec=TENSE; }
+      if(pmrS.phase==="tense"){ pmrS.phase="relax"; pmrS.sec=RELAX; cue("relax"); }
+      else { pmrS.i++; if(pmrS.i>=PMR.length){ stopPmr(); cue("done"); reliefFinish("pmr"); return; } pmrS.phase="tense"; pmrS.sec=TENSE; cue("tense"); }
       render(); return;
     }
     const c=$("#pCount"); if(c) c.textContent=pmrS.sec;
@@ -644,7 +656,7 @@ function vDiary(){
     </div>
     <div class="stack-s"><span class="small muted">С чем связано?</span><div class="chips">${TAGS.map(t=>`<button class="chip" data-tag="${t}" aria-pressed="${draft.tags.includes(t)}">${t}</button>`).join("")}</div></div>
     <textarea id="mNote" placeholder="Пара слов о дне (необязательно)" aria-label="Заметка">${esc(draft.note)}</textarea>
-    <input type="text" id="mGood" placeholder="Что было хорошего? → в банку" aria-label="Что было хорошего" value="${esc(draft.good)}">
+    <input type="text" id="mGood" placeholder="Что было хорошего?" aria-label="Что было хорошего" value="${esc(draft.good)}">
     <button class="btn" id="mSave" ${draft.mood?"":"disabled"}>Сохранить запись</button>
   </div>
   <div class="card">
@@ -705,7 +717,7 @@ function vJar(){
       <path d="M58 110 Q54 200 60 290" class="shine"/>
     </svg>
     <p class="jar-count"><strong>${list.length}</strong> ${plural(list.length,"благодарность","благодарности","благодарностей")}</p>
-    <div class="row" style="flex-wrap:nowrap;width:100%"><input type="text" id="gIn" placeholder="Что было хорошего?" style="flex:1;min-width:0" maxlength="140"><button class="btn" id="gAdd">В банку</button></div>
+    <div class="row" style="flex-wrap:nowrap;width:100%"><input type="text" id="gIn" placeholder="Что хорошего?" aria-label="Что было хорошего" style="flex:1;min-width:0" maxlength="140"><button class="btn" id="gAdd">В банку</button></div>
     ${list.length?`<button class="btn quiet" id="gRand">Достать случайную</button><p class="small" id="gShow" hidden></p>`:""}
   </div>
   ${list.length?`<details class="more"><summary>Все записи · ${list.length}</summary><div>${list.slice().reverse().slice(0,10).map(g=>`<div class="entry"><span class="dot" style="background:${JAR_COLORS[list.indexOf(g)%JAR_COLORS.length]}"></span><div class="body"><p class="small">${esc(g.text)}</p><span class="small muted">${fmtDate(g.ts)}</span></div></div>`).join("")}</div></details>`:""}`;
@@ -862,6 +874,7 @@ function vPractices(){
   return `<div class="stack-s"><h1>Практики</h1></div>
   <div class="stack-s"><span class="label">Программы</span><div class="carousel">${PROGRAMS.map(programCard).join("")}</div></div>
   <button class="banner card" data-go="cards"><span class="mak-thumb">${typeof cardBack==="function"?cardBack():""}</span><span class="bt"><strong>Метафорические карты</strong><span class="small muted">Карта дня и расклады</span></span><span class="chev">›</span></button>
+  <button class="banner card" data-go="sounds"><span class="bi">${ico("moon",20)}</span><span class="bt"><strong>Звуки для сна</strong><span class="small muted">Дождь, море, лес, костёр, поющая чаша</span></span><span class="chev">›</span></button>
   <div class="stack-s"><span class="label">Упражнения</span>
   ${reliefStats()}
   <div class="grid2">
@@ -902,24 +915,24 @@ function vAbout(){
   </div>
   <div class="card" id="book">
     <h3>Записаться на консультацию</h3>
-    <p class="small muted">Заполните, скопируйте и отправьте в Telegram</p>
+    <p class="small muted">${PSY.telegram?"Заполните — откроется чат с готовым сообщением":"Заполните и скопируйте заявку"}</p>
     <form id="bForm" class="stack-s" novalidate>
       <label class="field"><span>Как к вам обращаться</span><input type="text" id="bName" required value="${esc(BK.name)}"></label>
       <label class="field"><span>Формат</span><select id="bFmt">${["Онлайн","Очно","Пока не знаю"].map(o=>`<option ${BK.fmt===o?"selected":""}>${o}</option>`).join("")}</select></label>
       <label class="field"><span>Удобное время</span><input type="text" id="bTime" placeholder="Например, будни после 18:00" value="${esc(BK.time)}"></label>
       <label class="field"><span>С чем хотите поработать</span><textarea id="bReq" placeholder="Коротко, в двух‑трёх предложениях">${esc(BK.req)}</textarea></label>
-      <button class="btn" type="submit">Подготовить заявку</button>
+      <button class="btn" type="submit">${PSY.telegram?"Отправить в Telegram":"Подготовить заявку"}</button>
     </form>
-    ${bookText?`<div class="copybox" id="bOut">${esc(bookText)}</div><div class="row"><button class="btn" id="bCopy">Скопировать текст</button>${contact}</div>`:""}
+    ${bookText?`<p class="small muted">Если текст не подставился в чат — скопируйте его:</p><div class="copybox" id="bOut">${esc(bookText)}</div><div class="row"><button class="btn quiet" id="bCopy">Скопировать текст</button>${contact}</div>`:""}
     <div class="stack-s small">
-      <div><span class="label">Telegram</span><div>${PSY.telegram?"@"+esc(PSY.telegram):'<span class="muted">появится после настройки</span>'}</div></div>
-      <div><span class="label">Телефон</span><div class="phone" style="font-size:1rem">${PSY.phone?`<a href="tel:${esc(PSY.phone.replace(/[^+\d]/g,""))}" style="color:inherit">${esc(PSY.phone)}</a>`:'<span class="muted" style="font-weight:400">появится после настройки</span>'}</div></div>
+      <div><span class="label">Telegram</span><div>${PSY.telegram?`<a class="tap" href="https://t.me/${encodeURIComponent(PSY.telegram)}" target="_blank" rel="noopener" style="color:inherit;font-weight:600">@${esc(PSY.telegram)}</a>`:'<span class="muted">появится после настройки</span>'}</div></div>
+      <div><span class="label">Телефон</span><div class="phone" style="font-size:1rem">${PSY.phone?`<a class="tap" href="tel:${esc(PSY.phone.replace(/[^+\d]/g,""))}" style="color:inherit">${esc(PSY.phone)}</a>`:'<span class="muted" style="font-weight:400">появится после настройки</span>'}</div></div>
     </div>
   </div>
   <div class="card">
     <h3>Что обсудить на сессии</h3>
     
-    <div class="row" style="flex-wrap:nowrap"><input type="text" id="nIn" placeholder="Например: почему я злюсь на брата" style="flex:1;min-width:0"><button class="btn" id="nAdd" aria-label="Добавить">+</button></div>
+    <div class="row" style="flex-wrap:nowrap"><input type="text" id="nIn" placeholder="Тема для сессии" aria-label="Что обсудить на сессии" style="flex:1;min-width:0"><button class="btn" id="nAdd" aria-label="Добавить">+</button></div>
     ${S.notes.length?S.notes.slice().reverse().map(n=>`<div class="entry"><input type="checkbox" data-nd="${n.id}" ${n.done?"checked":""} style="margin-top:5px;accent-color:var(--accent)" aria-label="Обсудили"><div class="body"><p class="small" style="${n.done?"text-decoration:line-through;color:var(--muted)":""}">${esc(n.text)}</p><span class="small muted">${fmtDate(n.ts)}</span></div><button class="linkbtn small" data-ndel="${n.id}">Удалить</button></div>`).join(""):`<p class="small muted">Список пуст.</p>`}
   </div>
   <div class="card">
@@ -935,6 +948,10 @@ function bindAbout(){
     BK={name:$("#bName").value,fmt:$("#bFmt").value,time:$("#bTime").value,req:$("#bReq").value};
     const name=BK.name.trim(); if(!name){ $("#bName").focus(); toast("Укажите, как к вам обращаться"); return; }
     bookText=`Здравствуйте, ${PSY.name}! Хочу записаться на консультацию.\nИмя: ${name}\nФормат: ${BK.fmt}\nУдобное время: ${BK.time.trim()||"обсудим"}\nЗапрос: ${BK.req.trim()||"расскажу на встрече"}`;
+    if(PSY.telegram){
+      try{ window.open(`https://t.me/${encodeURIComponent(PSY.telegram)}?text=${encodeURIComponent(bookText)}`, "_blank", "noopener"); }catch(err){}
+      try{ navigator.clipboard.writeText(bookText).catch(()=>{}); }catch(err){}
+    }
     render(); $("#bOut").scrollIntoView({behavior:"smooth",block:"center"});
   };
   const c=$("#bCopy"); if(c) c.onclick=()=>copy(bookText,$("#bOut"));
@@ -985,6 +1002,7 @@ function render(){
   $("#app").innerHTML=`<main class="view">${v()}</main>`;
   renderTabs();
   if(b) b();
+  if(window.SND) SND.pill();
 }
 
 /* ===== Адрес страницы: #sos, #diary и т.д. ===== */
