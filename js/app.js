@@ -1,50 +1,68 @@
 const PSY = window.PSY;
+const PROGRAMS = window.PROGRAMS, ART = window.ARTICLES, TIPS = window.TIPS;
 
 /* ===== Хранилище на устройстве ===== */
 const KEY = "opora_v1";
-const empty = () => ({moods:[], thoughts:[], tests:[], notes:[], demoCleared:false, days:[], program:{done:{}, notes:{}}});
+const empty = () => ({moods:[], thoughts:[], tests:[], notes:[], demoCleared:false, days:[],
+  programs:{}, activeProgram:null, relief:[], grat:null, badges:[], read:[]});
 let S = empty();
-function load(){ try{ const raw = localStorage.getItem(KEY); if(raw) S = Object.assign(empty(), JSON.parse(raw)); }catch(e){}
-  if(!S.program||!S.program.done) S.program={done:{},notes:{}}; if(!Array.isArray(S.days)) S.days=[]; }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-load();
-
-/* примеры записей, пока пользователь не добавил свои */
-function demoMoods(){
-  const tags=[["работа"],["сон","семья"],["работа","усталость"],["спорт"],["друзья"],["работа"],["отдых","семья"],["сон"],["работа","усталость"],["спорт","друзья"]];
-  const vals=[3,4,2,4,5,3,4,3,2,4];
-  const notes=["Много встреч, к вечеру голова гудела","Выспался, утро спокойное","Дедлайн, тревожно","Пробежка 3 км","Встретились с другом, долго гуляли","Обычный день","Ездили к родителям","Проснулся в 4 утра","Опять задержался на работе","Йога и ужин с друзьями"];
-  const now=new Date(); const out=[];
-  vals.forEach((v,i)=>{ const d=new Date(now); d.setDate(d.getDate()-(vals.length-i)); d.setHours(20,0,0,0);
-    out.push({id:"demo"+i, ts:d.getTime(), mood:v, tags:tags[i], note:notes[i], good:"", demo:true}); });
-  return out;
+function load(){
+  try{ const raw = localStorage.getItem(KEY); if(raw) S = Object.assign(empty(), JSON.parse(raw)); }catch(e){}
+  if(!Array.isArray(S.days)) S.days=[];
+  if(!S.programs) S.programs={};
+  // перенос старой версии с одной программой
+  if(S.program && S.program.done){ S.programs.calm7 = S.program; if(Object.keys(S.program.done).length) S.activeProgram="calm7"; delete S.program; }
+  // банка благодарностей: забираем «хорошее» из старых записей дневника
+  if(!Array.isArray(S.grat)){ S.grat = S.moods.filter(m=>m.good).map(m=>({id:uid(), text:m.good, ts:m.ts})); }
+  ["relief","badges","read"].forEach(k=>{ if(!Array.isArray(S[k])) S[k]=[]; });
 }
-function moodsAll(){ if(!S.moods.length && !S.demoCleared) return demoMoods(); return S.moods; }
-const isDemo = () => !S.moods.length && !S.demoCleared;
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ===== Утилиты ===== */
+const $ = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Math.random().toString(36).slice(2,10);
+const fmtDate = ts => new Date(ts).toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
+const fmtDT = ts => new Date(ts).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+const plural=(n,a,b,c)=>{const m10=n%10,m100=n%100; return m10===1&&m100!==11?a:(m10>=2&&m10<=4&&(m100<12||m100>14)?b:c);};
+function toast(t){ const el=$("#toast"); el.textContent=t; el.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>el.hidden=true,2600); }
+async function copy(text, el){
+  try{ await navigator.clipboard.writeText(text); toast("Скопировано"); }
+  catch(e){ if(el){ const r=document.createRange(); r.selectNodeContents(el); const s=getSelection(); s.removeAllRanges(); s.addRange(r);} toast("Выделено — скопируйте вручную"); }
+}
+load();
 
 /* ===== Серия дней ===== */
 const dayKey = (d=new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-function markDay(){ const k=dayKey(); if(!S.days.includes(k)){ S.days.push(k); save(); } }
+function markDay(){ const k=dayKey(); if(!S.days.includes(k)){ S.days.push(k); save(); } checkBadges(); }
 function streak(){
   const set=new Set(S.days); let n=0; const d=new Date();
   if(!set.has(dayKey(d))) d.setDate(d.getDate()-1);
   while(set.has(dayKey(d))){ n++; d.setDate(d.getDate()-1); }
   return n;
 }
-const plural=(n,a,b,c)=>{const m10=n%10,m100=n%100; return m10===1&&m100!==11?a:(m10>=2&&m10<=4&&(m100<12||m100>14)?b:c);};
-
-/* ===== Утилиты ===== */
-const $ = (s,el=document)=>el.querySelector(s);
-const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const uid = () => Math.random().toString(36).slice(2,10);
-const fmtDate = ts => new Date(ts).toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
-const fmtDT = ts => new Date(ts).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
-function toast(t){ const el=$("#toast"); el.textContent=t; el.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>el.hidden=true,2200); }
-async function copy(text, el){
-  try{ await navigator.clipboard.writeText(text); toast("Скопировано"); }
-  catch(e){ if(el){ const r=document.createRange(); r.selectNodeContents(el); const s=getSelection(); s.removeAllRanges(); s.addRange(r);} toast("Выделено — скопируйте вручную"); }
+function bestStreak(){
+  const ds=[...new Set(S.days)].sort(); let best=0, cur=0, prev=null;
+  ds.forEach(k=>{ const t=new Date(k+"T12:00:00").getTime(); cur = prev && Math.round((t-prev)/864e5)===1 ? cur+1 : 1; best=Math.max(best,cur); prev=t; });
+  return best;
 }
 
+/* ===== Примеры для пустого дневника ===== */
+function demoMoods(){
+  const tags=[["работа"],["сон","семья"],["работа","усталость"],["спорт"],["друзья"],["работа"],["отдых","семья"],["сон"],["работа","усталость"],["спорт","друзья"]];
+  const vals=[3,4,2,4,5,3,4,3,2,4];
+  const emo=[["Тревога/напряжение"],["Спокойствие/облегчение"],["Тревога/беспокойство"],["Радость/воодушевление"],["Радость/благодарность"],[],["Спокойствие/умиротворение"],["Грусть/бессилие"],["Злость/раздражение"],["Радость/азарт"]];
+  const notes=["Много встреч, к вечеру голова гудела","Выспался, утро спокойное","Дедлайн, тревожно","Пробежка 3 км","Встретились с другом, долго гуляли","Обычный день","Ездили к родителям","Проснулся в 4 утра","Опять задержался на работе","Йога и ужин с друзьями"];
+  const now=new Date(); const out=[];
+  vals.forEach((v,i)=>{ const d=new Date(now); d.setDate(d.getDate()-(vals.length-i)); d.setHours(20,0,0,0);
+    out.push({id:"demo"+i, ts:d.getTime(), mood:v, tags:tags[i], emotions:emo[i], note:notes[i], good:"", demo:true}); });
+  return out;
+}
+function moodsAll(){ if(!S.moods.length && !S.demoCleared) return demoMoods(); return S.moods; }
+const isDemo = () => !S.moods.length && !S.demoCleared;
+
+/* ===== Иконки и лица ===== */
 const MOODS=[{v:1,t:"Плохо"},{v:2,t:"Так себе"},{v:3,t:"Нормально"},{v:4,t:"Хорошо"},{v:5,t:"Отлично"}];
 const moodColor = v => `var(--m${v})`;
 function face(v){
@@ -65,79 +83,169 @@ const I = {
   book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/>',
   share:'<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/>',
   check:'<path d="m5 12 5 5 9-10"/>',
-  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  jar:'<path d="M8 3h8v3l2 3v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9l2-3z"/><path d="M8 6h8"/><circle cx="10" cy="15" r="1.4"/><circle cx="14" cy="13" r="1.4"/><circle cx="12.5" cy="17.5" r="1.4"/>',
+  body:'<circle cx="12" cy="4.5" r="2"/><path d="M12 7v7M8 9.5l4-1 4 1M9.5 21l2.5-7 2.5 7"/>',
+  emo:'<circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.4 6.4M12 12 3.5 9.2"/>',
+  star:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+  image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>'
 };
 const ico = (n,sz=20)=>`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 
 /* ===== Навигация ===== */
 const TABS=[["home","Главная"],["tests","Тесты"],["diary","Дневник"],["practices","Практики"],["about","Психолог"]];
-let route="home", sub=null;
-function go(r, s=null){ stopBreath(); route=r; sub=s; render(); window.scrollTo(0,0); }
+const TAB_OF={sos:"home", breath:"practices", ground:"practices", pmr:"practices", thoughts:"practices", programs:"practices", program:"practices", article:"practices", jar:"practices", badges:"practices"};
+let route="home", sub=null, prevRoute="home";
+function stopAll(){ stopBreath(); stopPmr(); }
+function go(r, s=null){
+  stopAll();
+  if(route==="tests" && T.id && T.i>=TESTS[T.id].q.length) T={id:null,i:0,a:[]};
+  if(r!==route && !["breath","ground","pmr"].includes(route)) prevRoute=route;
+  if(["breath","ground","pmr"].includes(r)){ RL=null; groundStep=-1; }
+  route=r; sub=s; render(); window.scrollTo(0,0);
+  try{ history.replaceState(null,"", r==="home"?location.pathname+location.search:"#"+r); }catch(e){}
+}
 function renderTabs(){
-  const main = ["sos","breath"].includes(route) ? "home" : ["thoughts","program","article"].includes(route) ? "practices" : route;
+  const main = TAB_OF[route] || route;
   $("#tabs").innerHTML = TABS.map(([k,t])=>`<button data-go="${k}" ${main===k?'aria-current="page"':''}>${ico(k,22)}<span>${t}</span></button>`).join("");
 }
 document.addEventListener("click", e=>{
-  const g=e.target.closest("[data-go]"); if(g){ go(g.dataset.go, g.dataset.sub||null); }
+  const g=e.target.closest("[data-go]"); if(g && !g.disabled){ e.preventDefault(); go(g.dataset.go, g.dataset.sub||null); }
 });
+const backBtn = (to, label) => `<button class="back" data-go="${to}">← ${label}</button>`;
+const backPrev = () => backBtn(prevRoute==="sos"?"sos":prevRoute==="home"?"home":"practices", prevRoute==="sos"?"Быстрая помощь":prevRoute==="home"?"Главная":"Практики");
 
 function header(){
   return `<div class="top"><div class="brand"><div class="logo">О</div><div><div style="font-weight:700">Опора</div><div class="small muted">с психологом ${esc(PSY.nameWith)}</div></div></div><button class="sos-pill" data-go="sos">SOS</button></div>`;
 }
 
+/* ===== Достижения ===== */
+const BADGES=[
+  {id:"mood1", t:"Первый шаг", d:"Первая запись в дневнике", ok:()=>S.moods.length>=1},
+  {id:"test1", t:"Знаю себя", d:"Пройден первый тест", ok:()=>S.tests.length>=1},
+  {id:"thought1", t:"Мысль ≠ факт", d:"Первая разобранная мысль", ok:()=>S.thoughts.length>=1},
+  {id:"relief3", t:"Минус напряжение", d:"3 упражнения с оценкой до и после", ok:()=>S.relief.length>=3},
+  {id:"streak3", t:"Три дня подряд", d:"Занимались 3 дня подряд", ok:()=>bestStreak()>=3},
+  {id:"streak7", t:"Неделя заботы", d:"Занимались 7 дней подряд", ok:()=>bestStreak()>=7},
+  {id:"jar10", t:"Полная горсть", d:"10 благодарностей в банке", ok:()=>S.grat.length>=10},
+  {id:"reader", t:"Читатель", d:"Прочитано 3 статьи", ok:()=>S.read.length>=3},
+  {id:"program", t:"До конца", d:"Пройдена целая программа", ok:()=>PROGRAMS.some(p=>progState(p).count===p.days.length)},
+  {id:"emo10", t:"Словарь чувств", d:"10 раз назвали эмоцию точно", ok:()=>S.moods.reduce((a,m)=>a+(m.emotions||[]).length,0)>=10}
+];
+function checkBadges(){
+  const fresh=BADGES.filter(b=>!S.badges.includes(b.id) && b.ok());
+  if(!fresh.length) return;
+  fresh.forEach(b=>S.badges.push(b.id)); save();
+  setTimeout(()=>toast("Новое достижение: «"+fresh[0].t+"»"), 900);
+}
+function badgesRow(){
+  const got=BADGES.filter(b=>S.badges.includes(b.id)).length;
+  return `<button class="card badges-card" data-go="badges">
+    <span class="row" style="justify-content:space-between;width:100%"><strong class="ct">Достижения</strong><span class="tag">${got} из ${BADGES.length}</span></span>
+    <span class="badge-strip">${BADGES.map(b=>`<span class="bdg ${S.badges.includes(b.id)?"on":""}" title="${esc(b.t)}">${ico("star",16)}</span>`).join("")}</span>
+  </button>`;
+}
+function vBadges(){
+  return `${backBtn("practices","Практики")}
+  <div class="stack-s"><h1>Достижения</h1><p class="muted">Маленькие отметки того, что вы заботитесь о себе.</p></div>
+  <div class="grid2">${BADGES.map(b=>{const on=S.badges.includes(b.id); return `<div class="tile badge ${on?"on":""}"><span class="ico">${ico(on?"star":"lock",18)}</span><strong>${esc(b.t)}</strong><span class="small muted">${esc(b.d)}</span></div>`;}).join("")}</div>`;
+}
+
+/* ===== Шкала напряжения «до и после» ===== */
+const EX_NAMES={breath:"Дыхание «квадрат»", ground:"Заземление 5‑4‑3‑2‑1", pmr:"Расслабление мышц"};
+let RL=null; // {ex, before, after, stage}
+function reliefBefore(ex){
+  if(RL && RL.ex===ex && RL.stage!=="before") return "";
+  const v = RL && RL.ex===ex ? RL.before : 6;
+  return `<div class="card relief">
+    <label class="field"><span>Насколько вы напряжены прямо сейчас? <strong id="rbV" class="rv">${v}</strong></span>
+    <input type="range" id="rbR" min="0" max="10" step="1" value="${v}" aria-label="Напряжение до упражнения, от 0 до 10"></label>
+    <div class="scale-lbl small muted"><span>0 · спокойно</span><span>10 · очень сильно</span></div>
+  </div>`;
+}
+function reliefAfter(ex){
+  if(!RL || RL.ex!==ex || RL.stage!=="after") return "";
+  return `<div class="card relief soft" id="relAfter">
+    <h3>Как вы теперь?</h3>
+    <label class="field"><span>Напряжение после упражнения: <strong id="raV" class="rv">${RL.after}</strong></span>
+    <input type="range" id="raR" min="0" max="10" step="1" value="${RL.after}" aria-label="Напряжение после упражнения, от 0 до 10"></label>
+    <div class="scale-lbl small muted"><span>0 · спокойно</span><span>10 · очень сильно</span></div>
+    <button class="btn" id="raSave">Сохранить результат</button>
+  </div>`;
+}
+function reliefDone(ex){
+  if(!RL || RL.ex!==ex || RL.stage!=="done") return "";
+  const d=RL.before-RL.after;
+  return `<div class="card soft">
+    <div class="relief-res"><span class="big-num">${RL.before}</span><span class="arrow">→</span><span class="big-num" style="color:var(--ok)">${RL.after}</span></div>
+    <p>${d>0?`Напряжение снизилось на ${d} ${plural(d,"пункт","пункта","пунктов")}. Отличная работа.`:d===0?"Напряжение не изменилось. Так бывает: попробуйте другое упражнение или повторите позже.":"Напряжение выросло. Если вам плохо, откройте быструю помощь или поговорите с близким."}</p>
+    <div class="row"><button class="btn quiet" id="rlAgain">Ещё раз</button>${d<=0?`<button class="btn quiet" data-go="sos">Быстрая помощь</button>`:""}</div>
+  </div>`;
+}
+function bindRelief(ex){
+  const r=$("#rbR"); if(r) r.oninput=()=>{ $("#rbV").textContent=r.value; RL={ex, before:+r.value, after:+r.value, stage:"before"}; };
+  const a=$("#raR"); if(a) a.oninput=()=>{ $("#raV").textContent=a.value; RL.after=+a.value; };
+  const s=$("#raSave"); if(s) s.onclick=()=>{ S.relief.push({ex, before:RL.before, after:RL.after, ts:Date.now()}); RL.stage="done"; save(); markDay(); render(); };
+  const ag=$("#rlAgain"); if(ag) ag.onclick=()=>{ RL={ex, before:RL.after, after:RL.after, stage:"before"}; render(); window.scrollTo(0,0); };
+}
+function reliefStart(ex){ const r=$("#rbR"); const v=r?+r.value:(RL&&RL.ex===ex?RL.before:6); RL={ex, before:v, after:Math.max(0,v-1), stage:"doing"}; }
+function reliefFinish(ex){ if(RL && RL.ex===ex && RL.stage==="doing"){ RL.stage="after"; render(); setTimeout(()=>{const el=$("#relAfter"); if(el) el.scrollIntoView({behavior:"smooth",block:"center"});},50); } }
+function reliefStats(){
+  if(S.relief.length<2) return "";
+  const avg = S.relief.reduce((a,r)=>a+(r.before-r.after),0)/S.relief.length;
+  if(avg<=0) return "";
+  return `<p class="small">Упражнения снижают ваше напряжение в среднем на <strong>${avg.toFixed(1).replace(".",",")}</strong> из 10. Выполнено с оценкой: ${S.relief.length}.</p>`;
+}
+
 /* ===== Главная ===== */
-let pickMood=null;
+function tipOfDay(){
+  const d=new Date(); const n=Math.floor((d - new Date(d.getFullYear(),0,0))/864e5);
+  return TIPS[n % TIPS.length];
+}
 function vHome(){
   const h=new Date().getHours();
   const hi = h<6?"Доброй ночи":h<12?"Доброе утро":h<18?"Добрый день":"Добрый вечер";
-  const today = S.moods.find(m=>new Date(m.ts).toDateString()===new Date().toDateString());
+  const today = S.moods.filter(m=>new Date(m.ts).toDateString()===new Date().toDateString()).pop();
   return `${header()}
   <div class="stack-s"><h1>${hi}</h1><p class="muted">Как вы себя чувствуете сейчас?</p></div>
   <div class="card">
     ${today?`<div class="row">${face(today.mood)}<div><strong>Сегодня: ${MOODS[today.mood-1].t.toLowerCase()}</strong><div class="small muted">Отметка в ${new Date(today.ts).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}. Можно добавить ещё одну.</div></div></div>`:""}
     <div class="moods">${MOODS.map(m=>`<button class="mood" data-qm="${m.v}">${face(m.v)}<span>${m.t}</span></button>`).join("")}</div>
-    <p class="small muted">Нажмите — и добавьте подробности в дневнике.</p>
+    <p class="small muted">Нажмите и добавьте подробности в дневнике.</p>
+  </div>
+  <div class="card tip">
+    <div class="row"><span class="ico">${ico("bulb",18)}</span><span class="label">Совет дня от ${esc(PSY.nameFrom||PSY.name)}</span></div>
+    <p>${esc(tipOfDay())}</p>
   </div>
   ${homeProgress()}
-  ${installCard()}
   <div class="card sos">
     <div class="stack-s"><h3>Накрыло прямо сейчас?</h3><p class="small">Дыхание, заземление и что делать при панической атаке. Займёт 2–5 минут.</p></div>
     <button class="btn sosb" data-go="sos">Открыть быструю помощь</button>
   </div>
   <div class="grid2">
-    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Дыхание «квадрат»</strong><span class="small muted">4 секунды на шаг</span></button>
-    <button class="tile" data-go="tests"><span class="ico">${ico("tests")}</span><strong>Проверить состояние</strong><span class="small muted">Тревога и настроение</span></button>
-    <button class="tile" data-go="thoughts" data-sub="new"><span class="ico">${ico("thoughts")}</span><strong>Разобрать мысль</strong><span class="small muted">Дневник КПТ</span></button>
+    <button class="tile" data-go="tests" data-sub="cbi"><span class="ico">${ico("tests")}</span><strong>Тест на выгорание</strong><span class="small muted">6 вопросов</span></button>
+    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Снять напряжение</strong><span class="small muted">Дыхание, 2 минуты</span></button>
+    <button class="tile" data-go="jar"><span class="ico">${ico("jar")}</span><strong>Банка благодарностей</strong><span class="small muted">${S.grat.length?`Уже ${S.grat.length}`:"Начните сегодня"}</span></button>
     <button class="tile" data-go="about" data-sub="book"><span class="ico">${ico("cal")}</span><strong>Записаться</strong><span class="small muted">к ${esc(PSY.nameTo)}</span></button>
   </div>
+  ${installCard()}
   <button class="btn quiet block" data-share>${ico("share",18)} Поделиться Опорой с другом</button>
   <p class="disclaimer">Приложение помогает между встречами и не заменяет консультацию специалиста. Ваши записи хранятся только на этом устройстве.</p>`;
 }
+function bindHome(){
+  $$("[data-qm]").forEach(b=>b.onclick=()=>{draft.mood=+b.dataset.qm; go("diary");});
+  const ib=$("#installBtn"); if(ib) ib.onclick=async()=>{ if(!installEvt) return; installEvt.prompt(); try{ await installEvt.userChoice; }catch(e){} installEvt=null; render(); };
+  const ix=$("#installHide"); if(ix) ix.onclick=()=>{ S.installHidden=true; save(); render(); };
+}
 
 /* ===== SOS ===== */
-let groundStep=0;
-const GROUND=[
-  ["5","вещей, которые вы видите","Назовите их про себя или вслух. Например: лампа, кружка, окно."],
-  ["4","вещи, которые можно потрогать","Ощутите их фактуру: ткань одежды, стол, телефон в руке."],
-  ["3","звука, которые вы слышите","Шум улицы, гул техники, собственное дыхание."],
-  ["2","запаха","Если запахов нет, вспомните два любимых."],
-  ["1","вкус","Отпейте воды или просто заметите вкус во рту."]
-];
 function vSOS(){
-  const g=GROUND[groundStep];
-  return `<button class="back" data-go="home">← Назад</button>
-  <div class="stack-s"><h1>Быстрая помощь</h1><p class="muted">Вы в безопасности. Делайте по одному шагу.</p></div>
-  <div class="card">
-    <div class="row" style="justify-content:space-between"><h3>Дыхание «квадрат»</h3><span class="tag">2 минуты</span></div>
-    <p class="small muted">Медленное дыхание с паузами снижает возбуждение нервной системы.</p>
-    <button class="btn" data-go="breath">Начать дыхание</button>
-  </div>
-  <div class="card">
-    <div class="row" style="justify-content:space-between"><h3>Заземление 5‑4‑3‑2‑1</h3><span class="tag">${groundStep+1} из 5</span></div>
-    <div class="progress"><i style="width:${(groundStep+1)*20}%"></i></div>
-    <div class="row" style="align-items:flex-end;gap:12px"><span class="big-num">${g[0]}</span><strong style="font-size:1.1rem;padding-bottom:4px">${g[1]}</strong></div>
-    <p class="small">${g[2]}</p>
-    <div class="row"><button class="btn quiet" id="gPrev" ${groundStep===0?"disabled":""}>Назад</button><button class="btn" id="gNext">${groundStep===4?"Начать заново":"Дальше"}</button></div>
+  return `${backBtn("home","Главная")}
+  <div class="stack-s"><h1>Быстрая помощь</h1><p class="muted">Вы в безопасности. Выберите одно упражнение и делайте по шагу.</p></div>
+  <div class="grid2">
+    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Дыхание «квадрат»</strong><span class="small muted">2 минуты</span></button>
+    <button class="tile" data-go="ground"><span class="ico">${ico("hand")}</span><strong>Заземление 5‑4‑3‑2‑1</strong><span class="small muted">Когда «уносит»</span></button>
   </div>
   <div class="card">
     <h3>Если это паническая атака</h3>
@@ -159,90 +267,225 @@ function vSOS(){
     </div>
   </div>`;
 }
-function bindSOS(){
-  $("#gNext").onclick=()=>{ groundStep = groundStep===4?0:groundStep+1; render(); };
-  $("#gPrev").onclick=()=>{ if(groundStep>0){groundStep--; render();} };
+
+/* ===== Заземление ===== */
+let groundStep=-1;
+const GROUND=[
+  ["5","вещей, которые вы видите","Назовите их про себя или вслух. Например: лампа, кружка, окно."],
+  ["4","вещи, которые можно потрогать","Ощутите их фактуру: ткань одежды, стол, телефон в руке."],
+  ["3","звука, которые вы слышите","Шум улицы, гул техники, собственное дыхание."],
+  ["2","запаха","Если запахов нет, вспомните два любимых."],
+  ["1","вкус","Отпейте воды или просто заметьте вкус во рту."]
+];
+function vGround(){
+  const doing = RL && RL.ex==="ground" && RL.stage==="doing";
+  const g=GROUND[Math.max(0,groundStep)];
+  return `${backPrev()}
+  <div class="stack-s"><h1>Заземление 5‑4‑3‑2‑1</h1><p class="muted">Возвращает внимание в настоящий момент через органы чувств. 2–3 минуты.</p></div>
+  ${reliefBefore("ground")}
+  ${doing?`<div class="card">
+    <div class="row" style="justify-content:space-between"><span class="label">Шаг ${groundStep+1} из 5</span></div>
+    <div class="progress"><i style="width:${(groundStep+1)*20}%"></i></div>
+    <div class="row" style="align-items:flex-end;gap:12px"><span class="big-num">${g[0]}</span><strong style="font-size:1.1rem;padding-bottom:4px">${g[1]}</strong></div>
+    <p class="small">${g[2]}</p>
+    <div class="row"><button class="btn quiet" id="gPrev" ${groundStep===0?"disabled":""}>Назад</button><button class="btn" id="gNext">${groundStep===4?"Готово":"Дальше"}</button></div>
+  </div>`:(RL&&RL.ex==="ground"&&RL.stage!=="before"?"":`<button class="btn block" id="gStart">Начать</button>`)}
+  ${reliefAfter("ground")}${reliefDone("ground")}`;
+}
+function bindGround(){
+  bindRelief("ground");
+  const st=$("#gStart"); if(st) st.onclick=()=>{ reliefStart("ground"); groundStep=0; render(); };
+  const n=$("#gNext"); if(n) n.onclick=()=>{ if(groundStep===4){ groundStep=-1; reliefFinish("ground"); } else { groundStep++; render(); } };
+  const p=$("#gPrev"); if(p) p.onclick=()=>{ if(groundStep>0){groundStep--; render();} };
 }
 
 /* ===== Дыхание ===== */
 const PHASES=[["Вдох",1],["Задержка",1],["Выдох",.55],["Задержка",.55]];
 let bTimer=null, bState={running:false, phase:0, sec:4, cycles:0};
 function vBreath(){
-  return `<button class="back" data-go="sos">← Быстрая помощь</button>
+  const showRun = !(RL && RL.ex==="breath" && (RL.stage==="after"||RL.stage==="done"));
+  return `${backPrev()}
   <div class="stack-s"><h1>Дыхание «квадрат»</h1><p class="muted">Вдох, пауза, выдох, пауза — по 4 секунды. Сделайте 4–6 кругов.</p></div>
-  <div class="card">
+  ${reliefBefore("breath")}
+  ${showRun?`<div class="card">
     <div class="breath-wrap"><div class="breath"><div class="ring"></div><div class="ball" id="ball"></div><div class="txt"><div class="phase" id="bPhase">Готовы?</div><div class="count" id="bCount">4</div></div></div></div>
-    <p class="small muted" style="text-align:center" id="bCycles">Кругов: 0</p>
+    <p class="small muted" style="text-align:center" id="bCycles">Кругов: 0 из 5</p>
     <button class="btn block" id="bBtn">Начать</button>
   </div>
-  <p class="disclaimer">Если кружится голова, вернитесь к обычному дыханию.</p>`;
+  <p class="disclaimer">Если кружится голова, вернитесь к обычному дыханию.</p>`:""}
+  ${reliefAfter("breath")}${reliefDone("breath")}`;
 }
-function bindBreath(){ $("#bBtn").onclick=()=> bState.running?stopBreath(true):startBreath(); }
+function bindBreath(){
+  bindRelief("breath");
+  const b=$("#bBtn"); if(b) b.onclick=()=> bState.running?finishBreath():startBreath();
+}
 function applyPhase(){
   const [t,s]=PHASES[bState.phase]; const b=$("#ball"); if(!b) return;
   $("#bPhase").textContent=t; $("#bCount").textContent=bState.sec; b.style.transform=`scale(${s})`;
 }
 function startBreath(){
-  bState={running:true, phase:0, sec:4, cycles:0}; $("#bBtn").textContent="Остановить"; applyPhase();
+  reliefStart("breath");
+  const rb=$(".relief"); if(rb) rb.remove();
+  bState={running:true, phase:0, sec:4, cycles:0}; $("#bBtn").textContent="Закончить"; applyPhase();
   bTimer=setInterval(()=>{
     bState.sec--;
-    if(bState.sec===0){ bState.phase=(bState.phase+1)%4; bState.sec=4; if(bState.phase===0){bState.cycles++; if(bState.cycles===2) markDay(); const c=$("#bCycles"); if(c) c.textContent="Кругов: "+bState.cycles;} }
+    if(bState.sec===0){ bState.phase=(bState.phase+1)%4; bState.sec=4;
+      if(bState.phase===0){ bState.cycles++; const c=$("#bCycles"); if(c) c.textContent=`Кругов: ${bState.cycles} из 5`; if(bState.cycles>=5){ finishBreath(); return; } } }
     applyPhase();
   },1000);
 }
-function stopBreath(ui){
-  clearInterval(bTimer); bTimer=null; const was=bState.running; bState.running=false;
-  if(ui && was){ $("#bBtn").textContent="Начать снова"; $("#bPhase").textContent="Отлично"; $("#ball").style.transform="scale(.55)"; }
+function stopBreath(){ clearInterval(bTimer); bTimer=null; bState.running=false; }
+function finishBreath(){
+  const cyc=bState.cycles; stopBreath();
+  if(cyc>=1){ reliefFinish("breath"); }
+  else { RL=null; render(); }
 }
 
+/* ===== Расслабление мышц по Джекобсону ===== */
+const PMR=[
+  {p:"hands", t:"Кисти и предплечья", tense:"Сожмите кулаки как можно сильнее"},
+  {p:"arms", t:"Плечи и руки", tense:"Согните руки в локтях и напрягите бицепсы"},
+  {p:"shoulders", t:"Плечи", tense:"Поднимите плечи к ушам"},
+  {p:"face", t:"Лицо", tense:"Зажмурьтесь и сморщите нос"},
+  {p:"neck", t:"Шея", tense:"Слегка прижмите подбородок к груди"},
+  {p:"belly", t:"Живот", tense:"Втяните и напрягите живот"},
+  {p:"legs", t:"Бёдра", tense:"Напрягите бёдра, прижав колени друг к другу"},
+  {p:"feet", t:"Стопы", tense:"Потяните носки на себя"}
+];
+const TENSE=5, RELAX=10;
+let pmrT=null, pmrS={i:0, phase:"tense", sec:TENSE, running:false};
+function figure(active){
+  const c=p=>`class="fp ${p===active?"on":""}"`;
+  return `<svg class="figure" viewBox="0 0 120 220" aria-hidden="true">
+    <circle ${c("face")} cx="60" cy="24" r="16"/>
+    <rect ${c("neck")} x="53" y="40" width="14" height="10" rx="4"/>
+    <rect ${c("shoulders")} x="28" y="50" width="64" height="14" rx="7"/>
+    <rect class="fp" x="40" y="64" width="40" height="34" rx="6"/>
+    <rect ${c("belly")} x="40" y="98" width="40" height="28" rx="6"/>
+    <rect ${c("arms")} x="16" y="58" width="12" height="44" rx="6"/><rect ${c("arms")} x="92" y="58" width="12" height="44" rx="6"/>
+    <rect ${c("hands")} x="14" y="104" width="14" height="34" rx="7"/><rect ${c("hands")} x="92" y="104" width="14" height="34" rx="7"/>
+    <rect ${c("legs")} x="40" y="128" width="18" height="50" rx="8"/><rect ${c("legs")} x="62" y="128" width="18" height="50" rx="8"/>
+    <rect ${c("feet")} x="36" y="180" width="22" height="26" rx="8"/><rect ${c("feet")} x="62" y="180" width="22" height="26" rx="8"/>
+  </svg>`;
+}
+function vPmr(){
+  const doing = pmrS.running;
+  const hideRun = RL && RL.ex==="pmr" && (RL.stage==="after"||RL.stage==="done");
+  const cur=PMR[pmrS.i];
+  return `${backPrev()}
+  <div class="stack-s"><h1>Расслабление мышц</h1><p class="muted">Метод Джекобсона: напрягаем группу мышц на ${TENSE} секунд, потом расслабляем на ${RELAX}. Около 3 минут. Сядьте удобно.</p></div>
+  ${reliefBefore("pmr")}
+  ${hideRun?"":`<div class="card pmr">
+    <div class="pmr-wrap">${figure(doing?cur.p:null)}
+      <div class="stack-s pmr-txt">
+        <span class="label">${doing?`Шаг ${pmrS.i+1} из ${PMR.length} · ${esc(cur.t)}`:"Готовы?"}</span>
+        <div class="phase" id="pPhase">${doing?(pmrS.phase==="tense"?"Напрягите":"Расслабьте"):"8 групп мышц"}</div>
+        <p class="small" id="pHint">${doing?(pmrS.phase==="tense"?esc(cur.tense):"Отпустите напряжение и почувствуйте разницу"):"Не напрягайте мышцы до боли. Если где‑то болит, пропустите эту группу."}</p>
+        <div class="count" id="pCount">${doing?pmrS.sec:""}</div>
+      </div>
+    </div>
+    <div class="progress"><i style="width:${doing?(pmrS.i/PMR.length*100):0}%"></i></div>
+    <button class="btn block" id="pmrBtn">${doing?"Закончить":"Начать"}</button>
+  </div>`}
+  ${reliefAfter("pmr")}${reliefDone("pmr")}`;
+}
+function bindPmr(){
+  bindRelief("pmr");
+  const b=$("#pmrBtn"); if(b) b.onclick=()=>{ if(pmrS.running){ const done=pmrS.i; stopPmr(); if(done>=2) reliefFinish("pmr"); else { RL=null; render(); } } else startPmr(); };
+}
+function startPmr(){
+  reliefStart("pmr");
+  pmrS={i:0, phase:"tense", sec:TENSE, running:true}; render();
+  pmrT=setInterval(()=>{
+    pmrS.sec--;
+    if(pmrS.sec<=0){
+      if(pmrS.phase==="tense"){ pmrS.phase="relax"; pmrS.sec=RELAX; }
+      else { pmrS.i++; if(pmrS.i>=PMR.length){ stopPmr(); reliefFinish("pmr"); return; } pmrS.phase="tense"; pmrS.sec=TENSE; }
+      render(); return;
+    }
+    const c=$("#pCount"); if(c) c.textContent=pmrS.sec;
+  },1000);
+}
+function stopPmr(){ clearInterval(pmrT); pmrT=null; pmrS.running=false; }
+
 /* ===== Тесты ===== */
-const OPTS=[["Ни разу",0],["Несколько дней",1],["Больше половины дней",2],["Почти каждый день",3]];
+const FREQ4=[["Ни разу",0],["Несколько дней",1],["Больше половины дней",2],["Почти каждый день",3]];
 const TESTS={
-  gad7:{title:"Тревожность", code:"GAD‑7", desc:"7 вопросов о тревоге за последние 2 недели. Около 2 минут.", max:21,
+  cbi:{title:"Выгорание", code:"CBI", desc:"6 вопросов о том, насколько вы истощены. Копенгагенский опросник выгорания. 1 минута.",
+    intro:"Как часто в последнее время:", max:100, unit:"из 100", score:"mean",
+    opts:[["Всегда",100],["Часто",75],["Иногда",50],["Редко",25],["Никогда или почти никогда",0]],
+    q:["Вы чувствуете усталость","Вы чувствуете физическое истощение","Вы чувствуете эмоциональное истощение","Вы думаете: «Я больше не могу»","Вы чувствуете себя вымотанным(-ой)","Вы чувствуете слабость и уязвимость к болезням"],
+    levels:[[49,"Низкий уровень выгорания","ok","Сил пока хватает. Продолжайте замечать, что вас наполняет, и берегите это: сон, отдых без телефона, приятные дела."],
+            [74,"Умеренное выгорание","m2","Ресурс заметно просел. Это сигнал остановиться и пересобрать нагрузку, пока усталость не стала хронической. Попробуйте программу «Выход из выгорания» и обсудите ситуацию со специалистом."],
+            [100,"Высокое выгорание","m1","Вы очень истощены. В таком состоянии трудно справляться самостоятельно, и это не ваша слабость. Рекомендую консультацию: вместе разберём, что забирает силы и как их вернуть."]],
+    program:"burnout7"},
+  gad7:{title:"Тревожность", code:"GAD‑7", desc:"7 вопросов о тревоге за последние 2 недели. Около 2 минут.",
+    intro:"Как часто за последние 2 недели вас беспокоило:", max:21, unit:"из 21", score:"sum", opts:FREQ4,
     q:["Нервозность, тревога или ощущение, что вы «на грани»","Неспособность остановить или контролировать беспокойство","Чрезмерное беспокойство о разных вещах","Трудно расслабиться","Такое беспокойство, что трудно усидеть на месте","Лёгкая раздражительность или вспыльчивость","Страх, что может случиться что‑то ужасное"],
-    levels:[[4,"Минимальная","ok","Уровень тревоги сейчас в пределах обычного. Продолжайте замечать своё состояние и пользоваться дыхательными практиками, когда нужно."],
-            [9,"Лёгкая","m3","Тревога заметна, но обычно с ней можно работать самостоятельно: дневник мыслей, режим сна, дыхание. Если состояние держится дольше месяца, стоит обсудить его со специалистом."],
-            [14,"Умеренная","m2","Тревога ощутимо влияет на жизнь. Это частый запрос, и с ним хорошо работает когнитивно‑поведенческая терапия. Рекомендую консультацию."],
-            [21,"Выраженная","m1","Тревога сильная и, скорее всего, сильно мешает. Пожалуйста, не оставайтесь с этим в одиночку: запишитесь на консультацию к психологу или к врачу‑психиатру."]]},
-  phq9:{title:"Настроение", code:"PHQ‑9", desc:"9 вопросов о настроении за последние 2 недели. Около 3 минут.", max:27,
+    levels:[[4,"Минимальная тревожность","ok","Уровень тревоги сейчас в пределах обычного. Продолжайте замечать своё состояние и пользоваться дыхательными практиками, когда нужно."],
+            [9,"Лёгкая тревожность","m3","Тревога заметна, но обычно с ней можно работать самостоятельно: дневник мыслей, режим сна, дыхание. Если состояние держится дольше месяца, стоит обсудить его со специалистом."],
+            [14,"Умеренная тревожность","m2","Тревога ощутимо влияет на жизнь. Это частый запрос, и с ним хорошо работает когнитивно‑поведенческая терапия. Рекомендую консультацию."],
+            [21,"Выраженная тревожность","m1","Тревога сильная и, скорее всего, сильно мешает. Пожалуйста, не оставайтесь с этим в одиночку: запишитесь на консультацию к психологу или к врачу‑психиатру."]],
+    program:"calm7"},
+  rse:{title:"Самооценка", code:"Розенберг", desc:"10 утверждений о том, как вы к себе относитесь. Шкала самооценки Розенберга. 2 минуты.",
+    intro:"Насколько вы согласны с утверждением:", max:30, unit:"из 30", score:"sum",
+    opts:[["Полностью согласен(-на)",3],["Согласен(-на)",2],["Не согласен(-на)",1],["Совсем не согласен(-на)",0]],
+    q:["В целом я доволен(-льна) собой",{t:"Иногда мне кажется, что я ни на что не годен(-дна)",r:1},"Я считаю, что у меня есть ряд хороших качеств","Я способен(-на) делать что‑то не хуже большинства людей",{t:"Мне кажется, мне особо нечем гордиться",r:1},{t:"Иногда я чувствую себя бесполезным(-ой)",r:1},"Я чувствую, что я ценный человек, по крайней мере не хуже других",{t:"Хотелось бы больше уважать себя",r:1},{t:"В целом я склонен(-нна) считать себя неудачником(-цей)",r:1},"Я отношусь к себе положительно"],
+    levels:[[14,"Сниженная самооценка","m1","Вы часто бываете к себе строги и недооцениваете себя. С этим можно работать: научиться замечать свои сильные стороны и говорить с собой бережнее. Это хорошая тема для консультаций."],
+            [25,"Нормальная самооценка","ok","В целом вы относитесь к себе ровно и принимаете себя. Бывают моменты сомнений, и это нормально."],
+            [30,"Высокая самооценка","ok","Вы уверены в себе и цените себя. Это хороший ресурс, на который можно опираться в трудные периоды."]]},
+  phq9:{title:"Настроение", code:"PHQ‑9", desc:"9 вопросов о настроении за последние 2 недели. Около 3 минут.",
+    intro:"Как часто за последние 2 недели вас беспокоило:", max:27, unit:"из 27", score:"sum", opts:FREQ4,
     q:["Мало интереса или удовольствия от привычных занятий","Подавленность, уныние или безнадёжность","Трудности с засыпанием, прерывистый сон или слишком много сна","Усталость или упадок сил","Плохой аппетит или переедание","Плохое мнение о себе: ощущение, что вы неудачник или подвели себя или близких","Трудно сосредоточиться, например на чтении или фильме","Вы двигаетесь или говорите так медленно, что это заметно окружающим. Или наоборот: суетливость, не можете усидеть на месте","Мысли, что лучше было бы умереть, или мысли причинить себе вред"],
-    levels:[[4,"Минимальная","ok","Признаков сниженного настроения почти нет. Поддерживайте то, что вам помогает: сон, движение, общение."],
-            [9,"Лёгкая","m3","Есть признаки сниженного настроения. Попробуйте каждый день отмечать настроение в дневнике и добавить приятные дела. Если через 2–3 недели не станет лучше, обсудим это на консультации."],
-            [14,"Умеренная","m2","Настроение заметно снижено. С этим стоит работать вместе со специалистом, самостоятельные усилия могут даваться тяжело. Рекомендую консультацию."],
-            [19,"Умеренно‑тяжёлая","m1","Состояние серьёзное. Рекомендую не откладывать консультацию психолога и показаться врачу‑психиатру или психотерапевту."],
-            [27,"Тяжёлая","m1","Состояние очень тяжёлое. Пожалуйста, обратитесь к врачу‑психиатру в ближайшее время. Вы не обязаны справляться с этим в одиночку."]]}
+    levels:[[4,"Минимальное снижение настроения","ok","Признаков сниженного настроения почти нет. Поддерживайте то, что вам помогает: сон, движение, общение."],
+            [9,"Лёгкое снижение настроения","m3","Есть признаки сниженного настроения. Попробуйте каждый день отмечать настроение в дневнике и добавить приятные дела. Если через 2–3 недели не станет лучше, обсудим это на консультации."],
+            [14,"Умеренное снижение настроения","m2","Настроение заметно снижено. С этим стоит работать вместе со специалистом, самостоятельные усилия могут даваться тяжело. Рекомендую консультацию."],
+            [19,"Умеренно‑тяжёлое снижение настроения","m1","Состояние серьёзное. Рекомендую не откладывать консультацию психолога и показаться врачу‑психиатру или психотерапевту."],
+            [27,"Тяжёлое снижение настроения","m1","Состояние очень тяжёлое. Пожалуйста, обратитесь к врачу‑психиатру в ближайшее время. Вы не обязаны справляться с этим в одиночку."]],
+    risk:8}
 };
-let T={id:null, i:0, a:[]};
-function vTests(){
-  if(T.id && T.i < TESTS[T.id].q.length) return vQuestion();
-  if(T.id) return vResult();
-  const hist=S.tests.slice().reverse().slice(0,6);
-  return `<div class="stack-s"><h1>Проверить состояние</h1><p class="muted">Короткие опросники, которыми пользуются психологи по всему миру. Результат не диагноз, а повод внимательнее посмотреть на себя.</p></div>
-  ${Object.entries(TESTS).map(([k,t])=>`<div class="card"><div class="row" style="justify-content:space-between"><h3>${t.title}</h3><span class="tag">${t.code}</span></div><p class="small muted">${t.desc}</p><button class="btn" data-test="${k}">Пройти тест</button></div>`).join("")}
-  ${hist.length?`<div class="card"><h3>Ваши результаты</h3>${hist.map(r=>{const t=TESTS[r.id]; const l=level(r.id,r.score); return `<div class="entry"><span class="dot" style="background:var(--${l[2]==='ok'?'ok':l[2]})"></span><div class="body"><strong>${t.title}: ${r.score} из ${t.max}</strong><span class="small muted">${l[1]} · ${fmtDate(r.ts)}</span></div></div>`}).join("")}</div>`:""}`;
+const qText = q => typeof q==="string"?q:q.t;
+function scoreOf(id, ans){
+  const t=TESTS[id]; const maxOpt=Math.max(...t.opts.map(o=>o[1]));
+  const vals=ans.map((v,i)=> (typeof t.q[i]==="object" && t.q[i].r) ? maxOpt-v : v);
+  const sum=vals.reduce((a,b)=>a+b,0);
+  return t.score==="mean" ? Math.round(sum/vals.length) : sum;
 }
 const level=(id,score)=>TESTS[id].levels.find(l=>score<=l[0]);
+const lvlColor = l => l[2]==="ok"?"var(--ok)":`var(--${l[2]})`;
+let T={id:null, i:0, a:[]};
+function vTests(){
+  if(sub && TESTS[sub]){ T={id:sub,i:0,a:[]}; sub=null; }
+  if(T.id && T.i < TESTS[T.id].q.length) return vQuestion();
+  if(T.id) return vResult();
+  const hist=S.tests.slice().reverse().slice(0,8);
+  return `<div class="stack-s"><h1>Проверить состояние</h1><p class="muted">Короткие опросники, которыми пользуются психологи. Результат не диагноз, а повод внимательнее посмотреть на себя.</p></div>
+  ${Object.entries(TESTS).map(([k,t])=>{ const last=S.tests.filter(r=>r.id===k).pop(); return `<div class="card"><div class="row" style="justify-content:space-between"><h3>${t.title}</h3><span class="tag">${esc(t.code)}</span></div><p class="small muted">${t.desc}</p>${last?`<p class="small">Последний результат: <strong style="color:${lvlColor(level(k,last.score))}">${level(k,last.score)[1].toLowerCase()}</strong>, ${fmtDate(last.ts)}</p>`:""}<button class="btn" data-test="${k}">${last?"Пройти ещё раз":"Пройти тест"}</button></div>`;}).join("")}
+  ${hist.length?`<div class="card"><h3>История</h3>${hist.map(r=>{const t=TESTS[r.id]; if(!t) return ""; const l=level(r.id,r.score); return `<div class="entry"><span class="dot" style="background:${lvlColor(l)}"></span><div class="body"><strong>${t.title}: ${r.score} ${t.unit}</strong><span class="small muted">${l[1]} · ${fmtDate(r.ts)}</span></div></div>`}).join("")}</div>`:""}`;
+}
 function vQuestion(){
   const t=TESTS[T.id], n=t.q.length;
   return `<button class="back" id="tBack">← ${T.i?"Предыдущий вопрос":"К тестам"}</button>
   <div class="stack-s"><span class="label">${t.title} · вопрос ${T.i+1} из ${n}</span><div class="progress"><i style="width:${(T.i/n)*100}%"></i></div></div>
   <div class="card">
-    <p class="small muted">Как часто за последние 2 недели вас беспокоило:</p>
-    <h2>${t.q[T.i]}</h2>
-    <div class="opts">${OPTS.map(([o,v])=>`<button class="opt" data-ans="${v}"><span>${o}</span><b>${v}</b></button>`).join("")}</div>
+    <p class="small muted">${t.intro}</p>
+    <h2>${esc(qText(t.q[T.i]))}</h2>
+    <div class="opts">${t.opts.map(([o,v])=>`<button class="opt ${T.a[T.i]===v?"sel":""}" data-ans="${v}"><span>${esc(o)}</span></button>`).join("")}</div>
   </div>`;
 }
 function vResult(){
-  const t=TESTS[T.id]; const score=T.a.reduce((x,y)=>x+y,0); const l=level(T.id,score);
-  const risk = T.id==="phq9" && T.a[8]>0;
-  const col = l[2]==="ok"?"var(--ok)":`var(--${l[2]})`;
-  const segs = t.levels.map((lv,i)=>{const prev=i?t.levels[i-1][0]:-1; return `<span style="flex:${lv[0]-prev};background:${lv[2]==='ok'?'var(--ok)':'var(--'+lv[2]+')'};opacity:${lv===l?1:.3}"></span>`}).join("");
+  const t=TESTS[T.id]; const score=scoreOf(T.id,T.a); const l=level(T.id,score);
+  const risk = t.risk!=null && T.a[t.risk]>0;
+  const segs = t.levels.map((lv,i)=>{const prev=i?t.levels[i-1][0]:-1; return `<span style="flex:${lv[0]-prev};background:${lvlColor(lv)};opacity:${lv===l?1:.3}"></span>`}).join("");
+  const prev=S.tests.filter(r=>r.id===T.id); const before = prev.length>=2 ? prev[prev.length-2] : null;
+  const prog = t.program ? PROGRAMS.find(p=>p.id===t.program) : null;
   return `<button class="back" id="tDone">← К тестам</button>
   <div class="card">
-    <span class="label">${t.title} · ${t.code}</span>
-    <div class="row" style="align-items:flex-end;gap:10px"><span class="big-num">${score}</span><span class="muted" style="padding-bottom:6px">из ${t.max}</span></div>
+    <span class="label">${t.title} · ${esc(t.code)}</span>
+    <div class="row" style="align-items:flex-end;gap:10px"><span class="big-num">${score}</span><span class="muted" style="padding-bottom:6px">${t.unit}</span></div>
     <div class="scale" aria-hidden="true">${segs}</div>
-    <div><span class="result-sev" style="background:var(--surface-2);color:${col}">${l[1]} выраженность</span></div>
+    <div><span class="result-sev" style="background:var(--surface-2);color:${lvlColor(l)}">${l[1]}</span></div>
+    ${before?`<p class="small muted">В прошлый раз (${fmtDate(before.ts)}): ${before.score} ${t.unit}</p>`:""}
   </div>
   ${risk?`<div class="card sos"><h3>Вы отметили мысли о смерти или вреде себе</h3><p class="small">Это важно. Пожалуйста, поговорите с кем‑то уже сегодня: с близким человеком, специалистом или по телефону экстренной помощи 112.</p><button class="btn sosb" data-go="sos">Где получить помощь</button></div>`:""}
   <div class="card soft">
@@ -250,22 +493,114 @@ function vResult(){
     <p>${l[3]}</p>
     <button class="btn" data-go="about" data-sub="book">Обсудить результат с ${esc(PSY.nameWith)}</button>
   </div>
+  ${prog && l[2]!=="ok"?`<div class="card"><span class="label">Что попробовать самостоятельно</span><h3>Программа «${esc(prog.title)}»</h3><p class="small muted">${esc(prog.subtitle)}</p><button class="btn ghost" data-go="programs" data-sub="${prog.id}">Открыть программу</button></div>`:""}
+  ${risk?"":`<div class="card story-cta">
+    <div class="row">${ico("image",20)}<strong>Поделиться результатом</strong></div>
+    <p class="small muted">Красивая карточка для сторис. Без баллов и личных данных, только общий итог и ссылка на тест.</p>
+    <button class="btn quiet" id="storyBtn">Создать карточку</button>
+  </div>`}
   <p class="disclaimer">Опросник помогает оценить состояние, но не ставит диагноз. Диагноз может поставить только врач.</p>`;
 }
 function bindTests(){
-  document.querySelectorAll("[data-test]").forEach(b=>b.onclick=()=>{T={id:b.dataset.test,i:0,a:[]}; render(); scrollTo(0,0);});
-  document.querySelectorAll("[data-ans]").forEach(b=>b.onclick=()=>{
+  $$("[data-test]").forEach(b=>b.onclick=()=>{T={id:b.dataset.test,i:0,a:[]}; render(); scrollTo(0,0);});
+  $$("[data-ans]").forEach(b=>b.onclick=()=>{
     T.a[T.i]=+b.dataset.ans; T.i++;
-    if(T.i===TESTS[T.id].q.length){ S.tests.push({id:T.id, score:T.a.reduce((x,y)=>x+y,0), ts:Date.now()}); save(); markDay(); }
+    if(T.i===TESTS[T.id].q.length){ S.tests.push({id:T.id, score:scoreOf(T.id,T.a), ts:Date.now()}); save(); markDay(); }
     render(); scrollTo(0,0);
   });
   const bk=$("#tBack"); if(bk) bk.onclick=()=>{ if(T.i>0){T.i--;} else T={id:null,i:0,a:[]}; render(); };
   const dn=$("#tDone"); if(dn) dn.onclick=()=>{T={id:null,i:0,a:[]}; render();};
+  const sb=$("#storyBtn"); if(sb) sb.onclick=()=>{ const t=TESTS[T.id]; const l=level(T.id,scoreOf(T.id,T.a)); storyCard(t, l); };
+}
+
+/* ===== Карточка для сторис ===== */
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function wrapText(ctx, text, maxW){
+  const words=text.split(" "); const lines=[]; let line="";
+  words.forEach(w=>{ const test=line?line+" "+w:w; if(ctx.measureText(test).width>maxW && line){ lines.push(line); line=w; } else line=test; });
+  if(line) lines.push(line); return lines;
+}
+async function storyCard(t, l){
+  try{ await document.fonts.ready; }catch(e){}
+  const W=1080, H=1920, c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d");
+  const colors={ok:"#2E8A63", m1:"#C2453B", m2:"#D9823B", m3:"#B9A43A"};
+  const lc=colors[l[2]]||"#4351C2";
+  const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,"#4351C2"); g.addColorStop(1,"#1E2560");
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  // мягкие круги
+  x.globalAlpha=.12; x.fillStyle="#fff"; [[880,260,260],[140,1500,320],[980,1650,180]].forEach(([a,b,r])=>{x.beginPath();x.arc(a,b,r,0,Math.PI*2);x.fill();}); x.globalAlpha=1;
+  const disp='"Literata", Georgia, serif', body='"Golos Text", system-ui, sans-serif';
+  // лого
+  x.fillStyle="#fff"; x.beginPath(); x.roundRect ? x.roundRect(90,140,110,110,30) : x.rect(90,140,110,110); x.fill();
+  x.fillStyle="#4351C2"; x.font=`600 72px ${disp}`; x.textAlign="center"; x.textBaseline="middle"; x.fillText("О",145,198);
+  x.textAlign="left"; x.textBaseline="alphabetic"; x.fillStyle="#fff"; x.font=`700 54px ${body}`; x.fillText("Опора",230,190);
+  x.globalAlpha=.75; x.font=`400 34px ${body}`; x.fillText(`с психологом ${PSY.nameWith}`,230,238); x.globalAlpha=1;
+  // карточка
+  const cx=90, cy=520, cw=W-180, ch=820;
+  x.fillStyle="#fff"; x.beginPath(); x.roundRect ? x.roundRect(cx,cy,cw,ch,48) : x.rect(cx,cy,cw,ch); x.fill();
+  x.fillStyle="#5B6478"; x.font=`600 34px ${body}`; x.fillText(`Я ПРОШЁЛ(-ЛА) ТЕСТ «${t.title.toUpperCase()}»`, cx+70, cy+110);
+  x.fillStyle="#1A2233"; x.font=`600 92px ${disp}`;
+  const lines=wrapText(x, l[1], cw-140); lines.forEach((ln,i)=>x.fillText(ln, cx+70, cy+250+i*110));
+  // шкала
+  const sy=cy+250+lines.length*110+30, sw=cw-140; let sx=cx+70;
+  const total=t.levels[t.levels.length-1][0]+1;
+  t.levels.forEach((lv,i)=>{ const prev=i?t.levels[i-1][0]+1:0; const w=(lv[0]+1-prev)/total*sw-8;
+    x.globalAlpha= lv===l?1:.25; x.fillStyle=colors[lv[2]]||"#4351C2"; x.beginPath(); x.roundRect ? x.roundRect(sx,sy,w,26,13) : x.rect(sx,sy,w,26); x.fill(); sx+=w+8; });
+  x.globalAlpha=1;
+  x.fillStyle="#5B6478"; x.font=`400 40px ${body}`;
+  wrapText(x, "Тест занимает пару минут. Проверьте себя тоже.", cw-140).forEach((ln,i)=>x.fillText(ln, cx+70, sy+130+i*54));
+  // ссылка
+  const url=(PSY.siteUrl||location.href).replace(/^https?:\/\//,"").replace(/\/$/,"");
+  x.fillStyle="#fff"; x.font=`600 46px ${body}`; x.textAlign="center";
+  x.fillText("Пройти тест бесплатно:", W/2, 1560);
+  x.font=`700 44px ${body}`; x.fillText(url, W/2, 1630);
+  x.globalAlpha=.7; x.font=`400 32px ${body}`; x.fillText("Без регистрации · данные остаются у вас", W/2, 1700); x.globalAlpha=1;
+  c.toBlob(blob=>showStory(blob), "image/png");
+}
+function showStory(blob){
+  const url=URL.createObjectURL(blob);
+  const file=new File([blob],"opora-test.png",{type:"image/png"});
+  const canShare = navigator.canShare && navigator.canShare({files:[file]});
+  const m=document.createElement("div"); m.className="modal"; m.setAttribute("role","dialog"); m.setAttribute("aria-label","Карточка для сторис");
+  m.innerHTML=`<div class="modal-in"><img src="${url}" alt="Карточка с результатом теста"><div class="row">
+    ${canShare?`<button class="btn" id="stShare">${ico("share",18)} Поделиться</button>`:""}
+    <a class="btn ${canShare?"quiet":""}" href="${url}" download="opora-test.png">Сохранить картинку</a>
+    <button class="btn quiet" id="stClose">Закрыть</button></div>
+    <p class="small muted">На телефоне можно также нажать на картинку и удерживать, чтобы сохранить.</p></div>`;
+  document.body.appendChild(m);
+  const close=()=>{ m.remove(); URL.revokeObjectURL(url); };
+  $("#stClose",m).onclick=close; m.onclick=e=>{ if(e.target===m) close(); };
+  const sh=$("#stShare",m); if(sh) sh.onclick=async()=>{ try{ await navigator.share({files:[file], text:"Проверьте себя: "+(PSY.siteUrl||"")}); }catch(e){} };
+}
+
+/* ===== Колесо эмоций ===== */
+const EMO=[
+  {k:"Радость", c:"#E3A93B", n:["воодушевление","гордость","благодарность","нежность","азарт"]},
+  {k:"Спокойствие", c:"#4FA37C", n:["умиротворение","облегчение","уверенность","безопасность","расслабленность"]},
+  {k:"Грусть", c:"#5B7FC7", n:["печаль","одиночество","разочарование","тоска","бессилие"]},
+  {k:"Тревога", c:"#8C6BC2", n:["беспокойство","страх","растерянность","напряжение","паника"]},
+  {k:"Злость", c:"#D0583F", n:["раздражение","обида","возмущение","зависть","ярость"]},
+  {k:"Стыд и вина", c:"#9A7B62", n:["стыд","вина","неловкость","сожаление","неуверенность"]}
+];
+const emoColor = name => (EMO.find(e=>e.k===name.split("/")[0])||{c:"#888"}).c;
+let emoOpen=null;
+function wheelSVG(){
+  const R=114, r=44, N=EMO.length;
+  const pt=(rad,a)=>[120+rad*Math.cos(a), 120+rad*Math.sin(a)];
+  return `<svg class="wheel" viewBox="0 0 240 240" role="group" aria-label="Колесо эмоций">${EMO.map((e,i)=>{
+    const a0=-Math.PI/2+i*2*Math.PI/N+0.02, a1=-Math.PI/2+(i+1)*2*Math.PI/N-0.02;
+    const [x0,y0]=pt(R,a0),[x1,y1]=pt(R,a1),[x2,y2]=pt(r,a1),[x3,y3]=pt(r,a0);
+    const am=(a0+a1)/2, [tx,ty]=pt((R+r)/2,am);
+    const label = e.k==="Стыд и вина" ? `<tspan x="${tx.toFixed(1)}" dy="-5">Стыд</tspan><tspan x="${tx.toFixed(1)}" dy="12">и вина</tspan>` : e.k;
+    return `<g class="seg ${emoOpen===i?"on":""}" data-emo="${i}" tabindex="0" role="button" aria-label="${e.k}">
+      <path d="M${x0.toFixed(1)} ${y0.toFixed(1)} A${R} ${R} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)} A${r} ${r} 0 0 0 ${x3.toFixed(1)} ${y3.toFixed(1)}Z" fill="${e.c}"/>
+      <text x="${tx.toFixed(1)}" y="${(ty+4).toFixed(1)}" text-anchor="middle">${label}</text></g>`;}).join("")}
+    <circle cx="120" cy="120" r="${r-6}" class="hub"/><text x="120" y="117" text-anchor="middle" class="hubt">Что я</text><text x="120" y="131" text-anchor="middle" class="hubt">чувствую?</text></svg>`;
 }
 
 /* ===== Дневник настроения ===== */
-const TAGS=["работа","семья","отношения","друзья","сон","усталость","спорт","отдых","здоровье","учёба"];
-let draft={mood:null,tags:[],note:"",good:""};
+const TAGS=["работа","семья","отношения","друзья","сон","усталость","деньги","спорт","отдых","здоровье","учёба"];
+let draft={mood:null,tags:[],emotions:[],note:"",good:""};
 function chartSVG(list){
   const days=14, W=320, H=120, pl=22, pr=18, pt=10, pb=22;
   const now=new Date(); now.setHours(0,0,0,0);
@@ -282,28 +617,42 @@ function chartSVG(list){
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Настроение за 14 дней">${grid}<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>${dots}${labels}</svg>`;
 }
 function insights(list){
-  if(list.length<4) return "";
-  const avg=list.reduce((a,b)=>a+b.mood,0)/list.length; const by={};
-  list.forEach(m=>m.tags.forEach(t=>{(by[t]=by[t]||[]).push(m.mood);}));
-  const rows=Object.entries(by).filter(([,v])=>v.length>=2).map(([t,v])=>[t,v.reduce((a,b)=>a+b,0)/v.length]);
-  if(!rows.length) return "";
-  rows.sort((a,b)=>b[1]-a[1]); const best=rows[0], worst=rows[rows.length-1];
   const lines=[];
-  if(best[1]-avg>=0.3) lines.push(`В дни с тегом «${best[0]}» настроение выше среднего: ${best[1].toFixed(1)} против ${avg.toFixed(1)}.`);
-  if(avg-worst[1]>=0.3) lines.push(`В дни с тегом «${worst[0]}» настроение ниже: ${worst[1].toFixed(1)}. Можно обсудить это на сессии.`);
+  if(list.length>=4){
+    const avg=list.reduce((a,b)=>a+b.mood,0)/list.length; const by={};
+    list.forEach(m=>m.tags.forEach(t=>{(by[t]=by[t]||[]).push(m.mood);}));
+    const rows=Object.entries(by).filter(([,v])=>v.length>=2).map(([t,v])=>[t,v.reduce((a,b)=>a+b,0)/v.length]);
+    if(rows.length){ rows.sort((a,b)=>b[1]-a[1]); const best=rows[0], worst=rows[rows.length-1];
+      if(best[1]-avg>=0.3) lines.push(`В дни с тегом «${best[0]}» настроение выше среднего: ${best[1].toFixed(1)} против ${avg.toFixed(1)}.`);
+      if(avg-worst[1]>=0.3) lines.push(`В дни с тегом «${worst[0]}» настроение ниже: ${worst[1].toFixed(1)}. Можно обсудить это на сессии.`); }
+  }
+  const cnt={}; list.forEach(m=>(m.emotions||[]).forEach(e=>{const k=e.split("/")[0]; cnt[k]=(cnt[k]||0)+1;}));
+  const total=Object.values(cnt).reduce((a,b)=>a+b,0);
+  let bars="";
+  if(total>=3){
+    const rows=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+    bars=`<div class="emo-bars">${rows.map(([k,v])=>`<div class="eb"><span class="small">${k}</span><span class="bar"><i style="width:${v/rows[0][1]*100}%;background:${emoColor(k)}"></i></span><span class="small muted">${v}</span></div>`).join("")}</div>`;
+    lines.push(`Чаще всего вы отмечали: ${rows[0][0].toLowerCase()}.`);
+  }
   if(!lines.length) return "";
-  return `<div class="card soft"><h3>Что видно по записям</h3>${lines.map(l=>`<p class="small">${l}</p>`).join("")}</div>`;
+  return `<div class="card soft"><h3>Что видно по записям</h3>${lines.map(l=>`<p class="small">${l}</p>`).join("")}${bars}</div>`;
 }
 function vDiary(){
   const list=moodsAll().slice().sort((a,b)=>b.ts-a.ts);
   const avg = list.length? (list.slice(0,7).reduce((a,b)=>a+b.mood,0)/Math.min(7,list.length)).toFixed(1):"—";
-  return `<div class="stack-s"><h1>Дневник настроения</h1><p class="muted">10 секунд в день, чтобы увидеть, что на вас влияет.</p></div>
+  const open = emoOpen!=null ? EMO[emoOpen] : null;
+  return `<div class="stack-s"><h1>Дневник настроения</h1><p class="muted">Минута в день, чтобы увидеть, что на вас влияет.</p></div>
   <div class="card" id="newMood">
     <h3>Как вы сейчас?</h3>
     <div class="moods">${MOODS.map(m=>`<button class="mood" data-mood="${m.v}" aria-pressed="${draft.mood===m.v}">${face(m.v)}<span>${m.t}</span></button>`).join("")}</div>
+    <div class="stack-s" id="emoBlock"><span class="small muted">Назовите эмоцию точнее: нажмите на сектор колеса</span>
+      <div class="wheel-wrap">${wheelSVG()}</div>
+      ${open?`<div class="chips">${open.n.map(n=>{const v=open.k+"/"+n; return `<button class="chip" data-emoval="${esc(v)}" aria-pressed="${draft.emotions.includes(v)}" style="--ec:${open.c}">${n}</button>`;}).join("")}</div>`:""}
+      ${draft.emotions.length?`<div class="row">${draft.emotions.map(e=>`<span class="etag" style="--ec:${emoColor(e)}">${esc(e.split("/")[1])}</span>`).join("")}</div>`:""}
+    </div>
     <div class="stack-s"><span class="small muted">С чем это связано?</span><div class="chips">${TAGS.map(t=>`<button class="chip" data-tag="${t}" aria-pressed="${draft.tags.includes(t)}">${t}</button>`).join("")}</div></div>
     <label class="field"><span>Пара слов о дне</span><textarea id="mNote" placeholder="Что происходило, что чувствовали">${esc(draft.note)}</textarea></label>
-    <label class="field"><span>Что сегодня было хорошего?</span><input type="text" id="mGood" placeholder="Даже мелочь: вкусный кофе, звонок другу" value="${esc(draft.good)}"></label>
+    <label class="field"><span>Что сегодня было хорошего?</span><input type="text" id="mGood" placeholder="Попадёт в банку благодарностей" value="${esc(draft.good)}"></label>
     <button class="btn" id="mSave" ${draft.mood?"":"disabled"}>Сохранить запись</button>
   </div>
   <div class="card">
@@ -313,16 +662,70 @@ function vDiary(){
   </div>
   ${insights(list)}
   <div class="card"><h3>Записи</h3>
-    ${list.length?list.slice(0,20).map(m=>`<div class="entry"><span class="dot" style="background:${moodColor(m.mood)}"></span><div class="body"><div class="row" style="justify-content:space-between"><strong>${MOODS[m.mood-1].t}</strong><span class="small muted">${fmtDT(m.ts)}</span></div>${m.note?`<p class="small">${esc(m.note)}</p>`:""}${m.good?`<p class="small muted">Хорошее: ${esc(m.good)}</p>`:""}${m.tags.length?`<div class="row">${m.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}</div></div>`).join(""):`<p class="small muted">Записей пока нет. Отметьте настроение выше.</p>`}
+    ${list.length?list.slice(0,20).map(m=>`<div class="entry"><span class="dot" style="background:${moodColor(m.mood)}"></span><div class="body"><div class="row" style="justify-content:space-between"><strong>${MOODS[m.mood-1].t}</strong><span class="small muted">${fmtDT(m.ts)}</span></div>${(m.emotions||[]).length?`<div class="row">${m.emotions.map(e=>`<span class="etag" style="--ec:${emoColor(e)}">${esc(e.split("/")[1])}</span>`).join("")}</div>`:""}${m.note?`<p class="small">${esc(m.note)}</p>`:""}${m.good?`<p class="small muted">Хорошее: ${esc(m.good)}</p>`:""}${m.tags.length?`<div class="row">${m.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}</div></div>`).join(""):`<p class="small muted">Записей пока нет. Отметьте настроение выше.</p>`}
   </div>`;
 }
 function bindDiary(){
-  document.querySelectorAll("[data-mood]").forEach(b=>b.onclick=()=>{draft.mood=+b.dataset.mood; keepDraft(); render();});
-  document.querySelectorAll("[data-tag]").forEach(b=>b.onclick=()=>{const t=b.dataset.tag; draft.tags=draft.tags.includes(t)?draft.tags.filter(x=>x!==t):[...draft.tags,t]; keepDraft(); render();});
-  $("#mSave").onclick=()=>{ keepDraft(); S.moods.push({id:uid(),ts:Date.now(),mood:draft.mood,tags:draft.tags,note:draft.note.trim(),good:draft.good.trim()}); S.demoCleared=true; save(); markDay(); draft={mood:null,tags:[],note:"",good:""}; toast("Запись сохранена"); render(); };
+  $$("[data-mood]").forEach(b=>b.onclick=()=>{draft.mood=+b.dataset.mood; keepDraft(); render();});
+  $$("[data-tag]").forEach(b=>b.onclick=()=>{const t=b.dataset.tag; draft.tags=draft.tags.includes(t)?draft.tags.filter(x=>x!==t):[...draft.tags,t]; keepDraft(); render();});
+  $$("[data-emo]").forEach(g=>{ const f=()=>{ const i=+g.dataset.emo; emoOpen = emoOpen===i?null:i; keepDraft(); const y=scrollY; render(); scrollTo(0,y); };
+    g.onclick=f; g.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); f(); } }; });
+  $$("[data-emoval]").forEach(b=>b.onclick=()=>{ const v=b.dataset.emoval; keepDraft();
+    draft.emotions = draft.emotions.includes(v) ? draft.emotions.filter(x=>x!==v) : [...draft.emotions, v].slice(-3);
+    const y=scrollY; render(); scrollTo(0,y); });
+  $("#mSave").onclick=()=>{ keepDraft();
+    const good=draft.good.trim();
+    S.moods.push({id:uid(),ts:Date.now(),mood:draft.mood,tags:draft.tags,emotions:draft.emotions,note:draft.note.trim(),good});
+    if(good) S.grat.push({id:uid(), text:good, ts:Date.now(), fresh:true});
+    S.demoCleared=true; save(); markDay(); draft={mood:null,tags:[],emotions:[],note:"",good:""}; emoOpen=null;
+    toast(good?"Запись сохранена, хорошее — в банке":"Запись сохранена"); render(); };
   const c=$("#clrDemo"); if(c) c.onclick=()=>{S.demoCleared=true; save(); render();};
+  if(sub==="emo"){ sub=null; setTimeout(()=>{const e=$("#emoBlock"); if(e) e.scrollIntoView({block:"center"});},30); }
 }
 function keepDraft(){ const n=$("#mNote"), g=$("#mGood"); if(n) draft.note=n.value; if(g) draft.good=g.value; }
+
+/* ===== Банка благодарностей ===== */
+const JAR_COLORS=["#E3A93B","#4FA37C","#5B7FC7","#D0583F","#8C6BC2","#E07AA0","#3BA6B5"];
+function ballPos(i){
+  // раскладка шариков снизу вверх рядами внутри банки
+  const perRow=[5,4]; let row=0, idx=i, n=0;
+  while(idx >= perRow[row%2]){ idx-=perRow[row%2]; row++; }
+  n=perRow[row%2];
+  const r=14, gap=30, w=(n-1)*gap, cx=120-w/2+idx*gap + ((i*37)%7-3);
+  const cy=316-r-row*25;
+  return {x:cx, y:cy, r};
+}
+function vJar(){
+  const list=S.grat;
+  const shown=list.slice(-70);
+  const balls=shown.map((g,i)=>{ const p=ballPos(i); const col=JAR_COLORS[(list.length-shown.length+i)%JAR_COLORS.length];
+    return `<circle class="ball-g ${g.fresh?"drop":""}" cx="${p.x}" cy="${p.y}" r="${p.r}" fill="${col}" style="--dy:${-(p.y+40)}px" data-gid="${g.id}"><title>${esc(g.text)}</title></circle>`; }).join("");
+  const fill = Math.min(1, list.length/70);
+  return `${backBtn("practices","Практики")}
+  <div class="stack-s"><h1>Банка благодарностей</h1><p class="muted">Каждый день кладите в банку что‑то хорошее, даже мелочь. В трудный день загляните сюда и перечитайте.</p></div>
+  <div class="card jar-card">
+    <svg class="jar" viewBox="0 0 240 340" role="img" aria-label="Банка: ${list.length} ${plural(list.length,"благодарность","благодарности","благодарностей")}">
+      <defs><clipPath id="jarClip"><path d="M58 70 Q40 90 40 120 L40 300 Q40 330 70 330 L170 330 Q200 330 200 300 L200 120 Q200 90 182 70 Z"/></clipPath></defs>
+      <rect x="70" y="30" width="100" height="26" rx="8" class="lid"/>
+      <path d="M78 56 L162 56 L162 70 L78 70 Z" class="neck"/>
+      <g clip-path="url(#jarClip)">${balls}</g>
+      <path d="M58 70 Q40 90 40 120 L40 300 Q40 330 70 330 L170 330 Q200 330 200 300 L200 120 Q200 90 182 70 Z" class="glass"/>
+      <path d="M58 110 Q54 200 60 290" class="shine"/>
+    </svg>
+    <p class="jar-count"><strong>${list.length}</strong> ${plural(list.length,"благодарность","благодарности","благодарностей")}</p>
+    <div class="row" style="flex-wrap:nowrap;width:100%"><input type="text" id="gIn" placeholder="За что я благодарен(-на) сегодня" style="flex:1;min-width:0" maxlength="140"><button class="btn" id="gAdd">В банку</button></div>
+    ${list.length?`<button class="btn quiet" id="gRand">Достать случайную</button><p class="small" id="gShow" hidden></p>`:""}
+  </div>
+  ${list.length?`<div class="card"><h3>Последние</h3>${list.slice().reverse().slice(0,10).map(g=>`<div class="entry"><span class="dot" style="background:${JAR_COLORS[list.indexOf(g)%JAR_COLORS.length]}"></span><div class="body"><p class="small">${esc(g.text)}</p><span class="small muted">${fmtDate(g.ts)}</span></div></div>`).join("")}</div>`:""}`;
+}
+function bindJar(){
+  const add=()=>{ const v=$("#gIn").value.trim(); if(!v){ $("#gIn").focus(); return; }
+    S.grat.forEach(g=>delete g.fresh); S.grat.push({id:uid(), text:v, ts:Date.now(), fresh:true}); save(); markDay(); render();
+    toast("Положили в банку"); };
+  $("#gAdd").onclick=add; $("#gIn").onkeydown=e=>{ if(e.key==="Enter") add(); };
+  const r=$("#gRand"); if(r) r.onclick=()=>{ const g=S.grat[Math.floor(Math.random()*S.grat.length)]; const s=$("#gShow"); s.hidden=false; s.innerHTML=`«${esc(g.text)}» · <span class="muted">${fmtDate(g.ts)}</span>`; };
+  setTimeout(()=>{ let ch=false; S.grat.forEach(g=>{ if(g.fresh){ delete g.fresh; ch=true; } }); if(ch) save(); }, 1200);
+}
 
 /* ===== Дневник мыслей (КПТ) ===== */
 const TSTEPS=[
@@ -337,7 +740,7 @@ let TD=null;
 function vThoughts(){
   if(TD) return vThoughtStep();
   const list=S.thoughts.slice().reverse();
-  return `<button class="back" data-go="practices">← Практики</button>
+  return `${backBtn("practices","Практики")}
   <div class="stack-s"><h1>Дневник мыслей</h1><p class="muted">Метод когнитивно‑поведенческой терапии: замечаем тревожную мысль, проверяем её фактами и находим более реалистичный взгляд.</p></div>
   <div class="card soft"><h3>Когда заполнять</h3><p class="small">Когда настроение резко изменилось или накрыла тревога. Шесть коротких шагов, около 5 минут.</p><button class="btn" id="tNew">Разобрать мысль</button></div>
   <div class="card"><h3>Ваши записи</h3>
@@ -370,6 +773,130 @@ function bindThoughts(){
     const diff=TD.before-TD.after; TD=null; toast(diff>0?`Запись сохранена. Эмоция стала слабее на ${diff}%`:"Запись сохранена"); render();
   };
   setTimeout(()=>{const t=$("#tdIn"); if(t) t.focus();},50);
+}
+
+/* ===== Программы ===== */
+const progData = p => (S.programs[p.id] = S.programs[p.id] || {done:{}, notes:{}});
+function progState(p){
+  const d=progData(p), done=d.done, n=p.days.length; let next=null;
+  for(let i=1;i<=n;i++){ if(!done[i]){ next=i; break; } }
+  // новый день открывается на следующий календарный день после выполнения предыдущего
+  const lockedUntilTomorrow = !!(next && next>1 && dayKey(new Date(done[next-1]))===dayKey());
+  return {done, n, next, count:Object.keys(done).length, lockedUntilTomorrow};
+}
+function dayStatus(p,i){
+  const st=progState(p);
+  if(st.done[i]) return "done";
+  if(i===st.next) return st.lockedUntilTomorrow?"tomorrow":"open";
+  return "locked";
+}
+function homeProgress(){
+  const s=streak();
+  const week=[]; for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); week.push({on:S.days.includes(dayKey(d)), l:d.toLocaleDateString("ru-RU",{weekday:"short"}).slice(0,2)}); }
+  const dots=`<div class="week">${week.map(w=>`<span class="wd ${w.on?"on":""}"><i></i>${w.l}</span>`).join("")}</div>`;
+  const p = PROGRAMS.find(x=>x.id===S.activeProgram);
+  let prog;
+  if(!p){
+    prog=`<div class="stack-s"><span class="label">Программы на неделю</span><div class="chips">${PROGRAMS.map(x=>`<button class="chip" data-go="programs" data-sub="${x.id}">${esc(x.short)}</button>`).join("")}</div><p class="small muted">Выберите тему, и каждый день будет открываться новое короткое задание.</p></div>`;
+  } else {
+    const st=progState(p);
+    if(!st.next) prog=`<p class="small"><strong>Программа «${esc(p.title)}» пройдена.</strong> <button class="linkbtn" data-go="practices">Выбрать следующую</button></p>`;
+    else { const d=p.days[st.next-1];
+      prog = `<div class="progress"><i style="width:${st.count/st.n*100}%"></i></div>` + (st.lockedUntilTomorrow
+        ? `<div><span class="label">${esc(p.title)} · день ${st.next} из ${st.n}</span><p class="small muted">Сегодняшний день выполнен. Следующий откроется завтра.</p></div>`
+        : `<div class="stack-s"><span class="label">${esc(p.title)} · день ${st.next} из ${st.n}</span><strong>${esc(d.title)}</strong><button class="btn" data-go="program" data-sub="${p.id}:${st.next}">${st.count?"Продолжить":"Начать"} · ${d.minutes} мин</button></div>`); }
+  }
+  return `<div class="card">
+    <div class="row" style="justify-content:space-between"><h3>${s?`${s} ${plural(s,"день","дня","дней")} подряд`:"Начните серию"}</h3><span class="small muted">${s?"Так держать":"Любое упражнение засчитывается"}</span></div>
+    ${dots}
+    ${prog}
+  </div>`;
+}
+function programCard(p){
+  const st=progState(p);
+  return `<button class="card prog-card ${S.activeProgram===p.id?"active":""}" data-go="programs" data-sub="${p.id}">
+    <span class="row" style="justify-content:space-between;width:100%"><strong class="ct">${esc(p.title)}</strong><span class="tag">${st.count} из ${st.n}</span></span>
+    <span class="small muted">${esc(p.subtitle)}</span>
+    <span class="progress" style="width:100%;display:block"><i style="width:${st.count/st.n*100}%"></i></span>
+  </button>`;
+}
+function vPrograms(){
+  const p=PROGRAMS.find(x=>x.id===sub); if(!p) return vPractices();
+  const st=progState(p);
+  return `${backBtn("practices","Практики")}
+  <div class="stack-s"><span class="label">Программа · ${p.days.length} ${plural(p.days.length,"день","дня","дней")}</span><h1>${esc(p.title)}</h1><p class="muted">${esc(p.subtitle)}</p></div>
+  <div class="card soft">
+    <div class="days">${p.days.map((d,i)=>{const k=i+1, ds=dayStatus(p,k);
+      const icon = ds==="done"?ico("check",16):ds==="open"?`<b>${k}</b>`:ico("lock",14);
+      return `<button class="day ${ds}" ${ds==="locked"||ds==="tomorrow"?"disabled":""} data-go="program" data-sub="${p.id}:${k}" aria-label="День ${k}: ${esc(d.title)}"><span class="dn">${icon}</span><span class="dt"><span class="small muted">День ${k} · ${d.minutes} мин${ds==="tomorrow"?" · откроется завтра":""}</span><strong>${esc(d.title)}</strong></span></button>`;}).join("")}</div>
+  </div>
+  ${st.count===0?`<p class="small muted">Первый день открыт. Новые дни открываются по одному в сутки, чтобы было время закрепить навык.</p>`:""}`;
+}
+function parseProgSub(){ const [id,k]=String(sub||"").split(":"); const p=PROGRAMS.find(x=>x.id===id)||PROGRAMS[0]; return {p, k:+k||progState(p).next||1}; }
+function vProgramDay(){
+  const {p,k}=parseProgSub(); const d=p.days[k-1], ds=dayStatus(p,k);
+  if(!d || ds==="locked"){ sub=p.id; return vPrograms(); }
+  const notes=progData(p).notes;
+  const act = d.action?`<button class="btn" data-go="${d.action.to}" ${d.action.sub?`data-sub="${d.action.sub}"`:""}>${esc(d.action.label)}</button>`:"";
+  return `<button class="back" data-go="programs" data-sub="${p.id}">← ${esc(p.title)}</button>
+  <div class="stack-s"><span class="label">День ${k} из ${p.days.length} · ${d.minutes} мин</span><h1>${esc(d.title)}</h1></div>
+  <div class="card">${d.text.map(t=>`<p>${esc(t)}</p>`).join("")}</div>
+  <div class="card"><h3>Задание на сегодня</h3>
+    <ul class="tasks">${d.tasks.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
+    ${act}
+  </div>
+  ${d.ask?`<div class="card"><label class="field"><span>${esc(d.ask)}</span><textarea id="pNote" placeholder="Пара предложений для себя. Можно обсудить на сессии">${esc(notes[k]||"")}</textarea></label></div>`:""}
+  ${ds==="done"
+    ? `<div class="card soft"><div class="row">${ico("check",20)}<strong>День выполнен ${fmtDate(progData(p).done[k])}</strong></div>${d.final?finalBlock(p):""}</div>`
+    : ds==="tomorrow" ? `<p class="small muted" style="text-align:center">Этот день откроется завтра. Отдохните и закрепите вчерашнее.</p>`
+    : `<button class="btn block" id="pDone">Отметить день выполненным</button>`}`;
+}
+function finalBlock(p){
+  let cmp="";
+  if(p.compareTest){ const t=TESTS[p.compareTest]; const g=S.tests.filter(x=>x.id===p.compareTest);
+    if(g.length>=2){ const a=g[0].score, b=g[g.length-1].score, d=a-b;
+      cmp=`<p class="small">${t.title} в начале: <strong>${a}</strong>, сейчас: <strong>${b}</strong> ${t.unit}. ${d>0?`Снижение на ${d} ${plural(d,"балл","балла","баллов")}.`:"Результат пока не изменился, это тоже важная информация."}</p>`; } }
+  return `${cmp}<p class="small">Хотите продолжить работу глубже? Обсудим ваши записи на консультации.</p><button class="btn" data-go="about" data-sub="book">Записаться к ${esc(PSY.nameTo)}</button>`;
+}
+function bindProgramDay(){
+  const {p,k}=parseProgSub(); const data=progData(p);
+  const n=$("#pNote"); if(n) n.oninput=()=>{ data.notes[k]=n.value; save(); };
+  const b=$("#pDone"); if(b) b.onclick=()=>{ data.done[k]=Date.now(); S.activeProgram=p.id; save(); markDay();
+    toast(k===p.days.length?"Программа пройдена":"День "+k+" выполнен"); render(); window.scrollTo(0,0); };
+}
+
+/* ===== Практики и статьи ===== */
+function vPractices(){
+  return `<div class="stack-s"><h1>Практики</h1><p class="muted">Программы, упражнения и короткие статьи от ${esc(PSY.nameFrom||PSY.name)}.</p></div>
+  ${badgesRow()}
+  <div class="stack-s"><span class="label">Программы</span>${PROGRAMS.map(programCard).join("")}</div>
+  <div class="stack-s"><span class="label">Упражнения</span>
+  ${reliefStats()}
+  <div class="grid2">
+    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Дыхание «квадрат»</strong><span class="small muted">2 минуты</span></button>
+    <button class="tile" data-go="pmr"><span class="ico">${ico("body")}</span><strong>Расслабление мышц</strong><span class="small muted">По Джекобсону, 3 минуты</span></button>
+    <button class="tile" data-go="ground"><span class="ico">${ico("hand")}</span><strong>Заземление 5‑4‑3‑2‑1</strong><span class="small muted">Когда «уносит»</span></button>
+    <button class="tile" data-go="thoughts"><span class="ico">${ico("thoughts")}</span><strong>Дневник мыслей</strong><span class="small muted">${S.thoughts.length?`Записей: ${S.thoughts.length}`:"Метод КПТ"}</span></button>
+    <button class="tile" data-go="diary" data-sub="emo"><span class="ico">${ico("emo")}</span><strong>Колесо эмоций</strong><span class="small muted">Назвать, что чувствую</span></button>
+    <button class="tile" data-go="jar"><span class="ico">${ico("jar")}</span><strong>Банка благодарностей</strong><span class="small muted">${S.grat.length?`В банке: ${S.grat.length}`:"Пока пустая"}</span></button>
+  </div></div>
+  <div class="card"><h3>Почитать</h3>
+    ${ART.map(a=>`<button class="art" data-go="article" data-sub="${a.id}"><span class="ico">${ico(S.read.includes(a.id)?"check":"book",18)}</span><span class="dt"><strong>${esc(a.title)}</strong><span class="small muted">${a.minutes} мин чтения${S.read.includes(a.id)?" · прочитано":""}</span></span></button>`).join("")}
+  </div>`;
+}
+function vArticle(){
+  const a=ART.find(x=>x.id===sub); if(!a) return vPractices();
+  if(!S.read.includes(a.id)){ S.read.push(a.id); save(); setTimeout(checkBadges,0); }
+  return `${backBtn("practices","Практики")}
+  <article class="stack">
+    <div class="stack-s"><span class="label">${a.minutes} мин чтения</span><h1>${esc(a.title)}</h1><p class="lead">${esc(a.lead)}</p></div>
+    ${a.body.map(t=>`<p>${esc(t)}</p>`).join("")}
+  </article>
+  <div class="card soft">
+    <div class="row"><div class="logo">${esc(PSY.name[0])}</div><strong>${esc(PSY.name)}, ${esc(PSY.role.toLowerCase())}</strong></div>
+    <p class="small">Если узнали себя в этом тексте, давайте разберём вашу ситуацию на консультации.</p>
+    <div class="row"><button class="btn" data-go="about" data-sub="book">Записаться</button><button class="btn quiet" data-share>${ico("share",18)} Поделиться</button></div>
+  </div>`;
 }
 
 /* ===== Психолог и запись ===== */
@@ -415,142 +942,29 @@ function bindAbout(){
   $("#bForm").onsubmit=e=>{ e.preventDefault();
     BK={name:$("#bName").value,fmt:$("#bFmt").value,time:$("#bTime").value,req:$("#bReq").value};
     const name=BK.name.trim(); if(!name){ $("#bName").focus(); toast("Укажите, как к вам обращаться"); return; }
-    bookText=`Здравствуйте, ${PSY.name}! Хочу записаться на консультацию.\nИмя: ${name}\nФормат: ${$("#bFmt").value}\nУдобное время: ${$("#bTime").value.trim()||"обсудим"}\nЗапрос: ${$("#bReq").value.trim()||"расскажу на встрече"}`;
+    bookText=`Здравствуйте, ${PSY.name}! Хочу записаться на консультацию.\nИмя: ${name}\nФормат: ${BK.fmt}\nУдобное время: ${BK.time.trim()||"обсудим"}\nЗапрос: ${BK.req.trim()||"расскажу на встрече"}`;
     render(); $("#bOut").scrollIntoView({behavior:"smooth",block:"center"});
   };
   const c=$("#bCopy"); if(c) c.onclick=()=>copy(bookText,$("#bOut"));
   const add=()=>{const v=$("#nIn").value.trim(); if(!v) return; S.notes.push({id:uid(),text:v,ts:Date.now(),done:false}); save(); render();};
   $("#nAdd").onclick=add; $("#nIn").onkeydown=e=>{if(e.key==="Enter") add();};
-  document.querySelectorAll("[data-nd]").forEach(b=>b.onchange=()=>{const n=S.notes.find(x=>x.id===b.dataset.nd); n.done=b.checked; save(); render();});
-  document.querySelectorAll("[data-ndel]").forEach(b=>b.onclick=()=>{S.notes=S.notes.filter(x=>x.id!==b.dataset.ndel); save(); render();});
+  $$("[data-nd]").forEach(b=>b.onchange=()=>{const n=S.notes.find(x=>x.id===b.dataset.nd); n.done=b.checked; save(); render();});
+  $$("[data-ndel]").forEach(b=>b.onclick=()=>{S.notes=S.notes.filter(x=>x.id!==b.dataset.ndel); save(); render();});
   $("#wipe").onclick=()=>$("#wipeConfirm").hidden=false;
   $("#wipeNo").onclick=()=>$("#wipeConfirm").hidden=true;
-  $("#wipeYes").onclick=()=>{S=empty(); save(); toast("Данные удалены"); render();};
+  $("#wipeYes").onclick=()=>{S=empty(); S.grat=[]; save(); toast("Данные удалены"); render();};
   if(sub==="book"){ sub=null; setTimeout(()=>$("#book").scrollIntoView({block:"start"}),30); }
-}
-
-/* ===== Практики, программа, статьи ===== */
-const PR = window.PROGRAM, ART = window.ARTICLES;
-function progState(){
-  const done=S.program.done, n=PR.days.length; let next=null;
-  for(let i=1;i<=n;i++){ if(!done[i]){ next=i; break; } }
-  // новый день открывается на следующий календарный день после выполнения предыдущего
-  let lockedUntilTomorrow=false;
-  if(next && next>1 && dayKey(new Date(done[next-1]))===dayKey()) lockedUntilTomorrow=true;
-  return {done, n, next, count:Object.keys(done).length, lockedUntilTomorrow};
-}
-function dayStatus(i){
-  const st=progState();
-  if(st.done[i]) return "done";
-  if(i===st.next) return st.lockedUntilTomorrow?"tomorrow":"open";
-  return "locked";
-}
-function homeProgress(){
-  const st=progState(), s=streak();
-  const week=[]; for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); week.push({on:S.days.includes(dayKey(d)), l:d.toLocaleDateString("ru-RU",{weekday:"short"}).slice(0,2)}); }
-  const dots=`<div class="week">${week.map(w=>`<span class="wd ${w.on?"on":""}"><i></i>${w.l}</span>`).join("")}</div>`;
-  let prog;
-  if(!st.next) prog=`<p class="small"><strong>Программа «${esc(PR.title)}» пройдена.</strong> Можно перечитать дни в разделе «Практики».</p>`;
-  else {
-    const d=PR.days[st.next-1];
-    prog = st.lockedUntilTomorrow
-      ? `<div class="row" style="justify-content:space-between"><div><span class="label">Программа · день ${st.next} из ${st.n}</span><p class="small muted">Сегодняшний день выполнен. Следующий откроется завтра.</p></div></div>`
-      : `<div class="stack-s"><span class="label">Программа · день ${st.next} из ${st.n}</span><strong>${esc(d.title)}</strong><button class="btn" data-go="program" data-sub="${st.next}">${st.count?"Продолжить":"Начать программу"} · ${d.minutes} мин</button></div>`;
-  }
-  return `<div class="card">
-    <div class="row" style="justify-content:space-between"><h3>${s?`${s} ${plural(s,"день","дня","дней")} подряд`:"Начните серию"}</h3><span class="small muted">${s?"Так держать":"Любое упражнение засчитывается"}</span></div>
-    ${dots}
-    <div class="progress"><i style="width:${st.count/st.n*100}%"></i></div>
-    ${prog}
-  </div>`;
-}
-function vPractices(){
-  const st=progState();
-  return `<div class="stack-s"><h1>Практики</h1><p class="muted">Программа, упражнения и короткие статьи от ${esc(PSY.nameFrom||PSY.name)}.</p></div>
-  <div class="card soft">
-    <div class="row" style="justify-content:space-between"><h3>${esc(PR.title)}</h3><span class="tag">${st.count} из ${st.n}</span></div>
-    <p class="small">${esc(PR.subtitle)}</p>
-    <div class="days">${PR.days.map((d,i)=>{const k=i+1, ds=dayStatus(k);
-      const icon = ds==="done"?ico("check",16):ds==="open"?`<b>${k}</b>`:ico("lock",14);
-      return `<button class="day ${ds}" ${ds==="locked"||ds==="tomorrow"?"disabled":""} data-go="program" data-sub="${k}" aria-label="День ${k}: ${esc(d.title)}"><span class="dn">${icon}</span><span class="dt"><span class="small muted">День ${k}${ds==="tomorrow"?" · откроется завтра":""}</span><strong>${esc(d.title)}</strong></span></button>`;}).join("")}</div>
-  </div>
-  <div class="stack-s"><span class="label">Упражнения</span>
-  <div class="grid2">
-    <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Дыхание «квадрат»</strong><span class="small muted">2 минуты</span></button>
-    <button class="tile" data-go="sos"><span class="ico">${ico("hand")}</span><strong>Заземление 5‑4‑3‑2‑1</strong><span class="small muted">Когда накрыло</span></button>
-    <button class="tile" data-go="thoughts"><span class="ico">${ico("thoughts")}</span><strong>Дневник мыслей</strong><span class="small muted">${S.thoughts.length?`Записей: ${S.thoughts.length}`:"Метод КПТ"}</span></button>
-    <button class="tile" data-go="diary"><span class="ico">${ico("diary")}</span><strong>Дневник настроения</strong><span class="small muted">10 секунд в день</span></button>
-  </div></div>
-  <div class="card"><h3>Почитать</h3>
-    ${ART.map(a=>`<button class="art" data-go="article" data-sub="${a.id}"><span class="ico">${ico("book",18)}</span><span class="dt"><strong>${esc(a.title)}</strong><span class="small muted">${a.minutes} мин чтения</span></span></button>`).join("")}
-  </div>`;
-}
-function vProgramDay(){
-  const k=+sub||progState().next||1, d=PR.days[k-1], ds=dayStatus(k);
-  if(!d || ds==="locked") return vPractices();
-  const act = d.action?`<button class="btn" data-go="${d.action.to}" ${d.action.sub?`data-sub="${d.action.sub}"`:""}>${esc(d.action.label)}</button>`:"";
-  return `<button class="back" data-go="practices">← Практики</button>
-  <div class="stack-s"><span class="label">${esc(PR.title)} · день ${k} из ${PR.days.length} · ${d.minutes} мин</span><h1>${esc(d.title)}</h1></div>
-  <div class="card">${d.text.map(t=>`<p>${esc(t)}</p>`).join("")}</div>
-  <div class="card"><h3>Задание на сегодня</h3>
-    <ul class="tasks">${d.tasks.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
-    ${act}
-  </div>
-  ${d.ask?`<div class="card"><label class="field"><span>${esc(d.ask)}</span><textarea id="pNote" placeholder="Пара предложений для себя. Можно обсудить на сессии">${esc(S.program.notes[k]||"")}</textarea></label></div>`:""}
-  ${ds==="done"
-    ? `<div class="card soft"><div class="row">${ico("check",20)}<strong>День выполнен ${fmtDate(S.program.done[k])}</strong></div>${d.final?finalBlock():""}</div>`
-    : ds==="tomorrow" ? `<p class="small muted" style="text-align:center">Этот день откроется завтра. Отдохните и закрепите вчерашнее.</p>`
-    : `<button class="btn block" id="pDone">Отметить день выполненным</button>`}`;
-}
-function finalBlock(){
-  const g=S.tests.filter(t=>t.id==="gad7"); let cmp="";
-  if(g.length>=2){ const a=g[0].score, b=g[g.length-1].score, d=a-b;
-    cmp=`<p class="small">Тревожность в начале: <strong>${a}</strong>, сейчас: <strong>${b}</strong>. ${d>0?`Снижение на ${d} ${plural(d,"балл","балла","баллов")}.`:"Результат пока не изменился, это тоже важная информация."}</p>`; }
-  return `${cmp}<p class="small">Хотите продолжить работу глубже? Обсудим ваши записи за неделю на консультации.</p><button class="btn" data-go="about" data-sub="book">Записаться к ${esc(PSY.nameTo)}</button>`;
-}
-function bindProgramDay(){
-  const k=+sub||progState().next||1;
-  const n=$("#pNote"); if(n) n.oninput=()=>{ S.program.notes[k]=n.value; save(); };
-  const b=$("#pDone"); if(b) b.onclick=()=>{ S.program.done[k]=Date.now(); save(); markDay();
-    toast(k===PR.days.length?"Программа пройдена":"День "+k+" выполнен"); render(); window.scrollTo(0,0); };
-}
-function vArticle(){
-  const a=ART.find(x=>x.id===sub); if(!a) return vPractices();
-  return `<button class="back" data-go="practices">← Практики</button>
-  <article class="stack">
-    <div class="stack-s"><span class="label">${a.minutes} мин чтения</span><h1>${esc(a.title)}</h1><p class="lead">${esc(a.lead)}</p></div>
-    ${a.body.map(t=>`<p>${esc(t)}</p>`).join("")}
-  </article>
-  <div class="card soft">
-    <div class="row"><div class="logo">${esc(PSY.name[0])}</div><strong>${esc(PSY.name)}, ${esc(PSY.role.toLowerCase())}</strong></div>
-    <p class="small">Если узнали себя в этом тексте, давайте разберём вашу ситуацию на консультации.</p>
-    <div class="row"><button class="btn" data-go="about" data-sub="book">Записаться</button><button class="btn quiet" data-share>${ico("share",18)} Поделиться</button></div>
-  </div>`;
 }
 
 /* ===== Поделиться ===== */
 document.addEventListener("click", async e=>{
   const b=e.target.closest("[data-share]"); if(!b) return;
   const url = PSY.siteUrl || (location.protocol.startsWith("http") ? location.origin+location.pathname : "");
-  const text = `Опора — бесплатная карманная поддержка от психолога ${PSY.name}: дыхание при тревоге, дневник настроения, тесты. Без регистрации.`;
+  const text = `Опора — бесплатная карманная поддержка от психолога ${PSY.name}: снять напряжение, проверить выгорание и тревогу, дневник настроения. Без регистрации.`;
   try{ if(navigator.share){ await navigator.share({title:"Опора", text, url: url||undefined}); return; } }catch(err){ if(err && err.name==="AbortError") return; }
   try{ await navigator.clipboard.writeText(url?text+" "+url:text); toast("Ссылка скопирована. Отправьте её другу"); }
   catch(err){ toast("Не удалось скопировать ссылку"); }
 });
-
-/* ===== Рендер ===== */
-function render(){
-  const v={home:vHome,sos:vSOS,breath:vBreath,tests:vTests,diary:vDiary,thoughts:vThoughts,about:vAbout,practices:vPractices,program:vProgramDay,article:vArticle}[route]||vHome;
-  if(route==="thoughts" && sub==="new"){ TD={step:0,before:70,after:40}; sub=null; }
-  $("#app").innerHTML=`<main class="view">${v()}</main>`;
-  renderTabs();
-  ({home:bindHome,sos:bindSOS,breath:bindBreath,tests:bindTests,diary:bindDiary,thoughts:bindThoughts,about:bindAbout,practices:()=>{},program:bindProgramDay,article:()=>{}}[route]||(()=>{}))();
-}
-function bindHome(){
-  document.querySelectorAll("[data-qm]").forEach(b=>b.onclick=()=>{draft.mood=+b.dataset.qm; go("diary");});
-  const ib=$("#installBtn"); if(ib) ib.onclick=async()=>{ if(!installEvt) return; installEvt.prompt(); try{ await installEvt.userChoice; }catch(e){} installEvt=null; render(); };
-  const ix=$("#installHide"); if(ix) ix.onclick=()=>{ S.installHidden=true; save(); render(); };
-}
 
 /* ===== Установка на телефон ===== */
 let installEvt=null;
@@ -565,17 +979,28 @@ function installCard(){
     : isIOS()
       ? `<p class="small">В Safari нажмите «Поделиться» внизу экрана, затем «На экран Домой».</p>`
       : `<p class="small">Откройте меню браузера (⋮) и выберите «Установить приложение» или «Добавить на главный экран».</p>`;
-  return `<div class="card soft"><div class="row" style="justify-content:space-between"><h3>Поставьте Опору на телефон</h3><button class="linkbtn small" id="installHide">Скрыть</button></div><p class="small muted">Значок на экране, запуск в одно касание и работа без интернета.</p>${how}</div>`;
+  return `<div class="card soft"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h3>Поставьте Опору на телефон</h3><button class="linkbtn small" id="installHide">Скрыть</button></div><p class="small muted">Значок на экране, запуск в одно касание и работа без интернета.</p>${how}</div>`;
+}
+
+/* ===== Рендер ===== */
+const VIEWS={home:[vHome,bindHome], sos:[vSOS,null], ground:[vGround,bindGround], breath:[vBreath,bindBreath], pmr:[vPmr,bindPmr],
+  tests:[vTests,bindTests], diary:[vDiary,bindDiary], thoughts:[vThoughts,bindThoughts], about:[vAbout,bindAbout],
+  practices:[vPractices,null], programs:[vPrograms,null], program:[vProgramDay,bindProgramDay], article:[vArticle,null],
+  jar:[vJar,bindJar], badges:[vBadges,null]};
+function render(){
+  if(route==="thoughts" && sub==="new"){ TD={step:0,before:70,after:40}; sub=null; }
+  const [v,b]=VIEWS[route]||VIEWS.home;
+  $("#app").innerHTML=`<main class="view">${v()}</main>`;
+  renderTabs();
+  if(b) b();
 }
 
 /* ===== Адрес страницы: #sos, #diary и т.д. ===== */
-const ROUTES=["home","sos","breath","tests","diary","thoughts","about","practices"];
-const _go=go;
-go=function(r,s=null){ _go(r,s); try{ history.replaceState(null,"", r==="home"?location.pathname:"#"+r); }catch(e){} };
-window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(ROUTES.includes(h) && h!==route){ _go(h); } });
+window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(VIEWS[h] && h!==route){ go(h); } });
 const h0=(location.hash||"").slice(1);
-if(ROUTES.includes(h0)) route=h0;
+if(VIEWS[h0] && !["program","programs","article"].includes(h0)) route=h0;
 render();
+checkBadges();
 
 /* ===== Офлайн-режим ===== */
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){

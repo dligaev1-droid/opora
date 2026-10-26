@@ -1,6 +1,6 @@
 // Офлайн-режим: файлы приложения сохраняются на телефоне.
 // При каждом обновлении приложения увеличивайте номер версии.
-const VERSION = "opora-v3";
+const VERSION = "opora-v4";
 const FILES = [
   "./", "./index.html", "./css/style.css", "./js/config.js", "./js/content.js", "./js/app.js",
   "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"
