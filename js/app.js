@@ -921,7 +921,7 @@ function vAbout(){
     ${bookText?`<div class="copybox" id="bOut">${esc(bookText)}</div><div class="row"><button class="btn" id="bCopy">Скопировать текст</button>${contact}</div>`:""}
     <div class="stack-s small">
       <div><span class="label">Telegram</span><div>${PSY.telegram?"@"+esc(PSY.telegram):'<span class="muted">появится после настройки</span>'}</div></div>
-      <div><span class="label">Телефон</span><div class="phone" style="font-size:1rem">${PSY.phone?esc(PSY.phone):'<span class="muted" style="font-weight:400">появится после настройки</span>'}</div></div>
+      <div><span class="label">Телефон</span><div class="phone" style="font-size:1rem">${PSY.phone?`<a href="tel:${esc(PSY.phone.replace(/[^+\d]/g,""))}" style="color:inherit">${esc(PSY.phone)}</a>`:'<span class="muted" style="font-weight:400">появится после настройки</span>'}</div></div>
     </div>
   </div>
   <div class="card">
