@@ -198,10 +198,6 @@ function reliefStats(){
 }
 
 /* ===== Главная ===== */
-function tipOfDay(){
-  const d=new Date(); const n=Math.floor((d - new Date(d.getFullYear(),0,0))/864e5);
-  return TIPS[n % TIPS.length];
-}
 function vHome(){
   const h=new Date().getHours();
   const hi = h<6?"Доброй ночи":h<12?"Доброе утро":h<18?"Добрый день":"Добрый вечер";
@@ -213,10 +209,7 @@ function vHome(){
   </div>
   ${typeof homeCard==="function"?homeCard():""}
   ${typeof homeTree==="function"?homeTree():""}
-  <div class="card tip">
-    <div class="row"><span class="ico">${ico("bulb",18)}</span><span class="label">Совет дня</span></div>
-    <p>${esc(tipOfDay())}</p>
-  </div>
+  ${typeof homeThought==="function"?homeThought():""}
   ${homeProgress()}
   <button class="banner sos-banner" data-go="sos"><span class="bi">${ico("heart",20)}</span><span class="bt"><strong>Накрыло?</strong><span class="small muted">Помощь за 2 минуты</span></span><span class="chev">›</span></button>
   <div class="grid2">
