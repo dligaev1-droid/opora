@@ -16,17 +16,22 @@ const G = () => {
   g.list.forEach(x=>{ x.id=String(x.id); if(!Array.isArray(x.steps)) x.steps=[]; x.steps=x.steps.filter(s=>isObj(s) && typeof s.t==="string"); x.steps.forEach(s=>{ if(s.id==null) s.id=uid(); s.id=String(s.id); }); });
   if(!Array.isArray(g.hab)) g.hab=[];
   g.hab=g.hab.filter(h=>isObj(h) && typeof h.t==="string" && h.id!=null);
-  g.hab.forEach(h=>{ h.id=String(h.id); if(!isObj(h.days)) h.days={}; });
+  g.hab.forEach(h=>{ h.id=String(h.id); if(!isObj(h.days)) h.days={}; Object.keys(h.days).forEach(k=>{ const v=+h.days[k]; if(!(v>0)) delete h.days[k]; else h.days[k]=v; });
+    h.n=Math.max(1,Math.min(20,Math.round(+h.n)||1)); h.w=Math.max(1,Math.min(7,Math.round(+h.w)||7)); });
   if(!Array.isArray(g.proc)) g.proc=[]; g.proc=g.proc.filter(isObj);
-  ["focus","energy"].forEach(k=>{ if(!isObj(g[k])) g[k]={}; });
+  ["focus","energy","fmin"].forEach(k=>{ if(!isObj(g[k])) g[k]={}; });
   Object.keys(g.energy).forEach(k=>{ const e=g.energy[k]; if(!isObj(e)||typeof e.v!=="number") delete g.energy[k]; else { if(!Array.isArray(e.p)) e.p=[]; if(!Array.isArray(e.m)) e.m=[]; } });
   if(!isObj(g.prog)) g.prog={done:{},notes:{}};
   if(!isObj(g.prog.done)) g.prog.done={}; if(!isObj(g.prog.notes)) g.prog.notes={};
   if(g.main!=null && !isObj(g.main)) delete g.main;
   return g;
 };
-const dayNum = (t=Date.now()) => { const d=new Date(t); return Math.floor(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/864e5); };
-const FREE={goals:1, hab:2, proc:1};
+// Номер дня по местной дате (ключ без часового пояса: день k — это UTC-полночь k*864e5)
+const dayNum = (t=Date.now()) => { const d=new Date(t); return Math.round(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5); };
+const dayTs = k => { const u=new Date(k*864e5); return new Date(u.getUTCFullYear(),u.getUTCMonth(),u.getUTCDate()).getTime(); };
+const FREE={goals:3, hab:3, proc:3};
+const hDone = (h,k) => (+h.days[k]||0) >= (h.n||1);
+const weekStart = (d=dayNum()) => d-((new Date(d*864e5).getUTCDay()+6)%7);
 const active = () => G().list.filter(x=>!x.done);
 
 /* ---------- Навигация, шапка, общие куски ---------- */
@@ -61,7 +66,7 @@ const LAP=160;
 function points(){
   const g=G(); let p=0;
   g.list.forEach(x=>{ p+=x.steps.filter(s=>s.done).length*3; if(x.done) p+=10; });
-  g.hab.forEach(h=>p+=Object.keys(h.days).length);
+  g.hab.forEach(h=>p+=Object.keys(h.days).filter(k=>hDone(h,k)).length);
   Object.values(g.focus).forEach(n=>p+=(+n||0)*2);
   p+=Object.keys(g.prog.done||{}).length*3 + g.proc.length*2 + Object.keys(g.energy).length;
   return p;
@@ -94,12 +99,14 @@ function mtCard(){
 /* ---------- Сегодня ---------- */
 const CHG=["Сон","Прогулка","Спорт","Общение","Природа","Хобби","Тишина","Вкусная еда"];
 const DRN=["Недосып","Конфликты","Переработка","Соцсети","Шум","Спешка","Болезнь","Тревога"];
+let EOPEN=false;
 function energyCard(){
   const e=G().energy[dayNum()];
   const ins=energyInsight();
   return `<div class="card"><span class="label">Энергия сегодня</span>
     <div class="batt" role="group" aria-label="Уровень энергии">${[1,2,3,4,5].map(v=>`<button class="bt-v${e&&e.v>=v?" on":""}" data-ev="${v}" aria-label="${v} из 5" aria-pressed="${!!(e&&e.v===v)}"><i></i></button>`).join("")}</div>
-    ${e?`<div class="stack-s"><span class="small muted">Что заряжает</span><div class="chips">${CHG.map(t=>`<button class="chip" data-ep="${t}" aria-pressed="${(e.p||[]).includes(t)}">${t}</button>`).join("")}</div>
+    ${e&&!EOPEN&&!(e.p||[]).length&&!(e.m||[]).length?`<button class="linkbtn small" id="eOpen" style="align-self:flex-start">+ Добавить причины: что заряжает и что забирает силы</button>`:""}
+    ${e&&(EOPEN||(e.p||[]).length||(e.m||[]).length)?`<div class="stack-s"><span class="small muted">Что заряжает</span><div class="chips">${CHG.map(t=>`<button class="chip" data-ep="${t}" aria-pressed="${(e.p||[]).includes(t)}">${t}</button>`).join("")}</div>
       <span class="small muted">Что забирает силы</span><div class="chips">${DRN.map(t=>`<button class="chip" data-em="${t}" aria-pressed="${(e.m||[]).includes(t)}">${t}</button>`).join("")}</div></div>`:`<p class="small muted">Отметьте, сколько сегодня сил. Трудное лучше делать, когда их больше.</p>`}
     ${ins}</div>`;
 }
@@ -123,7 +130,8 @@ function habToday(){
   const hab=G().hab; if(!hab.length) return "";
   const d=dayNum();
   return `<div class="card"><div class="row" style="justify-content:space-between"><span class="label">Привычки сегодня</span><button class="linkbtn small" data-go="ghab">Все</button></div>
-  ${hab.slice(0,5).map(h=>`<label class="hab-row"><input type="checkbox" data-ht="${h.id}" ${h.days[d]?"checked":""}><span>${esc(h.t)}</span></label>`).join("")}</div>`;
+  ${hab.slice(0,5).map(h=>h.n>1?`<div class="hab-row hab-cnt"><span class="hc-t">${esc(h.t)}</span><span class="hc-c"><button class="hc-b" data-hm="${h.id}" aria-label="Минус">−</button><b>${+h.days[d]||0}/${h.n}</b><button class="hc-b" data-hp="${h.id}" aria-label="Плюс">+</button></span></div>`
+    :`<label class="hab-row"><input type="checkbox" data-ht="${h.id}" ${hDone(h,d)?"checked":""}><span>${esc(h.t)}</span></label>`).join("")}</div>`;
 }
 function vToday(){
   const h=new Date().getHours(), hi=h<6?"Доброй ночи":h<12?"Доброе утро":h<18?"Добрый день":"Добрый вечер";
@@ -140,9 +148,11 @@ function bindToday(){
   const md=$("#msDone"); if(md) md.onchange=()=>{ const goal=g.list.find(x=>x.id===g.main.gid), st=goal&&goal.steps.find(x=>x.id===g.main.sid); if(st){ stepToggle(goal,st,md.checked); } render(); };
   $$("[data-ev]").forEach(b=>b.onclick=()=>{ const e=g.energy[d]||(g.energy[d]={v:0,p:[],m:[]}); const first=!e.v; e.v=+b.dataset.ev; save(); if(first){ markDay(); award("res",3); } render(); });
   const tog=(k,v)=>{ const e=g.energy[d]; if(!e) return; const a=e[k]||(e[k]=[]); const i=a.indexOf(v); if(i>=0) a.splice(i,1); else a.push(v); save(); render(); };
+  const eo=$("#eOpen"); if(eo) eo.onclick=()=>{ EOPEN=true; render(); };
   $$("[data-ep]").forEach(b=>b.onclick=()=>tog("p",b.dataset.ep));
   $$("[data-em]").forEach(b=>b.onclick=()=>tog("m",b.dataset.em));
   $$("[data-ht]").forEach(b=>b.onchange=()=>{ habSet(b.dataset.ht, d, b.checked); render(); });
+  bindCnt();
 }
 
 /* ---------- Цели ---------- */
@@ -161,12 +171,12 @@ function vGoals(){
   const canAdd=plus()||a.length<FREE.goals;
   return `<div class="stack-s"><h1>Цели</h1><p class="muted">Начинаем с «зачем», а не с «надо»</p></div>
   ${a.length?a.map(card).join(""):`<div class="card"><p>Целей пока нет. Начните с одной — самой важной на ближайший месяц.</p></div>`}
-  ${canAdd?`<button class="btn block" data-go="gnew">+ Новая цель</button>`:lockCard("Больше одной цели одновременно")}
+  ${canAdd?`<button class="btn block" data-go="gnew">+ Новая цель</button>`:lockCard(`Больше ${FREE.goals} целей одновременно`)}
   ${done.length?`<details class="more"><summary>Достигнутые · ${done.length}</summary><div>${done.map(x=>`<div class="entry"><span class="dot" style="background:var(--accent)"></span><div class="body"><strong>${esc(x.t)}</strong><span class="small muted">${fmtDate(x.done)}</span></div></div>`).join("")}</div></details>`:""}`;
 }
 let NG={i:0, area:"", why:"", t:"", step:"", due:""};
 function vNew(){
-  if(!plus() && active().length>=FREE.goals) return `${gback()}${lockCard("Больше одной цели одновременно")}`;
+  if(!plus() && active().length>=FREE.goals) return `${gback()}${lockCard(`Больше ${FREE.goals} целей одновременно`)}`;
   const steps=[
     ["Какая сфера?","",`<div class="chips">${AREAS.map(a=>`<button class="chip" data-na="${a}" aria-pressed="${NG.area===a}">${a}</button>`).join("")}</div>`],
     ["Зачем это вам?","Цель «потому что надо» быстро выжигает. Цель «потому что важно» держит.",`<div class="chips">${WHY.map(w=>`<button class="chip" data-nw="${w}" aria-pressed="${NG.why===w}">${w}</button>`).join("")}</div><input type="text" id="ngWhy" placeholder="Или своими словами" aria-label="Зачем" value="${esc(WHY.includes(NG.why)?"":NG.why)}" maxlength="120">`],
@@ -217,25 +227,39 @@ function bindGoal(){
 }
 
 /* ---------- Привычки ---------- */
-const HT=["Пить воду утром","Прогулка 15 минут","Лечь до 23:30","Без телефона за час до сна","5 минут дыхания","Читать 10 страниц","Зарядка 10 минут","Записать одну благодарность"];
+const HT=[["Стакан воды",8,7],["Прогулка 15 минут",1,7],["Лечь до 23:30",1,7],["Без телефона за час до сна",1,7],["5 минут дыхания",1,7],["Читать 10 страниц",1,7],["Тренировка",1,3],["Записать одну благодарность",1,7]];
+let HN={n:1, w:7, t:""};
 const WD=["вс","пн","вт","ср","чт","пт","сб"];
-function habSet(id, d, on){ const h=G().hab.find(x=>x.id===id); if(!h) return; if(on){ if(!h.days[d]){ h.days[d]=1; markDay(); award("res",3); } } else delete h.days[d]; save(); }
+function habSet(id, d, on){ const h=G().hab.find(x=>x.id===id); if(!h) return; if(on){ if(!hDone(h,d)){ h.days[d]=h.n; markDay(); award("res",3); } } else delete h.days[d]; save(); }
+function habInc(id, d, dv){ const h=G().hab.find(x=>x.id===id); if(!h) return; const was=hDone(h,d), v=Math.max(0,Math.min(h.n,(+h.days[d]||0)+dv)); if(v) h.days[d]=v; else delete h.days[d]; if(!was && hDone(h,d)){ markDay(); award("res",3); toast("Норма на сегодня выполнена"); } save(); }
+function bindCnt(){ const d=dayNum(); $$("[data-hp]").forEach(b=>b.onclick=()=>{ habInc(b.dataset.hp,d,1); render(); }); $$("[data-hm]").forEach(b=>b.onclick=()=>{ habInc(b.dataset.hm,d,-1); render(); }); }
+const freqT = h => h.w<7 ? `${h.w} ${plural(h.w,"раз","раза","раз")} в неделю` : "каждый день";
 function vHab(){
   const hab=G().hab, d=dayNum(), canAdd=plus()||hab.length<FREE.hab;
   const week=[...Array(7)].map((_,i)=>d-6+i);
   return `<div class="stack-s"><h1>Привычки</h1><p class="muted">Пропустить день — нормально. Главное — не два подряд.</p></div>
-  ${hab.length?hab.map(h=>{ const m30=Object.keys(h.days).filter(k=>+k>d-30).length, missY=!h.days[d-1]&&!h.days[d]&&Object.keys(h.days).length;
-    return `<div class="card hab-card"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><strong>${esc(h.t)}</strong><button class="linkbtn small" data-hx="${h.id}" aria-label="Удалить привычку">✕</button></div>
-      <div class="hab-week">${week.map(k=>`<button class="hw${h.days[k]?" on":""}${k===d?" today":""}" data-hd="${h.id}|${k}" aria-pressed="${!!h.days[k]}" aria-label="${WD[new Date(k*864e5).getDay()]}"><span>${WD[new Date(k*864e5).getDay()]}</span><i>${h.days[k]?"✓":""}</i></button>`).join("")}</div>
-      <span class="small muted">За 30 дней: ${m30} ${plural(m30,"раз","раза","раз")}${missY?" · вчера пропуск — сегодня отличный день вернуться":""}</span></div>`; }).join(""):`<div class="card"><p>Начните с одной маленькой привычки. Лучше простая каждый день, чем сложная раз в неделю.</p></div>`}
-  ${canAdd?`<div class="card"><span class="label">Новая привычка</span><div class="row" style="flex-wrap:nowrap"><input type="text" id="hIn" placeholder="Своя привычка" aria-label="Новая привычка" maxlength="60" style="flex:1;min-width:0"><button class="btn" id="hAdd" aria-label="Добавить привычку">+</button></div>
-    <div class="chips">${HT.filter(t=>!hab.some(h=>h.t===t)).slice(0,6).map(t=>`<button class="chip" data-hs="${t}">${t}</button>`).join("")}</div></div>`:lockCard(`Больше ${FREE.hab} привычек`)}`;
+  ${hab.length?hab.map(h=>{ const m30=Object.keys(h.days).filter(k=>+k>d-30&&hDone(h,k)).length, missY=h.w===7&&!hDone(h,d-1)&&!hDone(h,d)&&Object.keys(h.days).length;
+    const ws=weekStart(d), wk=Object.keys(h.days).filter(k=>+k>=ws&&+k<=d&&hDone(h,k)).length;
+    return `<div class="card hab-card"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="stack-s" style="gap:2px;min-width:0"><strong>${esc(h.t)}</strong><span class="small muted">${freqT(h)}${h.n>1?` · ${h.n} за день`:""}</span></span><button class="linkbtn small" data-hx="${h.id}" aria-label="Удалить привычку">✕</button></div>
+      ${h.n>1?`<div class="hab-row hab-cnt"><span class="hc-t small">Сегодня</span><span class="hc-c"><button class="hc-b" data-hm="${h.id}" aria-label="Минус">−</button><b>${+h.days[d]||0}/${h.n}</b><button class="hc-b" data-hp="${h.id}" aria-label="Плюс">+</button></span></div>`:""}
+      <div class="hab-week">${week.map(k=>{ const v=+h.days[k]||0, on=hDone(h,k); return `<button class="hw${on?" on":v?" part":""}${k===d?" today":""}" data-hd="${h.id}|${k}" aria-pressed="${on}" aria-label="${WD[new Date(k*864e5).getUTCDay()]}"><span>${WD[new Date(k*864e5).getUTCDay()]}</span><i>${on?"✓":v?v:""}</i></button>`; }).join("")}</div>
+      <span class="small muted">${h.w<7?`На этой неделе: ${Math.min(wk,h.w)} из ${h.w}${wk>=h.w?" — норма недели выполнена":""}`:`За 30 дней: ${m30} ${plural(m30,"раз","раза","раз")}${missY?" · вчера пропуск — сегодня отличный день вернуться":""}`}</span></div>`; }).join(""):`<div class="card"><p>Начните с одной маленькой привычки. Лучше простая каждый день, чем сложная раз в неделю.</p></div>`}
+  ${canAdd?`<div class="card"><span class="label">Новая привычка</span><div class="row" style="flex-wrap:nowrap"><input type="text" id="hIn" placeholder="Своя привычка" aria-label="Новая привычка" maxlength="60" style="flex:1;min-width:0" value="${esc(HN.t)}"><button class="btn" id="hAdd" aria-label="Добавить привычку">+</button></div>
+    <div class="stack-s"><span class="small muted">Как часто</span><div class="chips">${[[7,"Каждый день"],[5,"5 раз в неделю"],[3,"3 раза в неделю"],[1,"Раз в неделю"]].map(([w,t])=>`<button class="chip" data-hw="${w}" aria-pressed="${HN.w===w}">${t}</button>`).join("")}</div>
+    <div class="hab-row hab-cnt"><span class="hc-t small muted">Сколько раз за день</span><span class="hc-c"><button class="hc-b" id="hnM" aria-label="Меньше">−</button><b>${HN.n}</b><button class="hc-b" id="hnP" aria-label="Больше">+</button></span></div></div>
+    <span class="small muted">Или выберите готовую</span>
+    <div class="chips">${HT.filter(([t])=>!hab.some(h=>h.t===t)).slice(0,6).map(([t,n,w])=>`<button class="chip" data-hs="${t}|${n}|${w}">${t}${n>1?` · ${n}`:""}${w<7?` · ${w}×/нед`:""}</button>`).join("")}</div></div>`:lockCard(`Больше ${FREE.hab} привычек`)}`;
 }
 function bindHab(){
-  const add=t=>{ t=String(t||"").trim().slice(0,60); if(!t) return; const g=G(); if(!plus()&&g.hab.length>=FREE.hab){ toast("Без Опора+ — до 2 привычек"); return; } g.hab.push({id:uid(), t, days:{}, created:Date.now()}); save(); render(); };
+  const add=(t,n,w)=>{ t=String(t||"").trim().slice(0,60); if(!t) return; const g=G(); if(!plus()&&g.hab.length>=FREE.hab){ toast(`Без Опора+ — до ${FREE.hab} привычек`); return; } g.hab.push({id:uid(), t, n:n||HN.n, w:w||HN.w, days:{}, created:Date.now()}); HN={n:1,w:7,t:""}; save(); render(); };
+  const hi=$("#hIn"); if(hi) hi.oninput=()=>{ HN.t=hi.value; };
+  $$("[data-hw]").forEach(b=>b.onclick=()=>{ HN.w=+b.dataset.hw; render(); });
+  const nm=$("#hnM"); if(nm) nm.onclick=()=>{ HN.n=Math.max(1,HN.n-1); render(); };
+  const np=$("#hnP"); if(np) np.onclick=()=>{ HN.n=Math.min(20,HN.n+1); render(); };
+  bindCnt();
   const a=$("#hAdd"); if(a){ a.onclick=()=>add($("#hIn").value); $("#hIn").onkeydown=e=>{ if(e.key==="Enter") add($("#hIn").value); }; }
-  $$("[data-hs]").forEach(b=>b.onclick=()=>add(b.dataset.hs));
-  $$("[data-hd]").forEach(b=>b.onclick=()=>{ const [id,k]=b.dataset.hd.split("|"); const h=G().hab.find(x=>x.id===id); habSet(id, +k, !(h&&h.days[k])); render(); });
+  $$("[data-hs]").forEach(b=>{ const [t,n,w]=b.dataset.hs.split("|"); b.onclick=()=>add(t,+n,+w); });
+  $$("[data-hd]").forEach(b=>b.onclick=()=>{ const [id,k]=b.dataset.hd.split("|"); const h=G().hab.find(x=>x.id===id); habSet(id, +k, !(h&&hDone(h,k))); render(); });
   $$("[data-hx]").forEach(b=>b.onclick=()=>{ if(b.dataset.sure){ G().hab=G().hab.filter(x=>x.id!==b.dataset.hx); save(); render(); } else { b.dataset.sure="1"; b.textContent="Удалить?"; } });
 }
 
@@ -257,15 +281,22 @@ function vFocus(){
     <button class="btn block" id="fGo">${FT.run?"Остановить":FT.brk?"Начать перерыв":"Начать"}</button>
     <div class="stack-s"><span class="small muted">Звук на фон</span><div class="chips">${SNDS.map(([k,t])=>`<button class="chip" data-fs="${k}" aria-pressed="${FT.snd===k}">${t}</button>`).join("")}</div></div>
   </div>
-  <p class="small muted" style="text-align:center">Сегодня ${today} ${plural(today,"сессия","сессии","сессий")} фокуса</p>`;
+  ${FT.run?`<button class="btn quiet block" id="fFull">На весь экран</button>`:""}
+  <p class="small muted" style="text-align:center">Сегодня ${today} ${plural(today,"сессия","сессии","сессий")} фокуса</p>
+  ${focusWeek()}
+  ${FT.full&&FT.run?`<div class="f-full" role="dialog" aria-label="Фокус на весь экран"><span class="label">${FT.brk?"Перерыв":"Фокус"}</span>${FT.label?`<p class="f-lab">${esc(FT.label)}</p>`:""}<span class="f-time" id="fTime2">${fmt(FT.left)}</span><button class="btn quiet" id="fExit">Свернуть</button></div>`:""}`;
 }
+function focusWeek(){ const g=G(), d=dayNum(), days=[...Array(7)].map((_,i)=>d-6+i), mins=days.map(k=>+g.fmin[k]||(+g.focus[k]||0)*25), tot=mins.reduce((a,b)=>a+b,0), mx=Math.max(25,...mins);
+  if(!tot) return "";
+  return `<div class="card"><span class="label">Фокус за неделю · ${tot>=60?`${Math.floor(tot/60)} ч ${tot%60} мин`:`${tot} мин`}</span><div class="d-bars f-bars">${days.map((k,i)=>`<span class="db" style="--h:${Math.max(3,mins[i]/mx*100)}%" title="${mins[i]} мин"><i></i><small>${WD[new Date(k*864e5).getUTCDay()]}</small></span>`).join("")}</div></div>`; }
 function tick(){
   FT.left=(FT.end-Date.now())/1000;
   const t=document.getElementById("fTime"); if(t) t.textContent=fmt(FT.left);
+  const t2=document.getElementById("fTime2"); if(t2) t2.textContent=fmt(FT.left);
   const fg=document.querySelector(".fr-fg"); if(fg){ const C=2*Math.PI*88; fg.setAttribute("stroke-dashoffset", C*(FT.left/(FT.min*60))); }
-  if(FT.left<=0){ clearInterval(fTimer); fTimer=null; FT.run=false; if(window.SND) SND.cue("done");
+  if(FT.left<=0){ clearInterval(fTimer); fTimer=null; FT.run=false; FT.full=false; if(window.SND) SND.cue("done");
     if(FT.brk){ FT.brk=false; FT.min=25; FT.left=25*60; toast("Перерыв окончен"); }
-    else { const g=G(), d=dayNum(); g.focus[d]=(+g.focus[d]||0)+1; save(); markDay(); award("res",10); FT.brk=true; FT.min=5; FT.left=5*60; toast("Сессия фокуса завершена. Отдохните 5 минут"); }
+    else { const g=G(), d=dayNum(); g.focus[d]=(+g.focus[d]||0)+1; g.fmin[d]=(+g.fmin[d]||0)+FT.min; save(); markDay(); award("res",10); FT.brk=true; FT.min=5; FT.left=5*60; toast("Сессия фокуса завершена. Отдохните 5 минут"); }
     if(route==="gfocus") render();
   }
 }
@@ -273,9 +304,11 @@ function bindFocus(){
   $$("[data-fm]").forEach(b=>b.onclick=()=>{ FT.min=+b.dataset.fm; FT.left=FT.min*60; FT.brk=false; render(); });
   const lb=$("#fLab"); if(lb) lb.oninput=()=>{ FT.label=lb.value; };
   $("#fGo").onclick=()=>{
-    if(FT.run){ clearInterval(fTimer); fTimer=null; FT.run=false; FT.brk=false; FT.left=FT.min*60; render(); return; }
+    if(FT.run){ clearInterval(fTimer); fTimer=null; FT.run=false; FT.full=false; FT.brk=false; FT.left=FT.min*60; render(); return; }
     FT.run=true; FT.end=Date.now()+FT.left*1000; if(window.SND) SND.cue("tense"); fTimer=setInterval(tick, 500); render();
   };
+  const ff=$("#fFull"); if(ff) ff.onclick=()=>{ FT.full=true; render(); };
+  const fx=$("#fExit"); if(fx) fx.onclick=()=>{ FT.full=false; render(); };
   $$("[data-fs]").forEach(b=>b.onclick=()=>{ const k=b.dataset.fs; if(window.SND && SND.play){ if(FT.snd) SND.stopOne(FT.snd); if(k) SND.play(k); } FT.snd=k; render(); });
 }
 
@@ -386,4 +419,7 @@ function bindGPlus(){
 /* ---------- Регистрация ---------- */
 Object.assign(VIEWS,{gtoday:[vToday,bindToday], ggoals:[vGoals,null], gnew:[vNew,bindNew], ggoal:[vGoal,bindGoal], ghab:[vHab,bindHab], gfocus:[vFocus,bindFocus], gpath:[vPath,null], gproc:[vProc,bindProc], gprog:[vProg,bindProg], gart:[vArt,null], gplus:[vGPlus,bindGPlus]});
 GR.forEach(r=>TAB_OF[r]="practices");
+window.GOALS={G, plus, LOCK, isObj, gback, lockCard, li, nico, GR, ROOT, PARENT, NAV, NAVI, BL, dayNum, dayTs, weekStart, active, hDone, FREE, WD, AREAS, WHY, PD, GA,
+  mainCard, energyCard, habToday, mtCard, points, bindToday, bindCnt, stepToggle,
+  newGoal:(area,why)=>{ NG={i:area?1:0, area:area||"", why:why||"", t:"", step:"", due:""}; }};
 })();

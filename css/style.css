@@ -699,3 +699,34 @@ button.main-step{cursor:pointer}
 .qz-row{gap:10px}.qz-row .btn{flex:1}
 .qz-res{margin:0}.qz-res.ok strong{color:var(--ok)}.qz-res.no strong{color:var(--accent)}
 .card[data-go] .progress{display:block;width:100%;margin-top:6px}
+
+/* ---------- Цели: ритуалы, колесо, ценности, итог недели, статистика ---------- */
+.rit-card{text-align:left;align-items:flex-start;gap:6px}
+.rit-card.empty{background:var(--surface)}
+.hab-cnt{justify-content:space-between;cursor:default}
+.hc-t{flex:1;min-width:0}
+.hc-c{display:flex;align-items:center;gap:10px;flex:none}
+.hc-c b{min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+.hc-b{width:40px;height:40px;border-radius:12px;border:0;background:var(--surface-2);color:var(--ink);font-size:1.2rem;font-weight:700;display:grid;place-items:center;cursor:pointer}
+.hw.part i{background:var(--accent-soft);color:var(--accent);font-size:.68rem;font-weight:700}
+.f-full{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
+.f-full .f-time{font-size:clamp(4rem,22vw,8rem)}
+.g-wheel{width:100%;max-width:340px;margin:0 auto;display:block;overflow:visible}
+.g-wheel .gw-bg{fill:var(--surface-2);stroke:var(--surface);stroke-width:2}
+.g-wheel .gw-ring{fill:none;stroke:var(--surface);stroke-width:1;opacity:.8}
+.g-wheel .gw-v{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.g-wheel .gw1,.g-wheel .gw3,.g-wheel .gw5,.g-wheel .gw7{fill-opacity:.72}
+.g-wheel .gw-prev{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-dasharray:4 4;opacity:.55}
+.g-wheel text{font-size:11.5px;fill:var(--ink);font-weight:600;font-family:inherit}
+.gw-card{padding:10px 8px}
+.gw-sl input[type=range]{width:100%;accent-color:var(--accent)}
+.val-card{gap:10px}.val-t{font-size:1.05rem}
+.val-card textarea{min-height:64px}
+.st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.st-cell{background:var(--surface-2);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.st-cell b{font-family:var(--f-display);font-size:1.3rem;line-height:1.2}
+.hm{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;max-width:100%}
+.hm i{display:block;aspect-ratio:1;border-radius:3px;background:var(--surface-2)}
+.hm i.on{background:var(--accent)}.hm i.part{background:var(--accent-soft)}.hm i.fut{background:transparent}
+.f-bars{height:100px}
+.wi-pick{text-align:center;align-items:center}
