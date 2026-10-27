@@ -894,3 +894,24 @@ details.how summary::after{content:"›";transform:rotate(90deg);display:inline-
 details.how[open] summary::after{transform:rotate(-90deg)}
 .how-b{margin-top:8px;background:var(--accent-soft);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .how-b p{margin:0}
+
+/* Антистресс */
+.calm-modes{gap:6px}
+.calm-card{gap:12px}
+.calm-card>p{margin:0}
+.calm-stage{position:relative;border-radius:calc(var(--r) - 4px);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.calm-cv{display:block;width:100%;height:min(400px,56vh);touch-action:none;cursor:pointer}
+.pop-wrap{display:flex;flex-direction:column;gap:10px;align-items:center;padding:8px 0}
+.pop-hint{margin:0;font-weight:600;min-height:1.4em;text-align:center}
+.pop-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;width:100%;max-width:380px;padding:12px;border-radius:22px;background:var(--c2);transition:box-shadow .6s}
+.pop-grid.exh{box-shadow:0 0 0 4px var(--accent-soft)}
+.pb{aspect-ratio:1;border-radius:50%;border:0;padding:0;cursor:pointer;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.85) 0 12%,var(--c1) 34%,var(--c2) 100%);box-shadow:0 3px 5px rgba(0,0,0,.18),inset 0 -3px 6px rgba(0,0,0,.12);transition:transform .12s, box-shadow .12s, filter .2s;-webkit-tap-highlight-color:transparent}
+.pb:active{transform:scale(.92)}
+.pb.on{background:radial-gradient(circle at 50% 60%,rgba(0,0,0,.10),var(--c2) 70%);box-shadow:inset 0 3px 6px rgba(0,0,0,.28);transform:scale(.94);filter:saturate(.8)}
+.pop-grid:has(.tg) .pb:not(.tg):not(.on){filter:saturate(.85) brightness(.96);opacity:.85}
+.pb.tg{animation:pbIn 4s ease-in-out infinite;box-shadow:0 0 0 3px #fff,0 0 16px 4px rgba(255,255,255,.7)}
+.pop-grid.exh .pb.tg{animation:none;transform:scale(1.12)}
+@keyframes pbIn{0%{transform:scale(.9)}100%{transform:scale(1.15)}}
+.calm-sw{gap:8px;align-items:center;flex-wrap:nowrap}
+.calm-sw input{width:20px;height:20px;flex:none}
+@media (prefers-reduced-motion:reduce){.pb.tg{animation:none}}
