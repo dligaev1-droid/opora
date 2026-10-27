@@ -915,3 +915,11 @@ details.how[open] summary::after{transform:rotate(-90deg)}
 .calm-sw{gap:8px;align-items:center;flex-wrap:nowrap}
 .calm-sw input{width:20px;height:20px;flex:none}
 @media (prefers-reduced-motion:reduce){.pb.tg{animation:none}}
+
+/* мандала */
+.mnd-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:6px 0}
+.mnd{width:100%;max-width:340px;height:auto;touch-action:manipulation}
+.mnd .mseg{stroke:var(--muted);stroke-width:.8;cursor:pointer;transition:fill .35s}
+.mnd-pal{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.mcol{width:34px;height:34px;border-radius:50%;border:2px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.18);cursor:pointer}
+.mcol.on{border-color:var(--ink);transform:scale(1.1)}
