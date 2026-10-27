@@ -1,8 +1,8 @@
 // Офлайн-режим: файлы приложения сохраняются на телефоне.
 // При каждом обновлении приложения увеличивайте номер версии.
-const VERSION = "opora-v17";
+const VERSION = "opora-v18";
 const FILES = [
-  "./", "./index.html", "./css/style.css", "./js/config.js", "./js/content.js", "./js/daily.js", "./js/app.js", "./js/growth.js", "./js/cards.js", "./js/thought.js", "./js/sounds.js", "./js/relations.js", "./js/couple.js", "./js/together.js", "./js/garden.js",
+  "./", "./index.html", "./css/style.css", "./js/config.js", "./js/content.js", "./js/daily.js", "./js/app.js", "./js/growth.js", "./js/cards.js", "./js/thought.js", "./js/sounds.js", "./js/relations.js", "./js/couple.js", "./js/together.js", "./js/garden.js", "./js/goals.js",
   "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"
 ];
 

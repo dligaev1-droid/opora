@@ -236,5 +236,5 @@ function pill(){
 setInterval(()=>{ if(!tEnd) return; const l=document.getElementById("tLeft"); if(l) l.textContent=`Звук плавно стихнет через ${left()} мин`; pill(); }, 30000);
 
 VIEWS.sounds=[vSounds, bindSounds]; TAB_OF.sounds="practices";
-window.SND={cue, cueBtn, bindCue, pill, stopAll, playing};
+window.SND={cue, cueBtn, bindCue, pill, stopAll, playing, play:start, stopOne:k=>{ stop(k); pill(); }};
 })();

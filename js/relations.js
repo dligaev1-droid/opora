@@ -307,6 +307,7 @@ function vPlus(){
     <li>${ico("check",18)}<span>40 свиданий-сюрпризов и список «Хотим вместе» без ограничений</span></li>
     <li>${ico("check",18)}<span>Полный профиль «Как мы чувствуем любовь» с советами</span></li>
     <li>${ico("check",18)}<span>Все статьи и новые материалы каждый месяц</span></li>
+    <li>${ico("check",18)}<span><strong>Цели без выгорания:</strong> безлимит целей и привычек, программа «Перестать откладывать», разборы прокрастинации</span></li>
     ${PSY.plusDiscount?`<li>${ico("check",18)}<span><strong>Скидка ${+PSY.plusDiscount}% на консультации у ${esc(PSY.nameFrom||PSY.nameTo)}</strong></span></li>`:""}
   </ul></div>
   ${plus()?`<div class="card soft"><p><strong>Опора+ подключена</strong></p><p class="small muted">Спасибо, что поддерживаете проект.</p><button class="linkbtn small" id="plusOff" style="align-self:flex-start">Отключить на этом устройстве</button></div>`:
