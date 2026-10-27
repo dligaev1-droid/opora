@@ -1,9 +1,9 @@
 // Офлайн-режим: файлы приложения сохраняются на телефоне.
 // При каждом обновлении приложения увеличивайте номер версии.
-const VERSION = "opora-v19";
+const VERSION = "opora-v20";
 const FILES = [
-  "./", "./index.html", "./css/style.css", "./js/config.js", "./js/content.js", "./js/daily.js", "./js/app.js", "./js/growth.js", "./js/cards.js", "./js/thought.js", "./js/sounds.js", "./js/relations.js", "./js/couple.js", "./js/together.js", "./js/garden.js", "./js/goals.js", "./js/intim.js",
-  "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"
+  "./", "./index.html", "./css/style.css", "./js/config.js", "./js/content.js", "./js/daily.js", "./js/app.js", "./js/growth.js", "./js/cards.js", "./js/thought.js", "./js/sounds.js", "./js/relations.js", "./js/couple.js", "./js/together.js", "./js/garden.js", "./js/goals.js", "./js/intim.js", "./js/legal.js",
+  "./fonts/onest.woff", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"
 ];
 
 self.addEventListener("install", e => {
@@ -21,15 +21,6 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
-  // Шрифты Google: берём из кэша, если есть, и докачиваем в фоне
-  if (url.hostname.endsWith("fonts.googleapis.com") || url.hostname.endsWith("fonts.gstatic.com")) {
-    e.respondWith(caches.open(VERSION).then(async c => {
-      const hit = await c.match(e.request);
-      const net = fetch(e.request).then(r => { c.put(e.request, r.clone()); return r; }).catch(() => hit);
-      return hit || net;
-    }));
-    return;
-  }
   if (url.origin !== location.origin) return;
   // Свои файлы: сначала сеть (чтобы быстро получать обновления), без сети — из кэша
   e.respondWith(

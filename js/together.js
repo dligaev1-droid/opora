@@ -159,7 +159,7 @@ function lwBlock(name, sc, full){
   const top=LK.slice().sort((a,b)=>sc[b]-sc[a]);
   return `<div class="card"><span class="label">${esc(name)}</span><h3>${LW[top[0]].t}${full?` и ${LW[top[1]].t.toLowerCase()}`:""}</h3>
     ${full?`<div class="lw-bars">${top.map(k=>`<div class="eb"><span class="small">${LW[k].t}</span><span class="bar"><i style="width:${sc[k]/4*100}%"></i></span><span class="small muted">${sc[k]}</span></div>`).join("")}</div>
-    <p class="small"><strong>Как радовать ${esc(name)}:</strong> ${LW[top[0]].tip}</p>`:""}</div>`;
+    <p class="small"><strong>Как порадовать:</strong> ${LW[top[0]].tip}</p>`:""}</div>`;
 }
 function vLw(){
   const l=L(); if(!Array.isArray(l.lw)) l.lw=[];
@@ -211,7 +211,7 @@ function vIdeas(){
   const s=SC(), next=ID.findIndex((_,i)=>!s.open.includes(i));
   const tile=i=>{
     const o=s.open.includes(i), d=s.done.includes(i);
-    if(o) return `<button class="sc-tile open${d?" done":""}" data-sc="${i}"><span class="sc-n">${i+1}${d?` · ${ico("check",14)} были`:""}</span><span class="sc-t">${ID[i][0]}</span></button>`;
+    if(o) return `<button class="sc-tile open${d?" done":""}" data-sc="${i}"><span class="sc-n">${i+1}${d?` · ${ico("check",14)} провели`:""}</span><span class="sc-t">${ID[i][0]}</span></button>`;
     if(!canOpen(i)) return `<button class="sc-tile lock" data-go="plus" aria-label="Свидание ${i+1}, доступно в Опора+"><span class="sc-big">${i+1}</span>${LOCK}</button>`;
     return `<button class="sc-tile cover${i===next?" next":""}" data-sc="${i}" aria-label="Свидание ${i+1}, закрыто"><span class="sc-big">${i+1}</span><span class="small">${i===next?"Следующее":"?"}</span></button>`;
   };
@@ -288,7 +288,7 @@ function wishAdd(t){
 }
 function vWish(){
   const w=WL(), left=w.filter(x=>!x.done), done=w.filter(x=>x.done);
-  const row=x=>`<div class="entry wish"><input type="checkbox" data-wd="${x.id}" ${x.done?"checked":""} aria-label="Сделано: ${esc(x.t)}"><p class="small" style="flex:1;${x.done?"text-decoration:line-through;color:var(--muted)":""}">${esc(x.t)}</p><button class="linkbtn small" data-wx="${x.id}" aria-label="Удалить">✕</button></div>`;
+  const row=x=>`<div class="entry wish"><label class="wl"><input type="checkbox" data-wd="${x.id}" ${x.done?"checked":""}><span class="small" style="${x.done?"text-decoration:line-through;color:var(--muted)":""}">${esc(x.t)}</span></label><button class="linkbtn small" data-wx="${x.id}" aria-label="Удалить">✕</button></div>`;
   return `<div class="stack-s"><h1>Свидания</h1></div>${dSeg("wl")}<p class="muted small">Места, поездки, дела — всё, что хочется сделать вдвоём</p>
   <div class="card"><div class="row" style="flex-wrap:nowrap"><input type="text" id="wIn" placeholder="Например: увидеть море" aria-label="Новое желание" maxlength="120" style="flex:1;min-width:0"><button class="btn" id="wAdd" aria-label="Добавить">+</button></div>
     ${left.length?left.map(row).join(""):`<p class="small muted">Пока пусто. Загляните в «Свидания-сюрпризы» — открытое свидание можно добавить сюда.</p>`}
@@ -347,7 +347,7 @@ function bindIn(){
   const xq=$("#xQ"); if(xq) xq.onclick=()=>{ const v=$("#xIn").value.trim(); if(!v){ toast("Напишите пару слов"); return; }
     const q=o.q, d=Number.isInteger(o.d)?o.d:dayNum(), n=keepName(), qd=QD();
     qd[d]={q, me:v, them:str(o.a), tn:str(o.n,30)}; save(); markDay(); award("self",5); render();
-    setTimeout(()=>{ const c=$("#app .card"); if(c){ c.insertAdjacentHTML("afterend", `<button class="btn block" id="xBack">Отправить свой ответ в ответ</button>`); $("#xBack").onclick=()=>send(`${n} тоже ответил(а) на вопрос дня:`, {t:"q", d, q, n, a:v, r:str(o.a)}); } }, 0);
+    setTimeout(()=>{ const c=$("#app .card"); if(c){ c.insertAdjacentHTML("afterend", `<button class="btn block" id="xBack">Отправить мой ответ</button>`); $("#xBack").onclick=()=>send(`${n} тоже ответил(а) на вопрос дня:`, {t:"q", d, q, n, a:v, r:str(o.a)}); } }, 0);
   };
   if(o.t==="q" && Number.isInteger(o.d) && o.r!==undefined){ const qd=QD(); const r=qd[o.d]; if(r && r.q===o.q && !r.them){ r.them=str(o.a); r.tn=str(o.n,30); save(); } }
   $$("[data-mr]").forEach(b=>b.onclick=()=>{ const n=keepName(); const i=+b.dataset.mr; send(`${n}: «${MS[i]}»`, {t:"m", n, s:i}); });

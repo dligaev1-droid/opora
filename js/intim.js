@@ -5,7 +5,16 @@
 (function(){
 "use strict";
 const LV=window.LOVE;
-const I = () => { if(!S.intim || typeof S.intim!=="object") S.intim={}; const x=S.intim; if(!Array.isArray(x.tests)) x.tests=[]; if(!Array.isArray(x.maps)) x.maps=[]; return x; };
+const isObj = v => !!v && typeof v==="object" && !Array.isArray(v);
+// Проверка и починка данных раздела: повреждённые записи отбрасываются, а не ломают экраны
+const I = () => {
+  if(!isObj(S.intim)) S.intim={};
+  const x=S.intim;
+  if(typeof x.adult!=="boolean") x.adult=x.adult===true;
+  if(!Array.isArray(x.tests)) x.tests=[]; x.tests=x.tests.filter(r=>isObj(r) && Array.isArray(r.a) && r.a.length===12);
+  if(!Array.isArray(x.maps)) x.maps=[]; x.maps=x.maps.filter(r=>isObj(r) && Array.isArray(r.a) && Array.isArray(r.b));
+  return x;
+};
 const all = () => !!(LV && LV.L().all);
 const adult = () => !!I().adult;
 const LOCK='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';

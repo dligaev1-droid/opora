@@ -6,14 +6,23 @@
 const LV = window.LOVE;
 const plus = () => !!(LV && LV.plus());
 const LOCK='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+const isObj = x => !!x && typeof x==="object" && !Array.isArray(x);
+// Проверка и починка данных раздела: повреждённые записи отбрасываются, а не ломают экраны
 const G = () => {
-  if(!S.goals || typeof S.goals!=="object") S.goals={};
+  if(!isObj(S.goals)) S.goals={};
   const g=S.goals;
-  if(!Array.isArray(g.list)) g.list=[]; if(!Array.isArray(g.hab)) g.hab=[]; if(!Array.isArray(g.proc)) g.proc=[];
-  ["focus","energy"].forEach(k=>{ if(!g[k]||typeof g[k]!=="object") g[k]={}; });
-  if(!g.prog||typeof g.prog!=="object") g.prog={done:{},notes:{}};
-  g.list.forEach(x=>{ if(!Array.isArray(x.steps)) x.steps=[]; });
-  g.hab.forEach(h=>{ if(!h.days||typeof h.days!=="object") h.days={}; });
+  if(!Array.isArray(g.list)) g.list=[];
+  g.list=g.list.filter(x=>isObj(x) && typeof x.t==="string" && x.id!=null);
+  g.list.forEach(x=>{ x.id=String(x.id); if(!Array.isArray(x.steps)) x.steps=[]; x.steps=x.steps.filter(s=>isObj(s) && typeof s.t==="string"); x.steps.forEach(s=>{ if(s.id==null) s.id=uid(); s.id=String(s.id); }); });
+  if(!Array.isArray(g.hab)) g.hab=[];
+  g.hab=g.hab.filter(h=>isObj(h) && typeof h.t==="string" && h.id!=null);
+  g.hab.forEach(h=>{ h.id=String(h.id); if(!isObj(h.days)) h.days={}; });
+  if(!Array.isArray(g.proc)) g.proc=[]; g.proc=g.proc.filter(isObj);
+  ["focus","energy"].forEach(k=>{ if(!isObj(g[k])) g[k]={}; });
+  Object.keys(g.energy).forEach(k=>{ const e=g.energy[k]; if(!isObj(e)||typeof e.v!=="number") delete g.energy[k]; else { if(!Array.isArray(e.p)) e.p=[]; if(!Array.isArray(e.m)) e.m=[]; } });
+  if(!isObj(g.prog)) g.prog={done:{},notes:{}};
+  if(!isObj(g.prog.done)) g.prog.done={}; if(!isObj(g.prog.notes)) g.prog.notes={};
+  if(g.main!=null && !isObj(g.main)) delete g.main;
   return g;
 };
 const dayNum = (t=Date.now()) => { const d=new Date(t); return Math.floor(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/864e5); };
@@ -190,7 +199,7 @@ function vGoal(){
   <div class="stack-s"><span class="label">${esc(x.area||"Цель")}</span><h1>${esc(x.t)}</h1>${x.why?`<p class="muted">Зачем: ${esc(x.why)}</p>`:""}</div>
   <div class="progress"><i style="width:${n?k/n*100:0}%"></i></div>
   <div class="card"><span class="label">Шаги · ${k} из ${n}</span>
-    ${x.steps.map(s=>`<div class="entry wish"><input type="checkbox" data-st="${s.id}" ${s.done?"checked":""} aria-label="${esc(s.t)}"><p class="small" style="flex:1;${s.done?"text-decoration:line-through;color:var(--muted)":""}">${esc(s.t)}</p><button class="linkbtn small" data-sx="${s.id}" aria-label="Удалить шаг">✕</button></div>`).join("")}
+    ${x.steps.map(s=>`<div class="entry wish"><label class="wl"><input type="checkbox" data-st="${s.id}" ${s.done?"checked":""}><span class="small" style="${s.done?"text-decoration:line-through;color:var(--muted)":""}">${esc(s.t)}</span></label><button class="linkbtn small" data-sx="${s.id}" aria-label="Удалить шаг">✕</button></div>`).join("")}
     <div class="row" style="flex-wrap:nowrap"><input type="text" id="sIn" placeholder="Следующий маленький шаг" aria-label="Новый шаг" maxlength="120" style="flex:1;min-width:0"><button class="btn" id="sAdd" aria-label="Добавить шаг">+</button></div>
   </div>
   <button class="btn quiet block" data-go="gproc">Застряли? Разобрать, что мешает</button>
@@ -272,11 +281,11 @@ function bindFocus(){
 
 /* ---------- Путь: программа, разбор прокрастинации, статьи ---------- */
 const PD=[
-  {t:"Это не лень", p:["Мы откладываем не потому, что ленивые, а чтобы не встречаться с неприятным чувством: скукой, тревогой, страхом ошибиться.","Откладывание даёт облегчение прямо сейчас — и счёт с процентами потом. Понять, от какого чувства вы убегаете, — первый шаг."], task:"Выпишите три дела, которые откладываете. Рядом с каждым — чувство, которое возникает, когда о нём думаете."},
+  {t:"Это не лень", p:["Мы откладываем не из-за лени, а чтобы не встречаться с неприятным чувством: скукой, тревогой, страхом ошибиться.","Откладывание даёт облегчение прямо сейчас — и счёт с процентами потом. Понять, от какого чувства вы убегаете, — первый шаг."], task:"Выпишите три дела, которые откладываете. Рядом с каждым — чувство, которое возникает, когда о нём думаете."},
   {t:"Правило 10 минут", p:["Начать — самое трудное. Мозг пугается всей задачи целиком.","Договоритесь с собой: только 10 минут, потом можно остановиться. Чаще всего вы продолжите."], task:"Выберите одно дело и сделайте только первые 10 минут. Можно через «Фокус» на 10 минут."},
   {t:"Мысли-ловушки", p:["«Надо идеально», «сделаю, когда будет настроение», «у меня всё равно не получится» — эти мысли звучат как правда, но это привычки мышления.","Их можно заметить и ответить им, как ответили бы другу."], task:"Найдите свою главную мысль-ловушку и напишите ей ответ. Помогает «Разбор прокрастинации»."},
   {t:"Среда сильнее силы воли", p:["Сила воли быстро заканчивается. Обстановка работает всегда.","Уберите то, что отвлекает, и подготовьте то, что помогает начать."], task:"На время одной сессии фокуса уберите телефон в другую комнату и закройте лишние вкладки."},
-  {t:"Энергия, а не время", p:["Час, когда вы бодры, стоит трёх, когда вы выжаты.","Трудное — на пик энергии. Рутину — на спад."], task:"Три дня отмечайте энергию утром, днём и вечером. Найдите свой пик."},
+  {t:"Энергия, а не время", p:["Час, когда вы бодры, стоит трёх, когда вы выжаты.","Трудное — на пик энергии. Рутину — на спад."], task:"Три дня подряд замечайте, когда у вас больше всего сил: утром, днём или вечером. Это и есть ваш пик."},
   {t:"Доброта вместо кнута", p:["Кажется, что ругать себя полезно. Исследования показывают обратное: самокритика усиливает откладывание, а прощение себя за прошлую неудачу его снижает.","Говорите с собой так, как говорили бы с близким человеком, который застрял."], task:"Напишите себе короткое письмо как другу, который откладывает важное дело. Что бы вы ему сказали?"},
   {t:"Система на будущее", p:["Мотивация приходит и уходит. Система остаётся.","Раз в неделю: что получилось, что мешало, какие три шага главные на следующую неделю."], task:"Составьте план следующей недели: три главных шага и когда вы их сделаете."}
 ];

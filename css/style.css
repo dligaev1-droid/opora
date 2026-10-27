@@ -1,3 +1,5 @@
+/* Шрифт Onest хранится в самом приложении (fonts/onest.woff, лицензия SIL OFL — fonts/OFL.txt): никаких запросов к сторонним серверам */
+@font-face{font-family:"Onest";src:url("../fonts/onest.woff") format("woff");font-weight:100 900;font-style:normal;font-display:swap}
 /* Базовый сброс */
 html{-webkit-text-size-adjust:100%;color-scheme:light}
 body{margin:0;padding-top:env(safe-area-inset-top,0px)}
@@ -650,3 +652,26 @@ button.main-step{cursor:pointer}
 @media (prefers-color-scheme: dark){:root[data-room="intim"]:not([data-theme="light"]) .feat-i{background:linear-gradient(135deg,#3A1F31,#43262E 60%,#331C2C)}
   :root[data-room="intim"]:not([data-theme="light"]) .feat-i .feat-t,:root[data-room="intim"]:not([data-theme="light"]) .feat-i .small{color:#F1E6EC}
   :root[data-room="intim"]:not([data-theme="light"]) .feat-i .label,:root[data-room="intim"]:not([data-theme="light"]) .feat-i .feat-go{color:#F0B3D2}}
+
+/* v20: юридические документы */
+.legal h3{margin-top:6px}
+.legal p{white-space:pre-line}
+.consent{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.consent input{width:22px;height:22px;flex:none;margin-top:1px;accent-color:var(--accent)}
+.legal-links{display:flex;flex-wrap:wrap;gap:0 6px;align-items:center;color:var(--muted)}
+.age16{display:inline-grid;place-items:center;height:22px;padding:0 6px;border-radius:6px;border:1.5px solid currentColor;font-size:.7rem;font-weight:800}
+
+/* v20: визуальная доводка по тестам */
+.sos-pill{min-height:44px;padding:0 16px}
+.mode-sw{padding:3px}.mode-sw button{height:38px}
+.wl{display:flex;gap:10px;align-items:center;flex:1;min-height:44px;cursor:pointer;min-width:0}
+.wl input{width:22px;height:22px;flex:none;accent-color:var(--accent)}
+.sc-tile.done .sc-n{color:var(--ink)}
+.card.soft .linkbtn{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.g-ms.on{color:var(--ink)}.g-ms.on svg{color:var(--accent)}
+.result-sev{background:transparent}
+/* отзывчивое нажатие */
+@media (prefers-reduced-motion:no-preference){
+  .btn,.tile,.li,.banner,.opt,.chip,.room-card,.sc-tile,.mood,.hw,.bt-v,.card[data-go],button.card{transition:transform .12s ease, background-color .2s}
+  .btn:active,.tile:active,.li:active,.banner:active,.opt:active,.chip:active,.room-card:active,.sc-tile:active,.mood:active,.bt-v:active,button.card:active{transform:scale(.975)}
+}

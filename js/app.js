@@ -234,7 +234,7 @@ function vHome(){
   </div>
   ${window.roomsRow?roomsRow():window.loveBanner?loveBanner():""}
   ${S.days.length>=2?installCard():""}
-  <p class="disclaimer">Не заменяет консультацию специалиста. Данные хранятся только у вас.</p>`;
+  <p class="disclaimer">Не заменяет консультацию специалиста. Данные хранятся только у вас. <button class="linkbtn small" data-go="legal" data-sub="privacy" style="display:inline;min-height:0">Конфиденциальность</button> · 16+</p>`;
 }
 function bindHome(){
   $$("[data-qm]").forEach(b=>b.onclick=()=>{draft.mood=+b.dataset.qm; go("diary");});
@@ -267,7 +267,7 @@ function vSOS(){
       <div><div class="label">Экстренные службы</div><a class="phone" href="tel:112">112</a></div>
       <div><div class="label">Психологическая помощь МЧС, круглосуточно</div><a class="phone" href="tel:+74959895050">8 495 989‑50‑50</a></div>
       <div><div class="label">Телефон доверия для подростков и родителей, бесплатно</div><a class="phone" href="tel:88002000122">8 800 2000‑122</a></div>
-      <div><div class="label">Психологическая помощь МЧС онлайн</div><a href="https://psi.mchs.gov.ru/" target="_blank" rel="noopener" style="color:var(--ink);font-weight:600">psi.mchs.gov.ru</a></div>
+      <div><div class="label">Психологическая помощь МЧС онлайн</div><a class="tap" href="https://psi.mchs.gov.ru/" target="_blank" rel="noopener" style="color:var(--ink);font-weight:600">psi.mchs.gov.ru</a></div>
     </div>
   </div>`;
 }
@@ -495,7 +495,7 @@ function vResult(){
     <span class="label">${t.title} · ${esc(t.code)}</span>
     <div class="row" style="align-items:flex-end;gap:10px"><span class="big-num">${score}</span><span class="muted" style="padding-bottom:6px">${t.unit}</span></div>
     <div class="scale" aria-hidden="true">${segs}</div>
-    <div><span class="result-sev" style="background:var(--surface-2);color:${lvlColor(l)}">${l[1]}</span></div>
+    <div><span class="result-sev" style="color:${lvlColor(l)};box-shadow:inset 0 0 0 1.5px currentColor">${l[1]}</span></div>
     ${before?`<p class="small muted">В прошлый раз (${fmtDate(before.ts)}): ${before.score} ${t.unit}</p>`:""}
   </div>
   ${risk?`<div class="card sos"><h3>Вы отметили мысли о смерти или вреде себе</h3><p class="small">Это важно. Пожалуйста, поговорите с кем‑то уже сегодня: с близким человеком, специалистом или по телефону экстренной помощи 112.</p><button class="btn sosb" data-go="sos">Где получить помощь</button></div>`:""}
@@ -925,6 +925,7 @@ function vAbout(){
       <label class="field"><span>Формат</span><select id="bFmt">${["Онлайн","Очно","Пока не знаю"].map(o=>`<option ${BK.fmt===o?"selected":""}>${o}</option>`).join("")}</select></label>
       <label class="field"><span>Удобное время</span><input type="text" id="bTime" placeholder="Например, будни после 18:00" value="${esc(BK.time)}"></label>
       <label class="field"><span>С чем хотите поработать</span><textarea id="bReq" placeholder="Коротко, в двух‑трёх предложениях">${esc(BK.req)}</textarea></label>
+      <label class="consent"><input type="checkbox" id="bOk" ${BK.ok?"checked":""}><span class="small">Я даю <button type="button" class="linkbtn small" data-go="legal" data-sub="consent" style="display:inline;min-height:0">согласие на обработку персональных данных</button> для записи на консультацию</span></label>
       <button class="btn" type="submit">${PSY.telegram?"Отправить в Telegram":"Подготовить заявку"}</button>
     </form>
     ${bookText?`<p class="small muted">Если текст не подставился в чат — скопируйте его:</p><div class="copybox" id="bOut">${esc(bookText)}</div><div class="row"><button class="btn quiet" id="bCopy">Скопировать текст</button>${contact}</div>`:""}
@@ -942,15 +943,19 @@ function vAbout(){
   <div class="card">
     <button class="btn quiet" data-share style="align-self:flex-start">${ico("share",18)} Поделиться приложением</button>
     <h3>Конфиденциальность</h3>
-    <p class="small">Без регистрации и рекламы. Записи хранятся только на этом устройстве.</p>
+    <p class="small">Без регистрации, рекламы и слежки. Записи хранятся только на этом устройстве.</p>
+    ${window.legalLinks?legalLinks():""}
     <button class="linkbtn small" id="wipe" style="align-self:flex-start">Удалить все мои данные</button>
     <div id="wipeConfirm" hidden class="demo-note"><span>Удалить все записи без возможности восстановить?</span><span class="row"><button class="btn quiet" id="wipeNo">Отмена</button><button class="btn sosb" id="wipeYes">Удалить</button></span></div>
   </div>`;
 }
 function bindAbout(){
+  const keepBK=()=>{ const n=$("#bName"); if(!n) return; BK={name:n.value,fmt:$("#bFmt").value,time:$("#bTime").value,req:$("#bReq").value,ok:$("#bOk").checked}; };
+  ["bName","bFmt","bTime","bReq","bOk"].forEach(id=>{ const el=$("#"+id); if(el) el.addEventListener(id==="bOk"||id==="bFmt"?"change":"input", keepBK); });
   $("#bForm").onsubmit=e=>{ e.preventDefault();
-    BK={name:$("#bName").value,fmt:$("#bFmt").value,time:$("#bTime").value,req:$("#bReq").value};
+    BK={name:$("#bName").value,fmt:$("#bFmt").value,time:$("#bTime").value,req:$("#bReq").value,ok:$("#bOk").checked};
     const name=BK.name.trim(); if(!name){ $("#bName").focus(); toast("Укажите, как к вам обращаться"); return; }
+    if(!BK.ok){ $("#bOk").focus(); toast("Отметьте согласие на обработку данных — без него нельзя отправить заявку"); return; }
     bookText=`Здравствуйте, ${PSY.name}! Хочу записаться на консультацию.\nИмя: ${name}\nФормат: ${BK.fmt}\nУдобное время: ${BK.time.trim()||"обсудим"}\nЗапрос: ${BK.req.trim()||"расскажу на встрече"}`;
     if(PSY.telegram){
       try{ window.open(`https://t.me/${encodeURIComponent(PSY.telegram)}?text=${encodeURIComponent(bookText)}`, "_blank", "noopener"); }catch(err){}
@@ -1025,3 +1030,9 @@ if(document.readyState==="loading") document.addEventListener("DOMContentLoaded"
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load", ()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
+
+/* Лёгкий тактильный отклик на отметки (Android); отключается при «уменьшить движение» */
+document.addEventListener("click", e=>{
+  if(!navigator.vibrate || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if(e.target.closest(".mood,.opt,.hw,.bt-v,.chip,[data-ev],[data-qm],input[type=checkbox],#bBtn,#pmrBtn,#fGo")) { try{ navigator.vibrate(8); }catch(_){} }
+}, {passive:true});
