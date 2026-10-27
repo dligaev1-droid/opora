@@ -82,14 +82,28 @@ function leafPath(x,y,len,ang,col,vein){
 /* Картинки стадий, нарисованные художником (art/tree-NN.webp). Для стадии без картинки дерево рисуется кодом.
    Для каждой стадии: [слева, сверху, размер] — какой квадрат картинки показать (доли от 1): ранние стадии приближены. */
 const TREE_ART={1:[.20,.38,.60], 2:[.20,.38,.60], 3:[.14,.27,.72]};
+// ночью луна подсвечивает растение: центр и размер пятна света для каждой стадии (в координатах 300×300)
+const TREE_GLOW={1:[150,190,58,40], 2:[150,165,62,56], 3:[150,138,72,88]};
 const treeArtURL = st => TREE_ART[st] ? `art/tree-${String(st).padStart(2,"0")}.webp` : null;
 function treeArtSVG(lv, opts, night){
   const st=stageOf(lv), cr=TREE_ART[st], id="ta"+(++treeUid), R=rng(S.seed||7), k=300/cr[2], out=[];
-  if(night){ for(let i=0;i<26;i++) out.push(`<circle cx="${f1(20+R()*260)}" cy="${f1(14+R()*110)}" r="${f1(.6+R()*1.1)}" fill="#fff" opacity="${f1(.4+R()*.6)}"/>`);
+  const href=treeArtURL(st), ix=f1(-cr[0]*k), iy=f1(-cr[1]*k), iw=f1(k);
+  let lit="";
+  if(night){ const [gx,gy,rx,ry]=TREE_GLOW[st]||[150,180,60,50];
+    lit=`<path d="M216 74 L${gx-rx*.55} ${gy+ry*.2} L${gx+rx*.55} ${gy+ry*.2}Z" fill="url(#${id}b)" style="mix-blend-mode:screen"/>
+      <image href="${href}" x="${ix}" y="${iy}" width="${iw}" height="${iw}" preserveAspectRatio="none" mask="url(#${id}l)" opacity=".9"/>
+      <ellipse cx="${gx}" cy="${gy}" rx="${rx}" ry="${ry}" fill="url(#${id}g)" style="mix-blend-mode:screen"/>`;
+    for(let i=0;i<7;i++){ const a=R()*Math.PI*2, d=.55+R()*.5, x=gx+Math.cos(a)*rx*d, y=gy+Math.sin(a)*ry*d*.8, z=1.2+R()*1.4;
+      lit+=`<path class="ffly" style="animation-delay:${f1(R()*3)}s" d="M${f1(x)} ${f1(y-z*2)} L${f1(x+z*.45)} ${f1(y-z*.45)} L${f1(x+z*2)} ${f1(y)} L${f1(x+z*.45)} ${f1(y+z*.45)} L${f1(x)} ${f1(y+z*2)} L${f1(x-z*.45)} ${f1(y+z*.45)} L${f1(x-z*2)} ${f1(y)} L${f1(x-z*.45)} ${f1(y-z*.45)}Z" fill="#FFF3C8"/>`; }
+    lit=`<defs><radialGradient id="${id}r"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+      <mask id="${id}l"><rect width="300" height="300" fill="#000"/><ellipse cx="${gx}" cy="${gy}" rx="${rx}" ry="${ry}" fill="url(#${id}r)"/></mask>
+      <radialGradient id="${id}g"><stop offset="0" stop-color="#FFF1C9" stop-opacity=".35"/><stop offset="1" stop-color="#FFF1C9" stop-opacity="0"/></radialGradient>
+      <linearGradient id="${id}b" x1="216" y1="74" x2="${gx}" y2="${gy}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFF6DA" stop-opacity=".30"/><stop offset="1" stop-color="#FFF6DA" stop-opacity=".04"/></linearGradient></defs>`+lit;
+    for(let i=0;i<26;i++) out.push(`<circle cx="${f1(20+R()*260)}" cy="${f1(14+R()*110)}" r="${f1(.6+R()*1.1)}" fill="#fff" opacity="${f1(.4+R()*.6)}"/>`);
     out.push(`<mask id="${id}m"><rect width="300" height="300" fill="#fff"/><circle cx="229" cy="63" r="13" fill="#000"/></mask><circle cx="222" cy="68" r="15" fill="#F4EFD8" mask="url(#${id}m)"/>`); }
   return `<svg class="tree ${opts.cls||""}" viewBox="0 0 300 300" role="img" aria-label="Дерево, уровень ${lv}"><defs><clipPath id="${id}c"><circle cx="150" cy="150" r="142"/></clipPath>
     <filter id="${id}n" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".19 .04 .04 0 .01  .03 .23 .06 0 .03  .04 .07 .36 0 .07  0 0 0 1 0"/></filter></defs>
-    <g clip-path="url(#${id}c)"><rect width="300" height="300" fill="${night?"#142336":"#CFE3F5"}"/><image href="${treeArtURL(st)}" x="${f1(-cr[0]*k)}" y="${f1(-cr[1]*k)}" width="${f1(k)}" height="${f1(k)}" preserveAspectRatio="none"${night?` filter="url(#${id}n)"`:""}/>${out.join("")}</g></svg>`;
+    <g clip-path="url(#${id}c)"><rect width="300" height="300" fill="${night?"#142336":"#CFE3F5"}"/><image href="${href}" x="${ix}" y="${iy}" width="${iw}" height="${iw}" preserveAspectRatio="none"${night?` filter="url(#${id}n)"`:""}/>${out.join("")}${lit}</g></svg>`;
 }
 function treeSVG(lv, opts={}){
   if(TREE_ART[stageOf(lv)]){ const nt=opts.colors && opts.colors.night!==undefined ? opts.colors.night : isDark(); return treeArtSVG(lv, opts, nt); }

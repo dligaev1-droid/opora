@@ -187,10 +187,17 @@ function dataCard(){
   </div>`;
 }
 const vAbout0=VIEWS.about[0], bAbout0=VIEWS.about[1];
-function vAbout(){ const h=vAbout0(), k=h.indexOf('<button class="btn quiet" data-share'), i=h.lastIndexOf('<div class="card">', k); return i<0?h+dataCard():h.slice(0,i)+dataCard()+h.slice(i); }
+function themeCard(){
+  if(!window.THEME) return "";
+  const p=THEME.pref(), O=[["time",`По времени суток`],["system","Как в телефоне"],["light","Всегда светлая"],["dark","Всегда тёмная"]];
+  return `<div class="card" id="themeCard"><h3>Оформление</h3><p class="small muted">${p==="time"?`С ${THEME.NIGHT_FROM}:00 до ${THEME.NIGHT_TO}:00 приложение само становится ночным, а утром — дневным. Дерево тоже засыпает под звёздами.`:p==="system"?"Тема меняется вместе с настройкой телефона.":"Тема не меняется сама."}</p>
+  <div class="chips">${O.map(([k,t])=>`<button class="chip" data-theme-set="${k}" aria-pressed="${p===k}">${t}</button>`).join("")}</div></div>`;
+}
+function vAbout(){ const h=vAbout0(), k=h.indexOf('<button class="btn quiet" data-share'), i=h.lastIndexOf('<div class="card">', k), x=themeCard()+dataCard(); return i<0?h+x:h.slice(0,i)+x+h.slice(i); }
 function bindAbout(){
   const wantData=sub==="data"; if(wantData) sub=null;
   bAbout0();
+  $$("[data-theme-set]").forEach(b=>b.onclick=()=>THEME.set(b.dataset.themeSet));
   const e=$("#dExp"); if(e) e.onclick=exportData;
   const f=$("#dImp"); if(f) f.onchange=()=>readImport(f.files[0]);
   const n=$("#iNo"); if(n) n.onclick=()=>{ IMP=null; render(); };
