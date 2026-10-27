@@ -152,6 +152,7 @@ function vPath(){
     ${li("lovef",null,ico("hand",18),"Разбор ссоры","Понять себя и сказать без упрёков",!plus() && l.fights.length>=1)}
     ${li("lovek",null,ico("book",18),"Трудные разговоры","Деньги, родители, ревность, близость",false)}
   </div></div>
+  ${window.intimLi?`<div class="list">${intimLi()}</div>`:""}
   <div class="stack-s"><span class="label">Почитать</span><div class="list">${LA.map((a,i)=>li("lovea",a.id,ico("book",18),a.t,`${a.m} мин`,i>0 && !plus())).join("")}</div></div>`;
 }
 /* Психолог */

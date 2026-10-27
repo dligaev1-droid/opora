@@ -627,3 +627,26 @@ button.main-step{cursor:pointer}
   :root[data-room="goals"]:not([data-theme="light"]) .feat-g .feat-t,:root[data-room="goals"]:not([data-theme="light"]) .feat-g .small{color:#E6EEE7}
   :root[data-room="goals"]:not([data-theme="light"]) .feat-g .label,:root[data-room="goals"]:not([data-theme="light"]) .feat-g .feat-go{color:#9FD6B3}}
 @media (prefers-reduced-motion:reduce){.fr-fg{transition:none}}
+
+/* v19: «Близость 18+» — глубокий сливовый */
+:root[data-room="intim"]{
+  --bg:#F6EFF2; --surface:#FFFFFF; --surface-2:#EEE1E8; --ink:#2A1E26; --muted:#64525D;
+  --accent:#86396A; --accent-ink:#FFFFFF; --accent-soft:#F1DDE8; --line:#E7D6DF; --nav:rgba(255,255,255,.88)}
+@media (prefers-color-scheme: dark){:root[data-room="intim"]:not([data-theme="light"]){
+  --bg:#170F15; --surface:#22161F; --surface-2:#2F2029; --ink:#F1E6EC; --muted:#B79FAE;
+  --accent:#E59BC4; --accent-ink:#1A0F16; --accent-soft:#3B2232; --line:#352631; --nav:rgba(34,22,31,.9)}}
+:root[data-theme="dark"][data-room="intim"]{
+  --bg:#170F15; --surface:#22161F; --surface-2:#2F2029; --ink:#F1E6EC; --muted:#B79FAE;
+  --accent:#E59BC4; --accent-ink:#1A0F16; --accent-soft:#3B2232; --line:#352631; --nav:rgba(34,22,31,.9)}
+.age18{display:inline-grid;place-items:center;min-width:36px;height:24px;padding:0 6px;border-radius:7px;border:1.5px solid currentColor;font-size:.72rem;font-weight:800;letter-spacing:.02em;color:var(--accent);line-height:1;vertical-align:middle}
+.age18.big{min-width:64px;height:40px;font-size:1.1rem;border-width:2px;border-radius:12px}
+.age-gate{align-items:center;text-align:center;padding:28px 20px;gap:14px;margin-top:24px}
+.age-gate .btn{width:100%}
+.intim-logo{background:linear-gradient(135deg,#86396A,#D58BA9)!important;color:#fff!important}
+.rooms .rc-intim{grid-column:1/-1;min-height:0;background:linear-gradient(135deg,#EFDDE8,#F5E6EC 60%,#EADCE6);color:#2A1E26}
+.rc-intim .rc-ico{background:#86396A}.rc-intim .small{color:#64525D}.rc-intim .age18{color:#86396A}
+.feat-i{background:linear-gradient(135deg,#EDD6E3,#F6E5EA 60%,#E9D7E3);color:#2A1E26}
+.feat-i .label,.feat-i .feat-go{color:#86396A}.feat-i .feat-t,.feat-i .small{color:#2A1E26}
+@media (prefers-color-scheme: dark){:root[data-room="intim"]:not([data-theme="light"]) .feat-i{background:linear-gradient(135deg,#3A1F31,#43262E 60%,#331C2C)}
+  :root[data-room="intim"]:not([data-theme="light"]) .feat-i .feat-t,:root[data-room="intim"]:not([data-theme="light"]) .feat-i .small{color:#F1E6EC}
+  :root[data-room="intim"]:not([data-theme="light"]) .feat-i .label,:root[data-room="intim"]:not([data-theme="light"]) .feat-i .feat-go{color:#F0B3D2}}

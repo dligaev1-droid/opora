@@ -119,7 +119,7 @@ function go(r, s=null){
   if(!go._pop){ try{ history.pushState({r,s}, "", r==="home"?location.pathname+location.search:"#"+r); }catch(e){} }
 }
 function renderTabs(){
-  const rm=window.ROOM_OF?ROOM_OF(route):""; if(rm && window.ROOM_NAV){ $("#tabs").innerHTML=ROOM_NAV(route); $("#tabs").closest("nav").setAttribute("aria-label",rm==="love"?"Для пары":"Цели"); return; }
+  const rm=window.ROOM_OF?ROOM_OF(route):""; if(rm && window.ROOM_NAV){ $("#tabs").innerHTML=ROOM_NAV(route); $("#tabs").closest("nav").setAttribute("aria-label",{love:"Для пары",goals:"Цели",intim:"Близость"}[rm]||"Разделы"); return; }
   $("#tabs").closest("nav").setAttribute("aria-label","Разделы");
   const main = TAB_OF[route] || route;
   $("#tabs").innerHTML = TABS.map(([k,t])=>`<button data-go="${k}" ${main===k?'aria-current="page"':''}>${ico(k,22)}<span>${t}</span></button>`).join("");
