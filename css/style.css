@@ -730,3 +730,41 @@ button.main-step{cursor:pointer}
 .hm i.on{background:var(--accent)}.hm i.part{background:var(--accent-soft)}.hm i.fut{background:transparent}
 .f-bars{height:100px}
 .wi-pick{text-align:center;align-items:center}
+
+/* ---------- Знакомство, лента «Сегодня», сон, статистика настроения, SOS для пары ---------- */
+body.onb-on nav{display:none}
+.onb{display:flex;flex-direction:column;gap:16px;min-height:calc(100dvh - 48px);justify-content:center;padding:8px 0 24px}
+.onb h1{font-size:2.2rem;margin:0}.onb h2{margin:0}
+.onb-logo{width:64px;height:64px;font-size:1.8rem;border-radius:20px}
+.onb-dots{display:flex;gap:6px}.onb-dots i{width:22px;height:5px;border-radius:9px;background:var(--surface-2)}.onb-dots i.on{background:var(--accent)}
+.onb-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+.onb-list li{display:flex;gap:12px;align-items:center}.onb-list svg{color:var(--accent);flex:none}
+.feed{align-items:flex-start}
+.feed .feed-i{flex:0 0 86%;scroll-snap-align:start;display:flex}
+.feed .feed-i>*{flex:1;min-width:0;margin:0}
+.file-btn{position:relative;overflow:hidden;cursor:pointer}
+.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.rm-card{gap:10px}.rm-card input[type=time]{max-width:120px}
+.sl-times{gap:10px}.sl-times input{width:100%}
+.sl-bars{height:110px}
+.mcal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+.mc-h{font-size:.7rem;color:var(--muted);text-align:center}
+.mc-d{aspect-ratio:1;border-radius:9px;display:grid;place-items:center;font-size:.78rem;background:var(--surface-2);color:var(--muted)}
+.mc-d.on{background:var(--c);color:#fff;font-weight:700}
+.ypix{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin-top:6px}
+.ypix .yp-h{font-size:.66rem;color:var(--muted);text-align:center;padding-bottom:2px}
+.ypix i{display:block;height:9px;border-radius:2px;background:var(--surface-2)}
+.ypix i.na{background:transparent}
+.yp-leg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:10px}
+.yp-leg span{display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--muted)}
+.yp-leg i{width:10px;height:10px;border-radius:3px;display:block}
+.our-path{gap:8px}
+.op-garden{border:0;padding:0;background:none;border-radius:14px;overflow:hidden;display:block;width:100%;cursor:pointer}
+.op-garden .garden-mini{display:block}
+.sos-pair .bi{background:var(--accent-soft);color:var(--accent)}
+.ls-breath{position:absolute;width:52%;aspect-ratio:1;border-radius:50%;background:var(--accent-soft);opacity:.55;z-index:-1}
+.ls-breath.on{animation:lsb 10s ease-in-out infinite}
+@keyframes lsb{0%{transform:scale(.7)}40%{transform:scale(1.05)}100%{transform:scale(.7)}}
+@media (prefers-reduced-motion: reduce){.ls-breath.on{animation:none}}
+.f-mid{isolation:isolate}
+#lsScr{font-size:1.05rem;line-height:1.5}
