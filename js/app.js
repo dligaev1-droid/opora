@@ -524,9 +524,12 @@ function vResult(){
 function bindTests(){
   $$("[data-test]").forEach(b=>b.onclick=()=>{T={id:b.dataset.test,i:0,a:[]}; render(); scrollTo(0,0);});
   $$("[data-ans]").forEach(b=>b.onclick=()=>{
+    if(T.busy) return; T.busy=true;
+    $$("[data-ans]").forEach(x=>x.classList.toggle("sel", x===b)); b.blur();
+    setTimeout(()=>{ T.busy=false; if(!T.id) return;
     T.a[T.i]=+b.dataset.ans; T.i++;
     if(T.i===TESTS[T.id].q.length){ const sc=scoreOf(T.id,T.a); S.tests.push({id:T.id, score:sc, ts:Date.now()}); save(); markDay(); if(level(T.id,sc)[2]!=="m1") award("aware",10); }
-    render(); scrollTo(0,0);
+    render(); scrollTo(0,0); }, 280);
   });
   const bk=$("#tBack"); if(bk) bk.onclick=()=>{ if(T.i>0){T.i--;} else T={id:null,i:0,a:[]}; render(); };
   const dn=$("#tDone"); if(dn) dn.onclick=()=>{T={id:null,i:0,a:[]}; render();};

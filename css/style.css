@@ -838,7 +838,6 @@ input[type=search]:focus-visible,input[type=number]:focus-visible,input[type=tim
 .bd-p{display:flex;flex-direction:column;gap:4px;margin-top:auto}
 .bd-p .progress{height:4px}
 .badges-card{gap:10px}
-.stg small{hyphens:auto;-webkit-hyphens:auto}
 
 /* «Сегодня» на главной: две плитки рядом и мысль дня под ними */
 .today-duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -869,3 +868,20 @@ input[type=search]:focus-visible,input[type=number]:focus-visible,input[type=tim
 .logo.has-photo,.avatar.has-photo{border-radius:50%}
 .psy-card{padding-top:0;overflow:hidden}
 .psy-hero{display:block;width:calc(100% + 36px);max-width:none;margin:0 -18px 4px;aspect-ratio:4/3;object-fit:cover;object-position:50% 30%}
+
+/* ответы в тестах: подсветка только при наведении мышью (на телефоне не «залипает») */
+.opt:hover{border-color:var(--line)}
+.opt.sel:hover{border-color:var(--accent)}
+@media (hover:hover){.opt:hover{border-color:var(--accent)}}
+.opt.sel{transition:background-color .15s,border-color .15s}
+/* стадии дерева: 3 колонки, слова не разрываются */
+.stages{grid-template-columns:repeat(3,1fr)}
+.stg small{hyphens:none;-webkit-hyphens:none;overflow-wrap:normal;word-break:normal;font-size:.72rem}
+.sk-next{color:var(--ink);opacity:.8}
+/* знакомство: дерево и подсказки разделов */
+.onb-grow{flex-direction:row;align-items:center;gap:14px}
+.onb-tree{flex:none;width:84px;height:84px;display:block}
+.onb-tree .tree{width:84px;height:84px}
+.tip-card{gap:8px}
+.tip-card p{margin:0}
+.tip-card .row{justify-content:space-between;align-items:center;flex-wrap:nowrap}

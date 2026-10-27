@@ -36,8 +36,9 @@ function award(skill, pts, why){
   const got=Math.min(pts, room);
   S.lastActive=Date.now();
   if(!got){ save(); return 0; }
-  const before=levelOf(xpTotal());
-  S.xp[skill]+=got; S.xpDay.v+=got; save();
+  const before=levelOf(xpTotal()), first=!xpTotal() && !S.xpIntro;
+  S.xp[skill]+=got; S.xpDay.v+=got; if(first) S.xpIntro=1; save();
+  if(first){ setTimeout(()=>firstPoints(got, skill), 500); return got; }
   const after=levelOf(xpTotal());
   if(after>before){
     const st0=stageOf(before), st1=stageOf(after);
@@ -47,6 +48,17 @@ function award(skill, pts, why){
     xpToast(`+${got} · ${SKILLS[skill].t}`);
   }
   return got;
+}
+// первые очки: коротко объясняем, что это и зачем
+function firstPoints(got, skill){
+  const m=document.createElement("div"); m.className="modal"; m.setAttribute("role","dialog"); m.setAttribute("aria-label","Первые очки");
+  m.innerHTML=`<div class="modal-in celebrate">${treeSVG(1,{cls:"big"})}<span class="label" style="text-align:center">+${got} · ${SKILLS[skill].t}</span><h2 style="text-align:center">Ваши первые очки!</h2>
+    <p class="small" style="text-align:center">Вы посадили семечко. За каждое дело для себя — запись в дневнике, тест, упражнение — начисляются очки, и дерево растёт: 11 стадий, от семечка до Древа жизни.</p>
+    <p class="small muted" style="text-align:center">Очки не сгорают. Посмотреть дерево и достижения можно в «Моём росте» на главной.</p>
+    <div class="row" style="justify-content:center"><button class="btn" id="fpGo">Посмотреть дерево</button><button class="btn quiet" id="fpOk">Понятно</button></div></div>`;
+  document.body.appendChild(m);
+  $("#fpOk",m).onclick=()=>{ m.remove(); render(); };
+  $("#fpGo",m).onclick=()=>{ m.remove(); go("growth"); };
 }
 function xpToast(t){
   const el=document.createElement("div"); el.className="xp-pop"; el.textContent=t;
@@ -273,7 +285,8 @@ function vGrowth(){
   </div>
   <div class="stack-s"><span class="label">Навыки</span>
     <div class="list">${Object.entries(SKILLS).map(([k,s])=>{ const x=S.xp[k], l=skillLv(x), a=skillNext(l-1), b=skillNext(l), p=l>=10?100:Math.round((x-a)/(b-a)*100);
-      return `<div class="li skill"><span class="sdot" style="background:${s.c}"></span><span class="dt" style="flex:1"><span class="row" style="justify-content:space-between"><strong>${s.t}</strong><span class="small muted">${l} · ${SKILL_TITLES[l-1]}</span></span><span class="progress" style="display:block"><i style="width:${p}%;background:${s.c}"></i></span><span class="small muted">${s.d}</span></span></div>`; }).join("")}</div>
+      return `<div class="li skill"><span class="sdot" style="background:${s.c}"></span><span class="dt" style="flex:1"><span class="row" style="justify-content:space-between"><strong>${s.t}</strong><span class="small muted">ур. ${l} · ${SKILL_TITLES[l-1]}</span></span><span class="progress" style="display:block"><i style="width:${p}%;background:${s.c}"></i></span><span class="small sk-next">${l>=10?"Максимальный уровень навыка":`До уровня ${l+1} «${SKILL_TITLES[l]}»: ещё ${b-x} ${plural(b-x,"очко","очка","очков")}`}</span><span class="small muted">${s.d}</span></span></div>`; }).join("")}</div>
+    <p class="small muted">Полоска показывает путь до следующего уровня навыка. Когда уровень повышается, она начинается заново.</p>
   </div>
   <div class="stack-s"><span class="label">Стадии</span>
     <div class="stages">${STAGES.map((n,i)=>`<div class="stg ${i+1<=st?"on":""}"><span>${i+1<=st?ico("check",14):i+1}</span><small>${n}</small></div>`).join("")}</div>

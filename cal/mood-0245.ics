@@ -1,0 +1,21 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Opora//RU
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:opora-mood-0245@opora
+DTSTAMP:20261028T000000Z
+DTSTART:20260101T024500
+DURATION:PT5M
+RRULE:FREQ=DAILY
+SUMMARY:Опора: как вы сегодня?
+DESCRIPTION:Отметьте настроение в дневнике — это минута.\nhttps://dligaev1-droid.github.io/opora/
+URL:https://dligaev1-droid.github.io/opora/
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Опора: как вы сегодня?
+TRIGGER:PT0M
+END:VALARM
+END:VEVENT
+END:VCALENDAR

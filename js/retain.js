@@ -38,8 +38,21 @@ let OB={i:0, f:[], min:5};
 function recsOf(f){ const out=[], seen=new Set(); (f.length?f:["stress"]).forEach(k=>(REC[k]||[]).forEach(r=>{ const key=r[0]+(r[1]||""); if(!seen.has(key)){ seen.add(key); out.push(r); } }));
   // по одной лучшей рекомендации из каждой выбранной темы — в начало
   const first=(f.length?f:["stress"]).map(k=>REC[k][0]); return [...first, ...out.filter(r=>!first.includes(r))].slice(0,3); }
+// шаг знакомства: как устроено приложение, разделы и дерево с очками
+function obHow(dots){
+  const tr=typeof treeSVG==="function"?`<span class="onb-tree">${treeSVG(1,{colors:{night:false}})}</span>`:"";
+  return `<div class="onb">${dots}<h2>Как устроена Опора</h2>
+    <div class="card soft onb-grow">${tr}<span class="stack-s" style="gap:4px"><strong>Ваше дерево растёт вместе с вами</strong><span class="small">За каждое дело для себя — очки: запись в дневнике +10, тест +10, упражнение +10. Из семечка вырастет дерево, а потом целая роща — 11 стадий. Очки не сгорают, даже если сделать паузу.</span></span></div>
+    <ul class="onb-list">
+      <li>${ico("home",18)}<span><strong>«Я»</strong> — забота о себе: дневник настроения, тесты, практики, карты</span></li>
+      <li>${ico("heart",18)}<span><strong>«Мы»</strong> — для пары: вопрос дня, свидания, разбор ссор и «Наш сад»</span></li>
+      <li>${ico("star",18)}<span><strong>«Цели»</strong> — цели и привычки без выгорания</span></li>
+      <li>${ico("hand",18)}<span>Переключатель «Я · Мы · Цели» и кнопка <strong>SOS</strong> — всегда вверху экрана</span></li>
+    </ul>
+    <button class="btn block" id="obNext">Понятно, дальше</button><button class="linkbtn small" id="obBack" style="align-self:center">Назад</button></div>`;
+}
 function vOnb(){
-  const dots=`<div class="onb-dots">${[0,1,2,3].map(i=>`<i class="${i<=OB.i?"on":""}"></i>`).join("")}</div>`;
+  const dots=`<div class="onb-dots">${[0,1,2,3,4].map(i=>`<i class="${i<=OB.i?"on":""}"></i>`).join("")}</div>`;
   if(OB.i===0) return `<div class="onb">${dots}<div class="logo onb-logo">О</div>
     <h1>Опора</h1><p class="lead">Карманная поддержка от психолога ${esc(PSY.nameFrom||PSY.name)}</p>
     <ul class="onb-list"><li>${ico("heart",18)}<span>Быстрая помощь, когда накрыло</span></li><li>${ico("diary",18)}<span>Дневник, тесты и программы по 5–10 минут</span></li><li>${ico("lock",18)}<span>Без регистрации. Всё хранится только на вашем телефоне</span></li></ul>
@@ -49,7 +62,8 @@ function vOnb(){
     <button class="btn block" id="obNext">${OB.f.length?"Дальше":"Пока ничего — дальше"}</button><button class="linkbtn small" id="obBack" style="align-self:center">Назад</button></div>`;
   if(OB.i===2) return `<div class="onb">${dots}<h2>Сколько времени в день готовы уделять себе?</h2><p class="muted small">Даже 2 минуты в день дают результат, если регулярно.</p>
     <div class="opts">${[[2,"2 минуты","Только самое быстрое"],[5,"5 минут","Упражнение или запись в дневнике"],[10,"10 минут и больше","Программы и практики"]].map(([m,t,s])=>`<button class="opt${OB.min===m?" sel":""}" data-om="${m}"><span><strong>${t}</strong><br><span class="small muted">${s}</span></span></button>`).join("")}</div>
-    <button class="linkbtn small" id="obBack" style="align-self:center">Назад</button></div>`;
+    <button class="btn block" id="obNext">Дальше</button><button class="linkbtn small" id="obBack" style="align-self:center">Назад</button></div>`;
+  if(OB.i===3) return obHow(dots);
   const recs=recsOf(OB.f);
   return `<div class="onb">${dots}<h2>Ваш план на старт</h2><p class="muted small">${OB.min<=2?"Начните с самого короткого — этого достаточно.":"Начните с первого пункта сегодня, остальное — в ближайшие дни."}</p>
     <div class="list">${recs.map((r,i)=>`<div class="li" style="cursor:default"><span class="ico">${ico(r[4],18)}</span><span class="dt"><strong>${i+1}. ${r[2]}</strong><span class="small muted">${r[3]}</span></span></div>`).join("")}</div>
@@ -63,7 +77,7 @@ function bindOnb(){
   const b=$("#obBack"); if(b) b.onclick=()=>{ OB.i--; render(); };
   const s=$("#obSkip"); if(s) s.onclick=()=>{ S.onb={f:[], skip:true, ts:Date.now()}; delete S._onbForce; save(); render(); };
   $$("[data-of]").forEach(c=>c.onclick=()=>{ const k=c.dataset.of, i=OB.f.indexOf(k); if(i>=0) OB.f.splice(i,1); else if(OB.f.length<3) OB.f.push(k); else { toast("Не больше трёх"); return; } render(); });
-  $$("[data-om]").forEach(o=>o.onclick=()=>{ OB.min=+o.dataset.om; OB.i++; render(); window.scrollTo(0,0); });
+  $$("[data-om]").forEach(o=>o.onclick=()=>{ OB.min=+o.dataset.om; render(); });
   const c=$("#obCal"); if(c) c.onclick=()=>ics("mood", $("#obT").value||"21:00");
   const g=$("#obGo"); if(g) g.onclick=()=>{ fin(); const r=recsOf(OB.f)[0]; go(r[0], r[1]); };
   const h=$("#obHome"); if(h) h.onclick=()=>{ fin(); render(); };
@@ -132,7 +146,12 @@ const RM={
 };
 const pad = n => String(n).padStart(2,"0");
 const ie = t => String(t).replace(/[\\,;]/g, m=>"\\"+m);
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
 function ics(kind, time){
+  // На iPhone файл из памяти открывается окном «Поделиться», а готовый файл с сайта — сразу календарём «Добавить в календарь».
+  // Поэтому на iPhone открываем заранее подготовленный файл cal/<вид>-ЧЧММ.ics (время округляется до 15 минут).
+  if(isIOS() && RM[kind]){ const [h0,m0]=(time||RM[kind].def).split(":").map(Number); let t=(h0||0)*60+Math.round((m0||0)/15)*15; t=t%1440;
+    const nm=`${pad(Math.floor(t/60))}${pad(t%60)}`; toast("Откроется календарь — нажмите «Добавить в календарь»"); setTimeout(()=>{ window.location.href=`cal/${kind}-${nm}.ics`; }, 600); return; }
   const r=RM[kind]||RM.mood, [hh,mm]=(time||r.def).split(":").map(Number), now=new Date(), st=new Date();
   st.setHours(hh||0, mm||0, 0, 0); if(st<=now) st.setDate(st.getDate()+1);
   if(r.by==="SU") while(st.getDay()!==0) st.setDate(st.getDate()+1);
@@ -218,8 +237,8 @@ function vSleep(){
   const mx=Math.max(540,...last.map(dur));
   return `${backTo("practices","Практики")}<div class="stack-s"><h1>Дневник сна</h1><p class="muted small">30 секунд утром. Через пару недель станет видно, как сон влияет на настроение и что ему мешает.</p></div>
   <div class="card"><span class="label">${have?"Сегодняшняя запись":"Прошлая ночь"}</span>
-    <div class="grid2 sl-times"><label class="field"><span class="small muted">Лёг(ла)</span><input type="time" id="slB" value="${SF.bed}"></label><label class="field"><span class="small muted">Встал(а)</span><input type="time" id="slW" value="${SF.wake}"></label></div>
-    <p class="small">Получается: <strong id="slD">${hm(dur(SF))}</strong></p>
+    <div class="grid2 sl-times"><label class="field"><span class="small muted">Легли спать</span><input type="time" id="slB" value="${SF.bed}"></label><label class="field"><span class="small muted">Проснулись</span><input type="time" id="slW" value="${SF.wake}"></label></div>
+    <p class="small">Время сна: <strong id="slD">${hm(dur(SF))}</strong></p>
     <span class="small muted">Как спалось?</span>
     <div class="moods">${MOODS.map(m=>`<button class="mood" data-sq="${m.v}" aria-pressed="${SF.q===m.v}">${face(m.v)}<span>${["Ужасно","Плохо","Средне","Хорошо","Отлично"][m.v-1]}</span></button>`).join("")}</div>
     <span class="small muted">Что могло повлиять</span><div class="chips">${STAGS.map(t=>`<button class="chip" data-st="${t}" aria-pressed="${SF.tags.includes(t)}">${t}</button>`).join("")}</div>
@@ -412,4 +431,32 @@ Object.assign(TAB_OF,{remind:"about", sleep:"practices", mstats:"diary", lovesos
 const render0=window.render;
 window.render=function(){ document.body.classList.toggle("onb-on", route==="home" && needOnbF()); return render0.apply(this, arguments); };
 window.RETAIN={ics, exportData, R};
+/* ================= Подсказки при первом заходе в раздел ================= */
+// Короткая карточка «что здесь и как этим пользоваться». Показывается, пока человек не нажмёт «Понятно».
+const SEC_TIPS={
+  home:["Это ваш раздел «Я»","Отмечайте настроение, проходите тесты, делайте практики и вытягивайте карту дня. За каждое дело растёт ваше дерево в «Моём росте». Вверху — переключатель «Я · Мы · Цели» и кнопка SOS, если накрыло."],
+  love:["Раздел «Мы» — для пары","Отвечайте на вопрос дня, выбирайте свидания, разбирайте ссоры без обвинений. Каждое общее дело сажает что-то в «Нашем саду». Пользоваться можно одному или вдвоём с одного телефона."],
+  gtoday:["«Цели» без выгорания","Поставьте свою цель или возьмите готовую из 100 — с разбивкой на год, месяц, неделю и день. Отмечайте привычки и энергию. Каждый шаг продвигает вас по «Тропе к вершине»: 11 уровней."],
+  growth:["Как растёт дерево","Очки дают за заботу о себе: запись в дневнике +10, тест +10, упражнение +10, разобранная мысль +20, день программы +25. В день — не больше 100. Очки и навыки не сгорают, даже после паузы."]
+};
+function tipCard(k){
+  if(!isObj(S.tipsSeen)) S.tipsSeen={};
+  if(S.tipsSeen[k] || needOnb()) return "";
+  const [t,d]=SEC_TIPS[k];
+  return `<div class="card soft tip-card"><div class="row"><span class="label">Подсказка</span><button class="linkbtn small" data-tip-ok="${k}">Понятно</button></div><strong>${t}</strong><p class="small">${d}</p></div>`;
+}
+function withTip(h, k){
+  const tip=tipCard(k); if(!tip) return h;
+  const t=document.createElement("template"); t.innerHTML=h;
+  const anchor=t.content.querySelector(".top")||t.content.querySelector(".back");
+  const x=document.createElement("template"); x.innerHTML=tip;
+  if(anchor) anchor.after(x.content); else t.content.prepend(x.content);
+  const d=document.createElement("div"); d.appendChild(t.content.cloneNode(true)); return d.innerHTML;
+}
+Object.keys(SEC_TIPS).forEach(k=>{
+  const v=VIEWS[k]; if(!v) return;
+  const v0=v[0], b0=v[1];
+  VIEWS[k]=[(...a)=>withTip(v0(...a), k), (...a)=>{ if(b0) b0(...a); $$("[data-tip-ok]").forEach(b=>b.onclick=()=>{ S.tipsSeen[b.dataset.tipOk]=1; save(); const c=b.closest(".tip-card"); if(c) c.remove(); }); }];
+});
+
 })();
