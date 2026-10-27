@@ -819,3 +819,9 @@ input[type=search]:focus-visible,input[type=number]:focus-visible,input[type=tim
 .rm-card input[type=time],#obT{width:auto}
 .src-note{font-size:.74rem;line-height:1.45;color:var(--muted);margin:0}
 .card .src-note{margin-top:2px}
+
+/* ---------- Дневник автоматических мыслей ---------- */
+.dm-th{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:14px;background:var(--surface-2)}
+.dm-sl input[type=range]{width:100%;accent-color:var(--accent)}
+.dm-asks{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:.88rem;color:var(--muted)}
+.dm-rec{border-top:1px solid var(--line);padding-top:8px}
