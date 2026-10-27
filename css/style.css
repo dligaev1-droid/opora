@@ -858,3 +858,7 @@ input[type=search]:focus-visible,input[type=number]:focus-visible,input[type=tim
 .tday-t .progress{margin-top:5px;height:5px}
 .tday-ok{position:absolute;top:16px;right:16px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink,#fff);display:grid;place-items:center}
 @media (min-width:560px){.tday-vis{height:150px}.tday-vis.tree .tree{width:150px;height:150px}.tday-c{width:78px;left:calc(50% - 44px);top:calc(50% - 58px)}.tday-c.back{left:calc(50% - 26px);top:calc(50% - 55px)}}
+.mak-guide .mg-body{margin-top:12px;gap:10px}
+.mak-guide p{margin:0}
+.mak-how{gap:8px}
+.mak-how p{margin:0}

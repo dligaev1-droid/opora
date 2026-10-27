@@ -87,6 +87,27 @@ function homeCard(){
     <span class="chev">›</span></button>`;
 }
 
+/* ---------- объяснение: зачем нужны карты и как с ними работать ---------- */
+function makGuide(open){
+  return `<details class="more mak-guide"${open?" open":""}><summary>Как работать с картами</summary>
+  <div class="stack-s mg-body">
+    <p><strong>Зачем это нужно.</strong> Метафорические карты — инструмент, которым пользуются психологи. У картинки нет «правильного» смысла: каждый видит в ней своё. То, что вы заметите, расскажет не о карте, а о вас — о чувствах, мыслях и желаниях, которые трудно назвать прямо.</p>
+    <p class="small muted">Это не гадание: карта ничего не предсказывает и не решает за вас. Она помогает посмотреть на свою ситуацию со стороны и услышать себя.</p>
+    <span class="label">Когда пригодится</span>
+    <ul class="tasks small"><li>Тревожно или грустно, а почему — непонятно</li><li>Нужно принять решение, и вы застряли</li><li>Утром — настроиться на день, вечером — подвести итог</li><li>Хочется поговорить с собой, но не знаете, с чего начать</li></ul>
+    <span class="label">Как выполнять · 5–10 минут</span>
+    <ol class="steps small">
+      <li><strong>Остановитесь.</strong> Сделайте 2–3 спокойных вдоха. Подумайте о ситуации, которая вас волнует, или просто о своём дне.</li>
+      <li><strong>Выберите карту, не раздумывая.</strong> Рубашки одинаковые — доверьтесь руке. Работайте с той картой, что выпала, даже если она кажется «не про вас».</li>
+      <li><strong>Рассмотрите картинку 1–2 минуты.</strong> Что первым бросилось в глаза? Какие детали? Что здесь происходит, что было до и что будет после?</li>
+      <li><strong>Заметьте чувства.</strong> Что откликается внутри: тепло, грусть, тревога, интерес? Где это ощущается в теле?</li>
+      <li><strong>Свяжите с собой.</strong> На что в вашей жизни это похоже? Какую подсказку или маленький шаг вы видите? Запишите ответы — первое, что приходит в голову, без оценки и красивых формулировок.</li>
+    </ol>
+    <span class="label">Важно</span>
+    <ul class="tasks small"><li>Правильных и неправильных ответов нет. Ваше восприятие и есть результат.</li><li>Если карта вызвала неприятные чувства — это тоже важная информация. Можно остановиться и сделать дыхательное упражнение.</li><li>Возвращайтесь к журналу через неделю: со стороны часто видно то, что не было заметно сразу.</li><li>Если карта задела что-то глубокое, принесите её на консультацию — разберём вместе.</li></ul>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn quiet" data-go="breath">Дыхание</button><button class="btn quiet" data-go="about">Записаться к психологу</button></div>
+  </div></details>`;
+}
 let justFlipped=false;
 function vCards(){
   const c=todayCard();
@@ -100,6 +121,7 @@ function vCards(){
     day=`<div class="card">
       <span class="label">Карта дня · ${fmtDate(c.ts)}</span>
       <div class="mc-big">${mcard(c.id,true,justFlipped?"reveal":"")}</div>
+      <p class="small muted">Рассмотрите картинку минуту-две, не торопясь. Потом ответьте на вопросы — первое, что приходит в голову. Правильных ответов нет.</p>
       ${c.q.map((q,k)=>`<label class="field"><span>${esc(q)}</span><textarea id="cq${k}" rows="2" placeholder="Первое, что приходит в голову">${esc(c.a[k]||"")}</textarea></label>`).join("")}
       <button class="btn" id="cSave">Сохранить</button>
     </div>`;
@@ -107,9 +129,10 @@ function vCards(){
   justFlipped=false;
   const past=S.cardLog.slice().reverse().filter(x=>!(x.type==="day"&&x.d===dayKey()));
   return `${backBtn(prevRoute==="home"?"home":"practices", prevRoute==="home"?"Главная":"Практики")}
-  ${intro}${day}
+  ${intro}${S.cardLog.length?"":`<div class="card soft mak-how"><span class="label">Как это работает</span><ol class="steps small"><li>Сделайте пару вдохов и подумайте о своём дне или о том, что волнует.</li><li>Выберите карту, не раздумывая.</li><li>Рассмотрите картинку и ответьте на 3 вопроса — первое, что приходит в голову. Правильных ответов нет.</li></ol><p class="small muted">Это не гадание: карта помогает услышать себя. Подробнее — внизу страницы.</p></div>`}${day}
   <button class="banner card" data-go="spread"><span class="bi" style="background:var(--accent-soft);color:var(--accent)">${ico("image",20)}</span><span class="bt"><strong>Расклад из 3 карт</strong><span class="small muted">Ситуация · Ресурс · Шаг</span></span><span class="chev">›</span></button>
   ${past.length?`<details class="more"><summary>Журнал · ${past.length}</summary><div class="stack">${past.slice(0,30).map(x=>`<div class="jr"><div class="jr-cards">${x.ids.map(id=>`<span class="mak-thumb">${cardFront(id)}</span>`).join("")}</div><div class="stack-s" style="min-width:0"><span class="small muted">${x.type==="day"?"Карта дня":"Расклад"} · ${fmtDate(x.ts)}</span>${x.a.map((a,k)=>a?`<p class="small"><strong>${esc(x.type==="day"?x.q[k]:SPREAD[k].t)}</strong> ${esc(a)}</p>`:"").join("")}</div></div>`).join("")}</div></details>`:""}
+  ${makGuide(false)}
   <p class="disclaimer">Карты помогают заметить мысли и чувства. Их можно принести на консультацию.</p>`;
 }
 function bindCards(){
@@ -131,7 +154,12 @@ function vSpread(){
   if(!SP){ const r=rng(Date.now()%1e9); const ids=new Set(); while(ids.size<3) ids.add(Math.floor(r()*DECK)); SP={ids:[...ids], open:[false,false,false], a:["","",""], saved:false}; }
   const all=SP.open.every(Boolean);
   return `${backBtn("cards","Карты")}
-  <div class="stack-s"><h1>Расклад</h1><p class="muted">Подумайте о ситуации, которая вас волнует. Открывайте карты по одной.</p></div>
+  <div class="stack-s"><h1>Расклад</h1><p class="muted">Подумайте о ситуации, которая вас волнует. Открывайте карты по одной: откройте карту, ответьте на вопрос и только потом переходите к следующей.</p></div>
+  <details class="more"><summary>Что значат три карты</summary><ul class="tasks small" style="margin-top:10px">
+    <li><strong>Ситуация</strong> — как вы видите происходящее сейчас. Что на карте похоже на вашу ситуацию?</li>
+    <li><strong>Ресурс</strong> — что может поддержать: качество, человек, воспоминание, занятие. Что на карте даёт силы?</li>
+    <li><strong>Шаг</strong> — с чего начать. Какое маленькое действие подсказывает картинка? Лучше такое, что можно сделать в ближайшие дни.</li>
+  </ul><p class="small muted">Карта не даёт ответ, а помогает его найти. Если ничего не приходит в голову — опишите просто, что видите: часто смысл появляется по ходу.</p></details>
   <div class="spread">${SP.ids.map((id,k)=>`<button class="sp-c" data-open="${k}" ${SP.open[k]?"disabled":""}><span class="label">${SPREAD[k].t}</span>${mcard(id,SP.open[k],SP.open[k]&&SP.last===k?"reveal":"")}</button>`).join("")}</div>
   ${SP.open.some(Boolean)?`<div class="card">${SPREAD.map((p,k)=>SP.open[k]?`<label class="field"><span><strong>${p.t}.</strong> ${p.q}</span><textarea id="sq${k}" rows="2">${esc(SP.a[k])}</textarea></label>`:"").join("")}
     ${all?`<button class="btn" id="spSave">${SP.saved?"Сохранено":"Сохранить расклад"}</button>`:""}</div>`:""}
