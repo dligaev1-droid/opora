@@ -61,8 +61,9 @@ window.modeSwitch = cur => `<div class="mode-sw" role="group" aria-label="Реж
 window.roomsRow = () => `<div class="rooms"><button class="room-card rc-love" data-go="love"><span class="rc-ico">${ico("heart",18)}</span><strong>Отношения</strong><span class="small">Близость, ссоры, свидания</span></button><button class="room-card rc-goals" data-go="gtoday"><span class="rc-ico">${nico("gtoday",18)}</span><strong>Цели</strong><span class="small">Без выгорания и «надо»</span></button></div>`;
 
 /* ---------- Тропа к вершине ---------- */
-const CAMPS=[[0,"Подножие"],[5,"Лесная тропа"],[15,"Первый привал"],[30,"Перевал"],[60,"Альпийский луг"],[100,"Снежник"],[160,"Вершина"]];
-const LAP=160;
+// 11 уровней восхождения; после вершины начинается новое восхождение, пройденные вершины копятся
+const CAMPS=[[0,"Подножие","Первый шаг сделан — вы на тропе"],[6,"Лесная тропа","Дорога под ногами"],[16,"Ручей","Первая передышка у воды"],[30,"Первый привал","Видно, сколько уже пройдено"],[48,"Каменистый склон","Становится круче, но вы привыкли"],[70,"Перевал","Половина пути позади"],[96,"Альпийский луг","Цветы, воздух и широкий вид"],[128,"Ледник","Шаг за шагом, без спешки"],[166,"Снежник","Выше облаков"],[210,"Гребень","Вершина уже рядом"],[260,"Вершина","Вы на вершине!"]];
+const LAP=260;
 function points(){
   const g=G(); let p=0;
   g.list.forEach(x=>{ p+=x.steps.filter(s=>s.done).length*3; if(x.done) p+=10; });
@@ -92,8 +93,12 @@ function mountain(){
 }
 function mtCard(){
   const p=points(), c=campOf(p), q=p%LAP, nx=CAMPS[c+1];
-  return `<div class="card mt-card"><div class="mt-wrap">${mountain()}</div><div class="row" style="justify-content:space-between"><span class="stack-s" style="gap:2px"><span class="label">Тропа к вершине</span><strong>${CAMPS[c][1]}</strong></span><span class="small muted" style="text-align:right">${nx?`До «${nx[1]}»: ${nx[0]-q} ${plural(nx[0]-q,"шаг","шага","шагов")}`:"Вершина! Дальше — новая"}</span></div>
-  <p class="small muted">Каждый сделанный шаг продвигает вас вверх. Назад тропа не ведёт — даже после паузы.</p></div>`;
+  const lap=Math.floor(p/LAP);
+  return `<div class="card mt-card"><div class="mt-wrap">${mountain()}</div><div class="row" style="justify-content:space-between"><span class="stack-s" style="gap:2px"><span class="label">Тропа к вершине · уровень ${c+1} из ${CAMPS.length}</span><strong>${CAMPS[c][1]}</strong></span><span class="small muted" style="text-align:right">${nx?`До «${nx[1]}»: ${nx[0]-q} ${plural(nx[0]-q,"шаг","шага","шагов")}`:"Вершина! Дальше — новая"}</span></div>
+  <div class="progress"><i style="width:${nx?Math.round((q-CAMPS[c][0])/(nx[0]-CAMPS[c][0])*100):100}%"></i></div>
+  <p class="small muted">Каждый сделанный шаг продвигает вас вверх. Назад тропа не ведёт — даже после паузы.${lap?` Пройдено вершин: ${lap}.`:""}</p>
+  <details class="more"><summary>Все ${CAMPS.length} уровней</summary><ol class="mt-lv">${CAMPS.map(([v,t,d],i)=>`<li class="${i<=c?"on":""}${i===c?" cur":""}"><b>${i<c||(i===c&&i===CAMPS.length-1)?"✓":i+1}</b><span><strong>${t}</strong><span class="small muted">${i? `${v} ${plural(v,"шаг","шага","шагов")} · `:""}${d}</span></span></li>`).join("")}</ol>
+  <p class="small muted">Шаги: пункт плана +3, достигнутая цель +10, отметка привычки +1, фокус-сессия +2, день программы +3, разбор откладывания +2, отметка энергии +1.</p></details></div>`;
 }
 
 /* ---------- Сегодня ---------- */
@@ -420,6 +425,6 @@ function bindGPlus(){
 Object.assign(VIEWS,{gtoday:[vToday,bindToday], ggoals:[vGoals,null], gnew:[vNew,bindNew], ggoal:[vGoal,bindGoal], ghab:[vHab,bindHab], gfocus:[vFocus,bindFocus], gpath:[vPath,null], gproc:[vProc,bindProc], gprog:[vProg,bindProg], gart:[vArt,null], gplus:[vGPlus,bindGPlus]});
 GR.forEach(r=>TAB_OF[r]="practices");
 window.GOALS={G, plus, LOCK, isObj, gback, lockCard, li, nico, GR, ROOT, PARENT, NAV, NAVI, BL, dayNum, dayTs, weekStart, active, hDone, FREE, WD, AREAS, WHY, PD, GA,
-  mainCard, energyCard, habToday, mtCard, points, bindToday, bindCnt, stepToggle,
+  mainCard, energyCard, habToday, mtCard, points, CAMPS, LAP, campOf, bindToday, bindCnt, stepToggle,
   newGoal:(area,why)=>{ NG={i:area?1:0, area:area||"", why:why||"", t:"", step:"", due:""}; }};
 })();

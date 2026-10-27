@@ -374,7 +374,7 @@ function ourPath(){
   const n=Object.values(G.counts()).reduce((a,b)=>a+b,0), wx=Cp?Cp.wxList():[], last=wx[wx.length-1];
   return `<div class="card our-path"><span class="label">Наш путь</span>
     <button class="op-garden" data-go="lovegd" aria-label="Открыть «Наш сад»"><span class="garden-mini">${G.gardenSVG({dark:darkOn(), slice:true})}</span></button>
-    <button class="li" data-go="lovegd"><span class="ico">${ico("practices",18)}</span><span class="dt"><strong>Наш сад</strong><span class="small muted">${n?`${n} ${plural(n,"росток","ростка","ростков")} из общих дел`:"Сделайте что-то вместе — появится первый росток"}</span></span><span class="chev">›</span></button>
+    <button class="li" data-go="lovegd"><span class="ico">${ico("practices",18)}</span><span class="dt"><strong>Наш сад${G.levelInfo?` · уровень ${G.levelInfo().lv}`:""}</strong><span class="small muted">${n?`${G.levelInfo?G.levelInfo().name+" · ":""}${n} ${plural(n,"росток","ростка","ростков")} из общих дел`:"Сделайте что-то вместе — появится первый росток"}</span></span><span class="chev">›</span></button>
     <button class="li" data-go="lovew"><span class="ico">${ico("emo",18)}</span><span class="dt"><strong>Погода в паре${plusOn()?" и отчёт месяца":""}</strong><span class="small muted">${last?`Близость ${last.c} · поддержка ${last.s} · напряжение ${last.t}`:"30 секунд раз в неделю"}</span></span><span class="chev">›</span></button></div>`;
 }
 const sosBanner = () => `<button class="banner card sos-pair" data-go="lovesos"><span class="bi">${ico("hand",20)}</span><span class="bt"><strong>Поссорились?</strong><span class="small muted">Пауза, дыхание и слова, чтобы помириться</span></span><span class="chev">›</span></button>`;

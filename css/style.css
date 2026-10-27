@@ -825,3 +825,17 @@ input[type=search]:focus-visible,input[type=number]:focus-visible,input[type=tim
 .dm-sl input[type=range]{width:100%;accent-color:var(--accent)}
 .dm-asks{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:.88rem;color:var(--muted)}
 .dm-rec{border-top:1px solid var(--line);padding-top:8px}
+
+/* Уровни тропы и сада, достижения с прогрессом */
+.mt-lv{list-style:none;margin:8px 0 4px;padding:0;display:flex;flex-direction:column;gap:8px}
+.mt-lv li{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start;color:var(--muted)}
+.mt-lv li>span{display:flex;flex-direction:column;gap:1px}
+.mt-lv b{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-size:.78rem}
+.mt-lv li.on{color:var(--ink)}
+.mt-lv li.on b{background:var(--accent);color:var(--accent-ink,#fff)}
+.mt-lv li.cur strong{color:var(--accent)}
+.g-seas{flex-wrap:wrap;gap:6px}
+.bd-p{display:flex;flex-direction:column;gap:4px;margin-top:auto}
+.bd-p .progress{height:4px}
+.badges-card{gap:10px}
+.stg small{hyphens:auto;-webkit-hyphens:auto}

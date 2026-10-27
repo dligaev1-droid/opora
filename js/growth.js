@@ -1,5 +1,5 @@
 /* =====================================================
-   Прокачка: 4 навыка, 24 уровня, 8 стадий дерева.
+   Прокачка: 4 навыка, 33 уровня, 11 стадий дерева (по 3 уровня в каждой).
    Подключается после app.js и использует его функции.
    ===================================================== */
 
@@ -10,8 +10,8 @@ const SKILLS = {
   self:  {t:"Опора на себя",c:"#9B7BD0", d:"дневник мыслей, границы, статьи"}
 };
 const SKILL_TITLES=["Новичок","Ученик","Практик","Уверенный","Опытный","Знаток","Наставник","Мастер","Гуру","Легенда"];
-const STAGES=["Семечко","Росток","Саженец","Молодое дерево","Крепкое дерево","Цветущее дерево","Плодоносящее дерево","Роща"];
-const MAX_LV=24, DAY_CAP=100;
+const STAGES=["Семечко","Росток","Саженец","Молодое дерево","Крепкое дерево","Цветущее дерево","Плодоносящее дерево","Роща","Роща у ручья","Лес","Древо жизни"];
+const MAX_LV=33, DAY_CAP=100;
 const PROG_SKILL={calm7:"calm", burnout7:"res", bounds5:"self"};
 
 // очки, нужные для уровня n (накопительно): быстрый старт, потом медленнее
@@ -98,10 +98,23 @@ function treeSVG(lv, opts={}){
       out.push(cl(70,72,1)); if(lv>=12) out.push(cl(150,44,.8)); }
   }
   if(st>=8) out.push(`<circle cx="150" cy="150" r="140" fill="url(#${id}glow)"/>`);
+  // стадия 11 «Древо жизни»: радуга днём и северное сияние ночью
+  if(lv>=31){ if(night){ ["#5FE3A1","#55C8E8","#9C8CF0"].forEach((c,i)=>out.push(`<path d="M-10 ${96+i*9} C70 ${50+i*9} 150 ${120+i*7} 310 ${62+i*9}" stroke="${c}" stroke-width="7" fill="none" opacity=".32" stroke-linecap="round"/>`)); }
+    else { ["#F28B82","#F6B26B","#FFE08A","#9ED38A","#8CC8EC","#B39DDB"].forEach((c,i)=>out.push(`<path d="M${30+i*5} 246 A${120-i*5} ${120-i*5} 0 0 1 ${270-i*5} 246" stroke="${c}" stroke-width="5" fill="none" opacity=".5"/>`)); } }
 
   /* дальние холмы и земля */
   if(lv>=4) out.push(`<path d="M0 ${G-18} Q60 ${G-46} 120 ${G-24} T240 ${G-30} T300 ${G-20} V300 H0Z" fill="${C.far}"/>`);
+  // стадия 10 «Лес»: ели на дальних холмах, их становится больше с каждым уровнем
+  if(lv>=28){ const n=Math.min(22,(lv-27)*6+4), FR=rng((S.seed||7)+99);
+    for(let i=0;i<n;i++){ const x=8+FR()*284, h=14+FR()*16, y=G-22-Math.sin(x/48)*8+FR()*6, w=h*.36, c=FR()<.5?C.l2:(night?"#2A5640":"#5E9467");
+      out.push(`<path d="M${f1(x)} ${f1(y-h)} L${f1(x+w)} ${f1(y)} L${f1(x-w)} ${f1(y)}Z" fill="${c}" opacity=".9"/><path d="M${f1(x)} ${f1(y-h*.62)} L${f1(x+w*1.2)} ${f1(y+3)} L${f1(x-w*1.2)} ${f1(y+3)}Z" fill="${c}" opacity=".9"/>`); } }
   out.push(`<path d="M0 ${G+2} Q75 ${G-16} 150 ${G-4} T300 ${G} V300 H0Z" fill="url(#${id}hill)"/>`);
+  // стадия 9 «Роща у ручья»: ручей, камыш и кувшинки
+  if(lv>=25){ const w=night?"#3E6E95":"#8CC8EC", hi=night?"#6E9CC2":"#D4EEFB";
+    out.push(`<path d="M-4 ${G+20} C60 ${G+6} 110 ${G+34} 170 ${G+22} S260 ${G+8} 304 ${G+18}" stroke="${w}" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M20 ${G+15} q20 -5 40 -1 M190 ${G+18} q22 -6 42 -4" stroke="${hi}" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".9"/>`);
+    if(lv>=26){ for(const [x,y] of [[30,G+10],[270,G+8],[214,G+32]].slice(0,lv-25+1)){ out.push(`<path d="M${x} ${y} q-2 -12 -4 -18 M${x+3} ${y} q0 -14 1 -20 M${x+6} ${y} q2 -10 5 -15" stroke="${C.l2}" stroke-width="1.6" fill="none" stroke-linecap="round"/><ellipse cx="${x-4}" cy="${y-17}" rx="1.6" ry="4" fill="${C.bark2}"/>`); } }
+    if(lv>=27){ for(const [x,y] of [[104,G+24],[140,G+25]]){ out.push(`<ellipse cx="${x}" cy="${y}" rx="5" ry="2" fill="${C.l1}"/><circle cx="${x+1}" cy="${y-1.4}" r="1.8" fill="#F6B8CB"/>`); } }
+  }
   out.push(`<ellipse cx="${X}" cy="${G+4}" rx="${lv<7?22:46+Math.min(30,(lv-7)*2.5)}" ry="${lv<7?5:9}" fill="#000" opacity=".12"/>`);
   // камешки
   out.push(`<ellipse cx="88" cy="${G+14}" rx="6" ry="3.5" fill="#B9B1A3"/><ellipse cx="214" cy="${G+18}" rx="4.5" ry="3" fill="#C9C1B3"/>`);
@@ -173,13 +186,19 @@ function treeSVG(lv, opts={}){
       out.push(p+`<circle cx="${f1(x)}" cy="${f1(y)}" r="1.3" fill="#F2C14E"/>`); } }
     // плоды с бликом
     if(lv>=19){ for(let i=0;i<Math.min(18,(lv-18)*4);i++){ const [x0,y0,r0]=blobs[Math.floor(R()*blobs.length)], x=x0+(R()-.5)*r0, y=y0+r0*.3;
-      out.push(`<path d="M${f1(x)} ${f1(y-4)} q1 -3 3 -4" stroke="${C.bark3}" stroke-width="1" fill="none"/><circle cx="${f1(x)}" cy="${f1(y)}" r="4.6" fill="#E9783A"/><circle cx="${f1(x-1.5)}" cy="${f1(y-1.6)}" r="1.4" fill="#fff" opacity=".7"/>`); } }
+      out.push(`<path d="M${f1(x)} ${f1(y-4)} q1 -3 3 -4" stroke="${C.bark3}" stroke-width="1" fill="none"/><circle cx="${f1(x)}" cy="${f1(y)}" r="4.6" fill="${lv>=32&&i%3===0?"#F2C14E":"#E9783A"}"/><circle cx="${f1(x-1.5)}" cy="${f1(y-1.6)}" r="1.4" fill="#fff" opacity=".7"/>`); } }
+    // стадия 10: бабочки у кроны
+    if(lv>=28){ const bc=["#F2A7C0","#F6D365","#B9A7F2","#8CC8EC"]; for(let i=0;i<Math.min(6,(lv-27)*2);i++){ const x=40+R()*220, y=150+R()*70, c=bc[i%4];
+      out.push(`<g transform="translate(${f1(x)} ${f1(y)})"><ellipse cx="-2.6" cy="-1" rx="3" ry="2.2" fill="${c}" transform="rotate(-25)"/><ellipse cx="2.6" cy="-1" rx="3" ry="2.2" fill="${c}" transform="rotate(25)"/><rect x="-.45" y="-2.6" width=".9" height="5" rx=".45" fill="#5A4A42"/></g>`); } }
+    // стадия 11: золотое сияние вокруг кроны
+    if(lv>=31){ for(let i=0;i<(lv-30)*7;i++){ const [x0,y0,r0]=blobs[Math.floor(R()*blobs.length)], x=x0+(R()-.5)*r0*1.6, y=y0+(R()-.5)*r0*1.6, s=1.2+R()*1.6;
+      out.push(`<path d="M${f1(x)} ${f1(y-s*2)} L${f1(x+s*.5)} ${f1(y-s*.5)} L${f1(x+s*2)} ${f1(y)} L${f1(x+s*.5)} ${f1(y+s*.5)} L${f1(x)} ${f1(y+s*2)} L${f1(x-s*.5)} ${f1(y+s*.5)} L${f1(x-s*2)} ${f1(y)} L${f1(x-s*.5)} ${f1(y-s*.5)}Z" fill="#FFE7A0" opacity=".95"/>`); } }
     // роща: молодые деревья вокруг и светлячки
     if(lv>=22){
-      for(let i=0;i<lv-21;i++){ const left=i%2===0, x=left?44+i*8:256-i*8, h=30+i*7, gy=G+6;
+      for(let i=0;i<Math.min(3,lv-21);i++){ const left=i%2===0, x=left?44+i*8:256-i*8, h=30+i*7, gy=G+6;
         out.push(`<path d="M${x-2.5} ${gy} L${x-1.5} ${gy-h} L${x+1.5} ${gy-h} L${x+2.5} ${gy}Z" fill="${C.bark2}"/>`);
         for(let j=0;j<5;j++){ const bx=x+(R()-.5)*16, by=gy-h-(R()*10), br2=7+R()*5; out.push(`<circle cx="${f1(bx+1)}" cy="${f1(by+2)}" r="${f1(br2+1)}" fill="${C.l2}"/><circle cx="${f1(bx)}" cy="${f1(by)}" r="${f1(br2)}" fill="${j%2?C.l1:C.l3}"/>`); } }
-      for(let i=0;i<10;i++){ out.push(`<circle class="ffly" style="animation-delay:${f1(R()*3)}s" cx="${f1(40+R()*220)}" cy="${f1(80+R()*150)}" r="2.4" fill="#FFE27A" filter="url(#${id}blur)"/>`); }
+      for(let i=0;i<(lv>=33?18:10);i++){ out.push(`<circle class="ffly" style="animation-delay:${f1(R()*3)}s" cx="${f1(40+R()*220)}" cy="${f1(80+R()*150)}" r="2.4" fill="#FFE27A" filter="url(#${id}blur)"/>`); }
     }
   }
   if(lv<=6){ const sc=lv<=3?2.1:1.12; const plant=out.splice(plantStart); out.push(`<g transform="translate(${X} ${G}) scale(${sc}) translate(${-X} ${-G})">${plant.join("")}</g>`); }
@@ -224,7 +243,7 @@ function vGrowth(){
       <span class="muted">Уровень ${lv} · ${t} ${plural(t,"очко","очка","очков")}</span>
     </div>
     <div class="progress"><i style="width:${pct}%"></i></div>
-    <p class="small muted" style="text-align:center">${lv<MAX_LV?`До ${lv+1} уровня: ${left} ${plural(left,"очко","очка","очков")}`:"Максимальный уровень. Вы вырастили рощу!"}${todayLeft<DAY_CAP?` · сегодня можно ещё ${todayLeft}`:""}</p>
+    <p class="small muted" style="text-align:center">${lv<MAX_LV?`До ${lv+1} уровня: ${left} ${plural(left,"очко","очка","очков")}`:"Максимальный уровень. Вы вырастили Древо жизни!"}${todayLeft<DAY_CAP?` · сегодня можно ещё ${todayLeft}`:""}</p>
     <button class="btn quiet" id="treeStory">${ico("image",18)} Поделиться деревом</button>
   </div>
   <div class="stack-s"><span class="label">Навыки</span>
