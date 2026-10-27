@@ -79,7 +79,20 @@ function leafPath(x,y,len,ang,col,vein){
   return `<path d="M${f1(x)} ${f1(y)} Q${f1(m[0]+n[0])} ${f1(m[1]+n[1])} ${f1(tip[0])} ${f1(tip[1])} Q${f1(m[0]-n[0])} ${f1(m[1]-n[1])} ${f1(x)} ${f1(y)}Z" fill="${col}"/>`+
     (vein?`<path d="M${f1(x)} ${f1(y)} L${f1(x+ca*len*.85)} ${f1(y+sa*len*.85)}" stroke="${vein}" stroke-width="1" opacity=".55"/>`:"");
 }
+/* Картинки стадий, нарисованные художником (art/tree-NN.webp). Для стадии без картинки дерево рисуется кодом.
+   Для каждой стадии: [слева, сверху, размер] — какой квадрат картинки показать (доли от 1): ранние стадии приближены. */
+const TREE_ART={1:[.20,.38,.60], 2:[.20,.38,.60], 3:[.14,.27,.72]};
+const treeArtURL = st => TREE_ART[st] ? `art/tree-${String(st).padStart(2,"0")}.webp` : null;
+function treeArtSVG(lv, opts, night){
+  const st=stageOf(lv), cr=TREE_ART[st], id="ta"+(++treeUid), R=rng(S.seed||7), k=300/cr[2], out=[];
+  if(night){ for(let i=0;i<26;i++) out.push(`<circle cx="${f1(20+R()*260)}" cy="${f1(14+R()*110)}" r="${f1(.6+R()*1.1)}" fill="#fff" opacity="${f1(.4+R()*.6)}"/>`);
+    out.push(`<mask id="${id}m"><rect width="300" height="300" fill="#fff"/><circle cx="229" cy="63" r="13" fill="#000"/></mask><circle cx="222" cy="68" r="15" fill="#F4EFD8" mask="url(#${id}m)"/>`); }
+  return `<svg class="tree ${opts.cls||""}" viewBox="0 0 300 300" role="img" aria-label="Дерево, уровень ${lv}"><defs><clipPath id="${id}c"><circle cx="150" cy="150" r="142"/></clipPath>
+    <filter id="${id}n" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".19 .04 .04 0 .01  .03 .23 .06 0 .03  .04 .07 .36 0 .07  0 0 0 1 0"/></filter></defs>
+    <g clip-path="url(#${id}c)"><rect width="300" height="300" fill="${night?"#142336":"#CFE3F5"}"/><image href="${treeArtURL(st)}" x="${f1(-cr[0]*k)}" y="${f1(-cr[1]*k)}" width="${f1(k)}" height="${f1(k)}" preserveAspectRatio="none"${night?` filter="url(#${id}n)"`:""}/>${out.join("")}</g></svg>`;
+}
 function treeSVG(lv, opts={}){
+  if(TREE_ART[stageOf(lv)]){ const nt=opts.colors && opts.colors.night!==undefined ? opts.colors.night : isDark(); return treeArtSVG(lv, opts, nt); }
   const night = opts.colors && opts.colors.night!==undefined ? opts.colors.night : isDark();
   const C=Object.assign(treeColors(night), opts.colors||{});
   const R=rng(S.seed||7), st=stageOf(lv), id="tr"+(++treeUid);
@@ -280,9 +293,10 @@ function stageCelebrate(lv){
 async function treeStory(){
   try{ await document.fonts.ready; }catch(e){}
   const lv=levelOf(xpTotal()), st=stageOf(lv);
-  const svg=treeSVG(lv,{colors:{night:false}}).replace("<svg ",'<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" ');
-  const img=new Image(); const url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
-  await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=url; });
+  const art=treeArtURL(st), cr=TREE_ART[st];
+  const svg=art?"":treeSVG(lv,{colors:{night:false}}).replace("<svg ",'<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" ');
+  const img=new Image(); const url=art||URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
+  try{ await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=url; }); }catch(e){ toast("Не получилось нарисовать картинку"); return; }
   const W=1080,H=1920,c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d");
   const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,"#3F86C8"); g.addColorStop(1,"#1C4670"); x.fillStyle=g; x.fillRect(0,0,W,H);
   const f='"Onest", system-ui, sans-serif';
@@ -291,13 +305,14 @@ async function treeStory(){
   x.textAlign="left"; x.textBaseline="alphabetic"; x.fillStyle="#fff"; x.font=`700 54px ${f}`; x.fillText("Опора",230,190);
   x.globalAlpha=.75; x.font=`400 34px ${f}`; x.fillText(`с психологом ${PSY.nameWith}`,230,238); x.globalAlpha=1;
   x.fillStyle="#fff"; x.beginPath(); x.roundRect ? x.roundRect(90,360,900,1180,56) : x.rect(90,360,900,1180); x.fill();
-  x.drawImage(img,90,400,900,900);
+  if(art){ const W0=img.naturalWidth; x.save(); x.beginPath(); x.arc(540,850,426,0,Math.PI*2); x.clip(); x.drawImage(img,cr[0]*W0,cr[1]*W0,cr[2]*W0,cr[2]*W0,90,400,900,900); x.restore(); }
+  else x.drawImage(img,90,400,900,900);
   x.textAlign="center"; x.fillStyle="#68707A"; x.font=`600 34px ${f}`; x.fillText(`МОЁ ДЕРЕВО · УРОВЕНЬ ${lv}`, W/2, 1370);
   x.fillStyle="#1F2630"; x.font=`800 80px ${f}`; x.fillText(STAGES[st-1], W/2, 1465);
   x.fillStyle="#fff"; x.font=`600 46px ${f}`; x.fillText("Расту каждый день", W/2, 1660);
   const link=(PSY.siteUrl||location.href).replace(/^https?:\/\//,"").replace(/\/$/,"");
   x.font=`700 44px ${f}`; x.fillText(link, W/2, 1730);
-  URL.revokeObjectURL(url);
+  if(!art) URL.revokeObjectURL(url);
   c.toBlob(b=>showStory(b),"image/png");
 }
 VIEWS.growth=[vGrowth,bindGrowth];
