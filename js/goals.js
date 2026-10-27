@@ -417,7 +417,7 @@ function vGPlus(){
 }
 function bindGPlus(){
   const b=$("#gpGo"); if(!b) return;
-  const f=()=>{ const v=$("#gpCode").value.trim().toUpperCase(); if(!v) return; if((PSY.plusCodes||[]).includes(fnv(v))){ LV.L().plus=true; save(); toast("Опора+ подключена"); render(); } else toast("Код не подошёл"); };
+  const f=()=>{ const v=$("#gpCode").value.trim().toUpperCase(); if(!v) return; if((PSY.allCodes||[]).includes(fnv(v))){ const l=LV.L(); l.plus=true; l.all=true; save(); toast("«Опора+ Всё» подключена"); render(); } else if((PSY.plusCodes||[]).includes(fnv(v))){ LV.L().plus=true; save(); toast("Опора+ подключена"); render(); } else toast("Код не подошёл"); };
   b.onclick=f; $("#gpCode").onkeydown=e=>{ if(e.key==="Enter") f(); };
 }
 

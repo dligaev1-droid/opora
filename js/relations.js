@@ -336,7 +336,7 @@ function vPlus(){
 function bindPlus(){
   const go=$("#plusGo");
   if(go){ const f=()=>{ const v=$("#plusCode").value.trim().toUpperCase(); if(!v) return;
-      if((PSY.plusCodes||[]).includes(fnv(v))){ L().plus=true; save(); toast("Опора+ подключена"); render(); } else toast("Код не подошёл"); };
+      if((PSY.allCodes||[]).includes(fnv(v))){ const l=L(); l.plus=true; l.all=true; save(); toast("«Опора+ Всё» подключена"); render(); } else if((PSY.plusCodes||[]).includes(fnv(v))){ L().plus=true; save(); toast("Опора+ подключена"); render(); } else toast("Код не подошёл"); };
     go.onclick=f; $("#plusCode").onkeydown=e=>{ if(e.key==="Enter") f(); }; }
   const off=$("#plusOff"); if(off) off.onclick=()=>{ L().plus=false; save(); render(); };
 }
