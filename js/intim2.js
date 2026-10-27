@@ -91,7 +91,7 @@ function vMap(){
     <div class="progress"><i style="width:${MS.i/MQ.length*100}%"></i></div>
     <div class="card"><span class="label">${SPH[q[0]].t} · ${MS.i+1} из ${MQ.length}</span><h3>${q[1]}</h3><div class="opts">${MO.map((o,i)=>`<button class="opt" data-mo="${i}">${o}</button>`).join("")}</div>
     ${MS.i?`<button class="linkbtn small" id="mBack" style="align-self:flex-start">← Предыдущий</button>`:""}</div>
-    <p class="disclaimer">Не диагноз, а способ увидеть картину целиком. Ответы хранятся только на этом телефоне.</p>`; }
+    <p class="src-note">Авторская самодиагностика психолога, а не стандартизированный тест: она помогает увидеть картину и выбрать, с чего начать, но не сравнивает вас с нормой. Научные опросники сексуального здоровья (FSFI, IIEF) — клинические, их проводит врач.</p><p class="disclaimer">Не диагноз. Ответы хранятся только на этом телефоне.</p>`; }
   const r=x.imap[x.imap.length-1], sc=scores(r.a), plan=planOf(sc), prev=x.imap.length>1?scores(x.imap[x.imap.length-2].a):null;
   const strong=SPH.map((s,i)=>({s,v:sc[i]})).sort((a,b)=>b.v-a.v).slice(0,2);
   const step=(p,k)=>{ const [go,sb,t]=p.s.go; return `<div class="ip-step"><span class="es-n">${k+1}</span><span class="es-b"><strong>${p.s.t} · ${p.v}</strong><span class="small">${t}</span></span>${k===0||all()?`<button class="btn quiet sm" data-go="${go}"${sb?` data-sub="${sb}"`:""}>Начать</button>`:`<span class="plus-tag sm">${LOCK}</span>`}</div>`; };
@@ -491,7 +491,7 @@ function vKnow(){
   const fc=IA.filter(a=>a.f).length;
   return `<div class="stack-s"><h1>Знания</h1><p class="muted">Коротко и по делу — без стыда и мифов</p></div>
   <div class="grid2">
-    <button class="tile" data-go="itest"><span class="ico">${ico("tests")}</span><strong>Тормоза и газ</strong><span class="small muted">Тест · 2 минуты</span></button>
+    <button class="tile" data-go="itest"><span class="ico">${ico("tests")}</span><strong>Тормоза и газ</strong><span class="small muted">Самонаблюдение · 2 минуты</span></button>
     <button class="tile" data-go="iquiz"><span class="ico">${ico("bulb")}</span><strong>Мифы и факты</strong><span class="small muted">Квиз · ${QZ.length} вопросов</span></button>
   </div>
   <h2 class="h-sec">Статьи · ${IA.length}</h2>
@@ -548,7 +548,7 @@ function vToday(){
     <button class="tile" data-go="idiary"><span class="ico">${ico("diary")}</span><strong>Дневник</strong><span class="small muted">${today?"Сегодня отмечено ✓":"Как сегодня желание?"}</span></button>
   </div>
   <div class="list">
-    ${li("itest",null,ico("tests",18),"Тест «Тормоза и газ»","Что гасит и что разжигает желание",false)}
+    ${li("itest",null,ico("tests",18),"«Тормоза и газ»","Что гасит и что разжигает желание · 2 минуты",false)}
     ${li("iquiz",null,ico("bulb",18),"Мифы и факты","Квиз из 20 вопросов",false)}
     ${li("icons",null,ico("hand",18),"Согласие и границы","Важно знать каждому",false)}
   </div>

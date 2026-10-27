@@ -60,21 +60,20 @@ const progOf = id => { const l=L(); return l.prog[id] || (l.prog[id]={done:{}, n
 const doneCount = id => Object.keys(progOf(id).done).length;
 
 /* ---------- Тест «Стиль привязанности» ---------- */
+// ECR-RS, шкала для романтического партнёра (Fraley, Heffernan, Vicary, Brumbaugh, 2011). 5-балльный вариант.
+// [шкала: a — тревога, v — избегание; текст; 1 — обратный пункт]
 const AQ=[
-  ["a","Я часто переживаю, что партнёр любит меня меньше, чем я его."],
-  ["v","Мне некомфортно, когда партнёр хочет слишком сильной близости."],
-  ["a","Если партнёр долго не отвечает, я начинаю тревожиться."],
-  ["v","Мне сложно делиться с партнёром своими переживаниями."],
-  ["a","Мне нужно часто слышать, что меня любят."],
-  ["v","С трудностями я предпочитаю справляться сам(а)."],
-  ["a","Я боюсь, что меня бросят."],
-  ["v","Когда отношения становятся серьёзнее, мне хочется отстраниться."],
-  ["a","Когда партнёр отдаляется, я стараюсь сильнее его удержать."],
-  ["v","Мне неловко просить партнёра о помощи."],
-  ["a","Я сомневаюсь, что достоин(а) любви."],
-  ["v","Своя независимость мне важнее, чем близость."]
+  ["v","Когда мне трудно, мне помогает обратиться к партнёру.",1],
+  ["v","Обычно я обсуждаю с партнёром свои проблемы и переживания.",1],
+  ["v","Я всё обговариваю с партнёром.",1],
+  ["v","Мне легко положиться на партнёра.",1],
+  ["v","Мне некомфортно открываться партнёру."],
+  ["v","Я предпочитаю не показывать партнёру, что чувствую в глубине души."],
+  ["a","Я часто беспокоюсь, что на самом деле не важен (не важна) партнёру."],
+  ["a","Я боюсь, что партнёр может меня оставить."],
+  ["a","Я беспокоюсь, что партнёр заботится обо мне меньше, чем я о нём (о ней)."]
 ];
-const AOPT=["Совсем не про меня","Скорее нет","Иногда","Скорее да","Точно про меня"];
+const AOPT=["Совершенно не согласен(на)","Скорее не согласен(на)","Ни да ни нет","Скорее согласен(на)","Полностью согласен(на)"];
 const ASTY={
   safe:{t:"Надёжный стиль", d:"Вам в целом комфортно и в близости, и в самостоятельности. Вы можете попросить о поддержке и дать её, а конфликты не воспринимаете как конец отношений.", tip:"Ваша сила — в открытости. Берегите её: говорите о своих потребностях прямо, даже когда страшно."},
   anx:{t:"Тревожный стиль", d:"Близость для вас очень важна, и поэтому страшно её потерять. Молчание или холодность партнёра легко воспринимаются как угроза, хочется больше подтверждений любви.", tip:"Помогает замечать тревогу раньше, чем действовать: пауза, дыхание, я-сообщение вместо проверок. Своя жизнь и опоры вне пары делают отношения спокойнее."},
@@ -128,7 +127,7 @@ const NAVI={
   lovepsy:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>'
 };
 const NAV=[["love","Сегодня"],["lovetog","Вместе"],["loveid","Свидания"],["lovepath","Путь"],["lovepsy","Психолог"]];
-const PARENT={lovew:"love",lovemd:"love",lovedt:"love",loved:"love",lovex:"love",lovegd:"love", lovem:"lovetog",lovekn:"lovetog",lovelw:"lovetog",loveq:"lovetog",lovee:"lovetog", lovewl:"loveid", lovep:"lovepath",lovet:"lovepath",lovef:"lovepath",lovek:"lovepath",lovea:"lovepath", plus:"lovepsy"};
+const PARENT={lovew:"love",lovemd:"love",lovedt:"love",loved:"love",lovex:"love",lovegd:"love", lovem:"lovetog",lovekn:"lovetog",lovelw:"lovetog",loveq:"lovetog",lovee:"lovetog", lovewl:"loveid", lovep:"lovepath",lovet:"lovepath",lovef:"lovepath",lovek:"lovepath",lovea:"lovepath", plus:"lovepsy", lovecsi:"lovepath", love30:"lovetog", lovesos:"love"};
 const TAB_ROOT=["love","lovetog","loveid","lovepath","lovepsy","lovewl"];
 const nico = (k,sz=22) => `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAVI[k]}</svg>`;
 window.ROOM_NAV = r => { const cur=TAB_ROOT.includes(r)?(r==="lovewl"?"loveid":r):(PARENT[r]||"love"); return NAV.map(([k,t])=>`<button data-go="${k}" ${cur===k?'aria-current="page"':''}>${nico(k)}<span>${t}</span></button>`).join(""); };
@@ -165,7 +164,7 @@ function vPath(){
   return `<div class="stack-s"><h1>Путь</h1><p class="muted">Разобраться в себе и в отношениях</p></div>
   <div class="stack-s"><span class="label">Программы</span><div class="carousel">${Object.entries(LP).map(([id,p])=>{ const n=doneCount(id); return `<button class="card prog-card" data-go="lovep" data-sub="${id}:${Math.min(n+1,p.days.length)}"><span class="stack-s"><strong style="font-size:1.05rem">${p.t}</strong><span class="small muted">${p.d}</span></span><span class="stack-s"><span class="small">${n?`Пройдено ${n} из ${p.days.length}`:"День 1 бесплатно"}</span><span class="progress"><i style="width:${n/p.days.length*100}%"></i></span></span></button>`; }).join("")}</div></div>
   <div class="stack-s"><span class="label">Разобраться</span><div class="list">
-    ${li("lovet",null,ico("star",18),"Мой стиль привязанности",last?ASTY[last.s].t:"Тест · 2 минуты",false)}
+    ${li("lovet",null,ico("star",18),"Мой стиль привязанности",last?ASTY[last.s].t:"Научный тест ECR‑RS · 2 минуты",false)}
     ${li("lovef",null,ico("hand",18),"Разбор ссоры","Понять себя и сказать без упрёков",!plus() && l.fights.length>=1)}
     ${li("lovek",null,ico("book",18),"Трудные разговоры","Деньги, родители, ревность, близость",false)}
   </div></div>
@@ -226,13 +225,13 @@ function vLoveTest(){
   if(AT.i<AQ.length){
     const [,q]=AQ[AT.i];
     return `${back()}
-    <div class="stack-s"><h1>Стиль привязанности</h1><p class="muted small">Отвечайте про отношения в целом — нынешние или прошлые</p></div>
+    <div class="stack-s"><h1>Стиль привязанности</h1><p class="muted small">Отвечайте о нынешнем партнёре. Если сейчас вы не в паре — о последних значимых отношениях.</p></div>
     <div class="progress"><i style="width:${AT.i/AQ.length*100}%"></i></div>
     <div class="card"><span class="label">Вопрос ${AT.i+1} из ${AQ.length}</span><h3>${q}</h3>
       <div class="opts">${AOPT.map((o,i)=>`<button class="opt" data-ao="${i+1}">${o}</button>`).join("")}</div>
       ${AT.i?`<button class="linkbtn small" id="aBack" style="align-self:flex-start">← Предыдущий</button>`:""}
     </div>
-    <p class="disclaimer">Не диагноз, а повод лучше понять себя. Основано на двухмерной модели привязанности: тревога и избегание.</p>`;
+    <p class="src-note">Официальная методика: ECR‑RS, шкала для партнёра — Fraley и соавт., 2011 (5‑балльный вариант). Перевод на русский; опубликованной российской адаптации этой версии нет. Две шкалы — тревога и избегание; деление на 4 стиля по середине шкалы условное.</p><p class="disclaimer">Не диагноз, а повод лучше понять себя.</p>`;
   }
   const r=l.tests[l.tests.length-1], S1=ASTY[r.s];
   const x=20+(r.v-1)/4*160, y=180-(r.a-1)/4*160;
@@ -251,7 +250,7 @@ function vLoveTest(){
 }
 function bindLoveTest(){
   $$("[data-ao]").forEach(b=>b.onclick=()=>{ AT.a[AT.i]=+b.dataset.ao; AT.i++;
-    if(AT.i>=AQ.length){ const m=k=>{ const v=AQ.map((q,i)=>q[0]===k?AT.a[i]:null).filter(x=>x!=null); return v.reduce((s,x)=>s+x,0)/v.length; };
+    if(AT.i>=AQ.length){ const m=k=>{ const v=AQ.map((q,i)=>q[0]===k?(q[2]?6-AT.a[i]:AT.a[i]):null).filter(x=>x!=null); return v.reduce((s,x)=>s+x,0)/v.length; };
       const a=m("a"), v=m("v"); L().tests.push({ts:Date.now(), a, v, s:styleOf(a,v)}); save(); markDay(); award("aware",15); }
     render(); window.scrollTo(0,0); });
   const bk=$("#aBack"); if(bk) bk.onclick=()=>{ AT.i--; render(); };

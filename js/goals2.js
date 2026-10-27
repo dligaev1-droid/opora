@@ -105,7 +105,7 @@ function wheelSvg(v, prev){
 function vWheel(){
   const g=X(), last=g.wheel[g.wheel.length-1];
   if(WF || !last){ if(!WF) WF=(last?last.v:Array(8).fill(5)).slice();
-    return `${gback()}<div class="stack-s"><h1>Колесо баланса</h1><p class="muted small">Оцените, насколько вас устраивает каждая сфера сейчас: 1 — совсем нет, 10 — полностью. Это не экзамен — честно, для себя.</p></div>
+    return `${gback()}<div class="stack-s"><h1>Колесо баланса</h1><p class="muted small">Оцените, насколько вас устраивает каждая сфера сейчас: 1 — совсем нет, 10 — полностью. Это не экзамен — честно, для себя.</p><p class="src-note">Колесо баланса — инструмент коучинга для самоанализа, а не психологический тест: у него нет норм, только ваша собственная оценка.</p></div>
     <div class="card">${WS.map((t,i)=>`<label class="field gw-sl"><span class="row" style="justify-content:space-between"><span>${t}</span><b id="wv${i}">${WF[i]}</b></span><input type="range" min="1" max="10" step="1" value="${WF[i]}" data-wi="${i}" aria-label="${t}"></label>`).join("")}
     <button class="btn" id="wSave">Построить колесо</button>${last?`<button class="btn quiet" id="wCancel">Отмена</button>`:""}</div>`; }
   const v=last.v, prev=g.wheel.length>1?g.wheel[g.wheel.length-2]:null, low=v.map((x,i)=>({i,x})).sort((a,b)=>a.x-b.x).slice(0,2);

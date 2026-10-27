@@ -80,7 +80,7 @@ function vMatch(){
   const l=L(); if(!Array.isArray(l.match)) l.match=[];
   const who=MD.step==="a"?(MD.n1||"Первый партнёр"):(MD.n2||"Второй партнёр");
   if(MD.step==="intro") return `${back()}
-    <div class="stack-s"><h1>Совпадаем ли мы</h1><p class="muted small">10 утверждений. Отвечайте по очереди на одном телефоне и не подглядывайте. В конце увидите, где вы совпадаете, а о чём стоит поговорить.</p></div>
+    <div class="stack-s"><h1>Совпадаем ли мы</h1><p class="muted small">10 утверждений. Отвечайте по очереди на одном телефоне и не подглядывайте. В конце увидите, где вы совпадаете, а о чём стоит поговорить.</p><p class="src-note">Это упражнение для разговора, а не психологический тест: оно не оценивает пару, а показывает темы для обсуждения.</p></div>
     <div class="card"><label class="field"><span>Имя первого</span><input type="text" id="mN1" value="${esc(MD.n1)}" maxlength="20"></label><label class="field"><span>Имя второго</span><input type="text" id="mN2" value="${esc(MD.n2)}" maxlength="20"></label><button class="btn" id="mGo">Начать</button></div>
     ${l.match.length?`<button class="btn quiet block" id="mLast">Последний результат</button>`:""}`;
   if(MD.step==="pass") return `${back()}<div class="card pass-card"><span class="pl-ico">${ico("hand",24)}</span><h2>Передайте телефон</h2><p class="muted">Теперь отвечает ${esc(MD.n2||"второй партнёр")}. Ответы первого скрыты.</p><button class="btn" id="mPass">Я ${esc(MD.n2||"второй")}, начинаю</button></div>`;

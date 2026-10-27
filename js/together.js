@@ -200,7 +200,7 @@ function lwBlock(name, sc, full){
 }
 function vLw(){
   const l=L(); if(!Array.isArray(l.lw)) l.lw=[];
-  if(LD.step==="intro") return `${back()}<div class="stack-s"><h1>Как мы чувствуем любовь</h1><p class="muted small">Люди по-разному чувствуют, что их любят: через слова, время, помощь, подарки или прикосновения. 10 пар — выбирайте, что вам ценнее.</p></div>
+  if(LD.step==="intro") return `${back()}<div class="stack-s"><h1>Как мы чувствуем любовь</h1><p class="muted small">Люди по-разному чувствуют, что их любят: через слова, время, помощь, подарки или прикосновения. 10 пар — выбирайте, что вам ценнее.</p><p class="src-note">Это игра для разговора, а не научный тест. Идея «пяти языков любви» Г. Чепмена популярна, но исследования её не подтверждают (Impett, Park, Muise, 2024): людям нужны все формы заботы, а не одна. Используйте результат как повод поговорить о том, что для вас важно.</p></div>
     <div class="card"><label class="field"><span>Ваше имя</span><input type="text" id="lN1" value="${esc(LD.n1||me())}" maxlength="20"></label><label class="field"><span>Имя партнёра (если проходите вдвоём)</span><input type="text" id="lN2" value="${esc(LD.n2)}" maxlength="20"></label>
     <div class="row"><button class="btn" id="lGo">Пройти вдвоём</button><button class="btn quiet" id="lSolo">Только я</button></div></div>
     ${l.lw.length?`<button class="btn quiet block" id="lLast">Последний результат</button>`:""}`;

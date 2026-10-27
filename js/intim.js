@@ -130,7 +130,7 @@ function vTest(){
     <div class="progress"><i style="width:${TS.i/TQ.length*100}%"></i></div>
     <div class="card"><span class="label">${q[0]==="b"?"Тормоза":"Газ"} · ${TS.i+1} из ${TQ.length}</span><h3>${q[2]}</h3><div class="opts">${TO.map((o,i)=>`<button class="opt" data-ta="${i}">${o}</button>`).join("")}</div>
     ${TS.i?`<button class="linkbtn small" id="tBack" style="align-self:flex-start">← Предыдущий</button>`:""}</div>
-    <p class="disclaimer">Не диагноз, а способ лучше понять себя. Ответы хранятся только на этом телефоне.</p>`; }
+    <p class="src-note">Это не научный тест, а упражнение для самонаблюдения по мотивам модели двойного контроля желания (Bancroft, Janssen, 2000). Научные опросники этой модели (SIS/SES) содержат откровенные формулировки, поэтому здесь используется упрощённая версия без баллов и норм.</p><p class="disclaimer">Не диагноз, а способ лучше понять себя. Ответы хранятся только на этом телефоне.</p>`; }
   const r=x.tests[x.tests.length-1]; const top=k=>TQ.map((q,i)=>[q,r.a[i]]).filter(([q])=>q[0]===k).sort((a,b)=>b[1]-a[1]).filter(([,v])=>v>0).slice(0,2);
   const B=top("b"), Gs=top("g");
   const block=(lab,arr)=>`<div class="card"><span class="label">${lab}</span>${arr.length?arr.map(([q],k)=>`<div class="m-row"><strong>${q[3]}</strong>${all()?`<span class="small">${q[4]}</span>`:""}</div>`).join(""):`<p class="small muted">Ничего не выделяется</p>`}</div>`;

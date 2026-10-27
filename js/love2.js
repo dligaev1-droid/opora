@@ -118,6 +118,52 @@ VIEWS.lovetog=[()=>{ let h=vTog0(); const n=Object.keys(d30()).length, nx=d30nex
   h=h.replace(/(data-go="lovee"[\s\S]*?<span class="small muted">)[^<]*/, `$1${Array.isArray(EV)?EV.length:3} сценариев`);
   return h; }, VIEWS.lovetog[1]];
 
+/* ---------- Научный тест: удовлетворённость отношениями (CSI-4) ---------- */
+// Couples Satisfaction Index, 4 пункта (Funk & Rogge, 2007). Сумма 0–21, ниже 13,5 — заметная неудовлетворённость.
+const CSQ=[
+ ["Насколько вы в целом счастливы в ваших отношениях?",["Крайне несчастлив(а)","Довольно несчастлив(а)","Немного несчастлив(а)","Счастлив(а)","Очень счастлив(а)","Крайне счастлив(а)","Идеально"]],
+ ["Насколько верно для вас: «У меня тёплые и комфортные отношения с партнёром»?",["Совсем неверно","Немного верно","Отчасти верно","В основном верно","Почти полностью верно","Полностью верно"]],
+ ["Насколько отношения с партнёром приносят вам радость и удовлетворение?",["Совсем нет","Немного","Отчасти","В основном","Почти полностью","Полностью"]],
+ ["В целом насколько вы удовлетворены своими отношениями?",["Совсем нет","Немного","Отчасти","В основном","Почти полностью","Полностью"]]
+];
+const CS_SRC="Официальная методика: индекс удовлетворённости отношениями CSI‑4 — Funk, Rogge, 2007. Порог 13,5 балла — из оригинального исследования. Перевод на русский; российской адаптации пока нет.";
+let CT={i:0, a:[]};
+const csiList = () => { const l=L(); if(!Array.isArray(l.csi)) l.csi=[]; l.csi=l.csi.filter(r=>isObj(r) && typeof r.score==="number" && r.score>=0 && r.score<=21); return l.csi; };
+function vCsi(){
+  const list=csiList(), bk=`<button class="back" data-go="lovepath">← Путь</button>`;
+  if(CT.i===0 && !CT.a.length && !CT.fresh && list.length) CT.i=CSQ.length;
+  if(CT.i>=CSQ.length && !list.length) CT={i:0,a:[]};
+  if(CT.i<CSQ.length){ const [q,o]=CSQ[CT.i];
+    return `${bk}<div class="stack-s"><h1>Удовлетворённость отношениями</h1><p class="muted small">4 вопроса, 1 минута. Отвечайте о нынешних отношениях.</p></div>
+    <div class="progress"><i style="width:${CT.i/CSQ.length*100}%"></i></div>
+    <div class="card"><span class="label">Вопрос ${CT.i+1} из ${CSQ.length}</span><h3>${q}</h3><div class="opts">${o.map((x,k)=>`<button class="opt" data-cs="${k}">${x}</button>`).join("")}</div>
+    ${CT.i?`<button class="linkbtn small" id="csBack" style="align-self:flex-start">← Предыдущий</button>`:""}</div>
+    <p class="src-note">${CS_SRC}</p>`; }
+  const r=list[list.length-1], low=r.score<13.5, prev=list.length>1?list[list.length-2]:null;
+  return `${bk}<div class="card"><span class="label">Удовлетворённость отношениями · CSI‑4</span>
+    <div class="row" style="align-items:flex-end;gap:10px"><span class="big-num">${r.score}</span><span class="muted" style="padding-bottom:6px">из 21</span></div>
+    <div class="scale" aria-hidden="true"><span style="flex:13.5;background:var(--m2);opacity:${low?1:.3}"></span><span style="flex:7.5;background:var(--ok);opacity:${low?.3:1}"></span></div>
+    <div><span class="result-sev" style="color:${low?"var(--m2)":"var(--ok)"};box-shadow:inset 0 0 0 1.5px currentColor">${low?"Заметная неудовлетворённость":"Отношения в целом устраивают"}</span></div>
+    ${prev?`<p class="small muted">В прошлый раз (${fmtDate(prev.ts)}): ${prev.score} из 21</p>`:""}</div>
+  <div class="card soft"><p>${low?"Сейчас в отношениях вам заметно не хватает тепла или удовлетворения. Это частое состояние, особенно в периоды стресса, и с ним можно работать: разговорами, совместным временем, а иногда — с помощью специалиста вдвоём.":"Вы в целом довольны отношениями. Чтобы так и оставалось, важно поддерживать то, что работает: время вдвоём, благодарность и разговоры о сложном."}</p>
+    <button class="btn" data-go="about" data-sub="book">Обсудить с ${esc(PSY.nameWith)}</button></div>
+  ${low?`<button class="btn quiet block" data-go="lovep" data-sub="close:1">Программа «Ближе друг к другу»</button>`:`<button class="btn quiet block" data-go="love30">30 дней вместе</button>`}
+  <p class="src-note">${CS_SRC}</p><p class="disclaimer">Опросник не ставит диагноз. Проходите раз в месяц, чтобы видеть динамику.</p>
+  <button class="btn quiet block" id="csAgain">Пройти заново</button>`;
+}
+function bindCsi(){
+  $$("[data-cs]").forEach(b=>b.onclick=()=>{ CT.a[CT.i]=+b.dataset.cs; CT.i++;
+    if(CT.i>=CSQ.length){ const sc=CT.a.reduce((x,y)=>x+y,0); csiList().push({ts:Date.now(), score:sc}); save(); markDay(); award("aware",10); CT={i:CSQ.length,a:[]}; }
+    render(); window.scrollTo(0,0); });
+  const bk=$("#csBack"); if(bk) bk.onclick=()=>{ CT.i--; render(); };
+  const ag=$("#csAgain"); if(ag) ag.onclick=()=>{ CT={i:0,a:[],fresh:true}; render(); window.scrollTo(0,0); };
+}
+const vPath0=VIEWS.lovepath[0];
+VIEWS.lovepath=[()=>{ const h=vPath0(), k=h.indexOf('data-go="lovet"'); const last=csiList().slice(-1)[0];
+  const item=li("lovecsi",null,ico("tests",18),"Удовлетворённость отношениями",last?`${last.score} из 21 · ${fmtDate(last.ts)}`:"Научный тест CSI‑4 · 1 минута",false);
+  if(k<0) return h+item; const e=h.indexOf("</button>",k)+9; return h.slice(0,e)+item+h.slice(e); }, VIEWS.lovepath[1]];
+VIEWS.lovecsi=[vCsi,bindCsi]; TAB_OF.lovecsi="practices"; if(!ROOM_ROUTES.includes("lovecsi")) ROOM_ROUTES.push("lovecsi");
+
 /* ---------- Регистрация ---------- */
 VIEWS.loveq=[vQ,bindQ];
 VIEWS.love30=[v30,bind30]; TAB_OF.love30="practices"; if(!ROOM_ROUTES.includes("love30")) ROOM_ROUTES.push("love30");

@@ -817,3 +817,5 @@ body.onb-on nav{display:none}
 input[type=search],input[type=number],input[type=time],input[type=date]{width:100%;font:inherit;color:var(--ink);border-radius:14px;border:1px solid transparent;background:var(--surface-2);padding:11px 12px;min-height:44px}
 input[type=search]:focus-visible,input[type=number]:focus-visible,input[type=time]:focus-visible,input[type=date]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .rm-card input[type=time],#obT{width:auto}
+.src-note{font-size:.74rem;line-height:1.45;color:var(--muted);margin:0}
+.card .src-note{margin-top:2px}
