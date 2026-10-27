@@ -124,6 +124,7 @@ let TS={i:0, a:[]};
 function vTest(){
   const x=I();
   if(TS.i===0 && !TS.a.length && !TS.fresh && x.tests.length) TS.i=TQ.length;
+  if(TS.i>=TQ.length && !x.tests.length) TS={i:0,a:[]};
   if(TS.i<TQ.length){ const q=TQ[TS.i];
     return `<div class="stack-s"><h1>Тормоза и газ</h1><p class="muted small">Что гасит и что разжигает ваше желание. 12 вопросов, 2 минуты.</p></div>
     <div class="progress"><i style="width:${TS.i/TQ.length*100}%"></i></div>
@@ -288,4 +289,5 @@ function bindPlus(){
 /* ---------- Регистрация ---------- */
 const V={itoday:[vToday], iknow:[vKnow], iart:[vArt], ipair:[vPair], iwish:[vWish,bindWish], isens:[vSens], italk:[vTalk], icons:[vCons], itest:[vTest,bindTest], ihelp:[vHelp], iplus:[vPlus,bindPlus]};
 Object.entries(V).forEach(([k,[v,b]])=>{ VIEWS[k]=guard(v,b); TAB_OF[k]="practices"; });
+window.INTIM={I, all, adult, AGE, LOCK, iback, lockCard, li, nico, guard, IR, ROOT, PARENT, NAV, NAVI, BL, TQ, IA, V};
 })();

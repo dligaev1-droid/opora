@@ -675,3 +675,27 @@ button.main-step{cursor:pointer}
   .btn,.tile,.li,.banner,.opt,.chip,.room-card,.sc-tile,.mood,.hw,.bt-v,.card[data-go],button.card{transition:transform .12s ease, background-color .2s}
   .btn:active,.tile:active,.li:active,.banner:active,.opt:active,.chip:active,.room-card:active,.sc-tile:active,.mood:active,.bt-v:active,button.card:active{transform:scale(.975)}
 }
+
+/* ---------- Близость 18+: карта, курсы, практики, дневник, колода, квиз ---------- */
+.h-sec{font-size:1.05rem;margin:6px 0 -4px}
+.i-map-card{padding:8px}
+.i-radar{width:100%;max-width:340px;margin:0 auto;display:block;overflow:visible}
+.i-radar .ir-grid{fill:none;stroke:var(--line);stroke-width:1}
+.i-radar .ir-val{fill:var(--accent);fill-opacity:.22;stroke:var(--accent);stroke-width:2;stroke-linejoin:round}
+.i-radar text{font-size:11.5px;fill:var(--ink);font-family:inherit;font-weight:600}
+.ip-step{display:flex;gap:12px;align-items:center;background:var(--surface-2);border-radius:14px;padding:12px 14px}
+.ip-step .es-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ip-step .btn{flex:none}
+.btn.sm{min-height:40px;padding:8px 14px;font-size:.9rem}
+.li.cur{background:var(--accent-soft)}.li.cur strong{color:var(--accent)}
+.d-bars{display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:6px}
+.d-bars .db{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;min-width:0}
+.d-bars .db i{display:block;width:100%;max-width:22px;height:var(--h);background:var(--accent);opacity:.75;border-radius:6px 6px 3px 3px}
+.d-bars .db small{font-size:.68rem;color:var(--muted)}
+.i-deck{min-height:200px;justify-content:center;align-items:center;text-align:center;gap:14px}
+.i-deck .label{align-self:center}
+.i-q{font-family:var(--f-display);font-size:1.35rem;line-height:1.35;font-weight:600;margin:0}
+.i-deck .pl-ico{width:48px;height:48px;border-radius:16px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.qz-row{gap:10px}.qz-row .btn{flex:1}
+.qz-res{margin:0}.qz-res.ok strong{color:var(--ok)}.qz-res.no strong{color:var(--accent)}
+.card[data-go] .progress{display:block;width:100%;margin-top:6px}
