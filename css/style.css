@@ -795,3 +795,25 @@ body.onb-on nav{display:none}
   .car-wrap .carousel.dragging *{pointer-events:none}
 }
 .carousel{scroll-padding-inline:16px}
+
+/* ---------- Цели: раскладка год → день, чтение ---------- */
+.g-ladder{display:flex;flex-direction:column;gap:0;margin-top:4px}
+.gl-row{display:flex;gap:12px;position:relative;padding-bottom:12px}
+.gl-row:last-child{padding-bottom:0}
+.gl-row:not(:last-child)::before{content:"";position:absolute;left:7px;top:18px;bottom:-2px;width:2px;background:var(--line)}
+.gl-dot{flex:none;width:16px;height:16px;border-radius:50%;margin-top:2px;background:var(--surface);box-shadow:inset 0 0 0 3px var(--accent)}
+.gl-d .gl-dot{background:var(--accent)}
+.gl-b{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.gl-b input{width:100%}
+.rd-top{flex-direction:row;align-items:center;gap:16px}
+.rd-ring{position:relative;width:96px;height:96px;flex:none}
+.rd-ring svg{width:100%;height:100%}
+.rd-n{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.rd-n b{font-family:var(--f-display);font-size:1.6rem}
+.rd-book{gap:10px}
+.rd-add{gap:8px}
+.read-mini{text-align:left;align-items:flex-start;gap:6px}
+@media (max-width:360px){.rd-top{flex-direction:column;align-items:flex-start}}
+input[type=search],input[type=number],input[type=time],input[type=date]{width:100%;font:inherit;color:var(--ink);border-radius:14px;border:1px solid transparent;background:var(--surface-2);padding:11px 12px;min-height:44px}
+input[type=search]:focus-visible,input[type=number]:focus-visible,input[type=time]:focus-visible,input[type=date]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.rm-card input[type=time],#obT{width:auto}
