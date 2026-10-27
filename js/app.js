@@ -127,6 +127,8 @@ function renderTabs(){
 document.addEventListener("click", e=>{
   const g=e.target.closest("[data-go]"); if(g && !g.disabled){ e.preventDefault(); go(g.dataset.go, g.dataset.sub||null); }
 });
+// фото психолога в маленьком кружке; если фото нет — первая буква имени
+const psyAva = (cls="logo") => PSY.photo ? `<div class="${cls} has-photo"><img src="${esc(PSY.photo)}" alt="${esc(PSY.name)}" loading="lazy"></div>` : `<div class="${cls}">${esc(PSY.name[0])}</div>`;
 const backBtn = (to, label) => `<button class="back" data-go="${to}">← ${label}</button>`;
 const backPrev = () => backBtn(prevRoute==="sos"?"sos":prevRoute==="home"?"home":"practices", prevRoute==="sos"?"Быстрая помощь":prevRoute==="home"?"Главная":"Практики");
 
@@ -509,7 +511,7 @@ function vResult(){
   </div>
   ${risk?`<div class="card sos"><h3>Вы отметили мысли о смерти или вреде себе</h3><p class="small">Это важно. Пожалуйста, поговорите с кем‑то уже сегодня: с близким человеком, специалистом или по телефону экстренной помощи 112.</p><button class="btn sosb" data-go="sos">Где получить помощь</button></div>`:""}
   <div class="card soft">
-    <div class="row"><div class="logo">${esc(PSY.name[0])}</div><strong>${esc(PSY.name)}</strong></div>
+    <div class="row">${psyAva()}<strong>${esc(PSY.name)}</strong></div>
     <p>${l[3]}</p>
     <button class="btn" data-go="about" data-sub="book">Обсудить на консультации</button>
   </div>
@@ -914,7 +916,7 @@ function vArticle(){
     ${a.body.map(t=>`<p>${esc(t)}</p>`).join("")}
   </article>
   <div class="card soft">
-    <div class="row"><div class="logo">${esc(PSY.name[0])}</div><strong>${esc(PSY.name)}, ${esc(PSY.role.toLowerCase())}</strong></div>
+    <div class="row">${psyAva()}<strong>${esc(PSY.name)}, ${esc(PSY.role.toLowerCase())}</strong></div>
     <p class="small">Узнали себя? Разберём вашу ситуацию.</p>
     <div class="row"><button class="btn" data-go="about" data-sub="book">Записаться</button><button class="btn quiet" data-share>${ico("share",18)} Поделиться</button></div>
   </div>`;
@@ -924,8 +926,9 @@ function vArticle(){
 let bookText="", BK={name:"",fmt:"Онлайн",time:"",req:""};
 function vAbout(){
   const contact = PSY.telegram?`<a class="btn ghost" href="https://t.me/${encodeURIComponent(PSY.telegram)}" target="_blank" rel="noopener">Открыть Telegram</a>`:"";
-  return `<div class="card">
-    <div class="row" style="gap:16px;flex-wrap:nowrap"><div class="avatar">${esc(PSY.name[0])}</div><div class="stack-s" style="min-width:0"><h2>${esc(PSY.name)}</h2><p class="small muted">${esc(PSY.role)}</p><p class="small muted">${esc(PSY.formats)}</p></div></div>
+  return `<div class="card${PSY.photoBig?" psy-card":""}">
+    ${PSY.photoBig?`<img class="psy-hero" src="${esc(PSY.photoBig)}" alt="${esc(PSY.name)}, ${esc(PSY.role.toLowerCase())}">`:""}
+    <div class="row" style="gap:16px;flex-wrap:nowrap">${PSY.photoBig?"":psyAva("avatar")}<div class="stack-s" style="min-width:0"><h2>${esc(PSY.name)}</h2><p class="small muted">${esc(PSY.role)}</p><p class="small muted">${esc(PSY.formats)}</p></div></div>
     <p>${esc(PSY.about)}</p>
     <div class="stack-s"><span class="label">С чем работаю</span><div class="chips">${PSY.topics.map(t=>`<span class="tag" style="font-size:.85rem;padding:5px 12px">${esc(t)}</span>`).join("")}</div></div>
   </div>

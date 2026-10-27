@@ -176,7 +176,7 @@ function vPath(){
 /* Психолог */
 function vPsy(){
   return `<div class="card">
-    <div class="row" style="gap:16px;flex-wrap:nowrap"><div class="avatar">${esc(PSY.name[0])}</div><div class="stack-s" style="min-width:0"><h2>${esc(PSY.name)}</h2><p class="small muted">${esc(PSY.role)}</p></div></div>
+    <div class="row" style="gap:16px;flex-wrap:nowrap">${psyAva("avatar")}<div class="stack-s" style="min-width:0"><h2>${esc(PSY.name)}</h2><p class="small muted">${esc(PSY.role)}</p></div></div>
     <p>Когда самим не получается договориться, помогает взгляд со стороны. Можно прийти одному или вдвоём: ссоры, ревность, доверие, расставание.</p>
     <button class="btn" data-go="about" data-sub="book">Записаться на консультацию</button>
   </div>

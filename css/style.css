@@ -862,3 +862,10 @@ input[type=search]:focus-visible,input[type=number]:focus-visible,input[type=tim
 .mak-guide p{margin:0}
 .mak-how{gap:8px}
 .mak-how p{margin:0}
+
+/* фото психолога */
+.has-photo{padding:0;overflow:hidden;background:var(--surface-2)}
+.has-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.logo.has-photo,.avatar.has-photo{border-radius:50%}
+.psy-card{padding-top:0;overflow:hidden}
+.psy-hero{display:block;width:calc(100% + 36px);max-width:none;margin:0 -18px 4px;aspect-ratio:4/3;object-fit:cover;object-position:50% 30%}
