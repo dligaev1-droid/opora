@@ -341,7 +341,7 @@ function bindPlus(){
 }
 
 /* ---------- Регистрация ---------- */
-window.LOVE={L, plus, back, lockCard, LOCK, li, ROOM_ROUTES};
+window.LOVE={L, plus, back, lockCard, LOCK, li, ROOM_ROUTES, LP, QL, tileL};
 Object.assign(VIEWS,{lovetog:[vTog,null], lovepath:[vPath,null], lovepsy:[vPsy,null], love:[vLove,null], lovep:[vLoveProg,bindLoveProg], lovet:[vLoveTest,bindLoveTest], loveq:[vLoveQ,bindLoveQ], lovef:[vLoveF,bindLoveF], lovea:[vLoveA,null], plus:[vPlus,bindPlus]});
 ROOM_ROUTES.forEach(r=>TAB_OF[r]="practices");
 window.ROOM_OF = r => ROOM_ROUTES.includes(r) ? "love" : "";
