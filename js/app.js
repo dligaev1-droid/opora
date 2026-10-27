@@ -421,7 +421,7 @@ function stopPmr(){ clearInterval(pmrT); pmrT=null; pmrS.running=false; }
 /* ===== Тесты ===== */
 const FREQ4=[["Ни разу",0],["Несколько дней",1],["Больше половины дней",2],["Почти каждый день",3]];
 const TESTS={
-  cbi:{src:"Официальная методика: Копенгагенский опросник выгорания (CBI), шкала личного выгорания — Kristensen и соавт., 2005. Перевод на русский; формальной российской адаптации пока нет. Границы уровней — как в исследованиях CBI.", title:"Выгорание", code:"CBI", min:1, icon:"wind", desc:"6 вопросов о том, насколько вы истощены. Копенгагенский опросник выгорания. 1 минута.",
+  cbi:{src:"Официальная методика: Копенгагенский опросник выгорания (CBI), шкала личного выгорания. Источник: Kristensen T. S., Borritz M., Villadsen E., Christensen K. B. The Copenhagen Burnout Inventory: A new tool for the assessment of burnout // Work & Stress. 2005. 19(3). P. 192–207. Разрешена для свободного использования с указанием источника (NFA, Дания). Перевод на русский; формальной российской адаптации нет.", title:"Выгорание", code:"CBI", min:1, icon:"wind", desc:"6 вопросов о том, насколько вы истощены. Копенгагенский опросник выгорания. 1 минута.",
     intro:"Как часто в последнее время:", max:100, unit:"из 100", score:"mean",
     opts:[["Всегда",100],["Часто",75],["Иногда",50],["Редко",25],["Никогда или почти никогда",0]],
     q:["Вы чувствуете усталость","Вы чувствуете физическое истощение","Вы чувствуете эмоциональное истощение","Вы думаете: «Я больше не могу»","Вы чувствуете себя вымотанным(-ой)","Вы чувствуете слабость и уязвимость к болезням"],
@@ -469,7 +469,7 @@ function vTests(){
   if(T.id && T.i < TESTS[T.id].q.length) return vQuestion();
   if(T.id) return vResult();
   const hist=S.tests.slice().reverse().slice(0,8);
-  return `<div class="stack-s"><h1>Тесты</h1><p class="muted">Не диагноз, а повод присмотреться к себе</p><p class="src-note">Все тесты в этом разделе — официальные научные опросники, которые используют психологи и врачи, а не тесты, придуманные «из головы».</p></div>
+  return `<div class="stack-s"><h1>Тесты</h1><p class="muted">Не диагноз, а повод присмотреться к себе</p><p class="src-note">Все тесты в этом разделе — официальные научные опросники, которые используют психологи и врачи, а не тесты, придуманные «из головы». Авторы разрешили использовать их свободно.</p></div>
   <div class="list">${Object.entries(TESTS).map(([k,t])=>{ const last=S.tests.filter(r=>r.id===k).pop(); const l=last?level(k,last.score):null;
     return `<button class="li" data-test="${k}"><span class="ico">${ico(t.icon||"tests",20)}</span><span class="dt"><strong>${t.title}</strong><span class="small muted">${l?`<span style="color:${lvlColor(l)}">${l[1]}</span>`:`${t.q.length} вопросов · ${t.min} мин`} · ${esc(t.code)}</span></span><span class="chev">›</span></button>`;}).join("")}</div>
   ${hist.length?`<details class="more"><summary>История</summary><div>${hist.map(r=>{const t=TESTS[r.id]; if(!t) return ""; const l=level(r.id,r.score); return `<div class="entry"><span class="dot" style="background:${lvlColor(l)}"></span><div class="body"><strong>${t.title}: ${r.score} ${t.unit}</strong><span class="small muted">${l[1]} · ${fmtDate(r.ts)}</span></div></div>`}).join("")}</div></details>`:""}`;
