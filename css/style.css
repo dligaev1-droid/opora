@@ -885,3 +885,12 @@ input[type=search]:focus-visible,input[type=number]:focus-visible,input[type=tim
 .tip-card{gap:8px}
 .tip-card p{margin:0}
 .tip-card .row{justify-content:space-between;align-items:center;flex-wrap:nowrap}
+
+/* «Как выполнять»: свёрнутая подсказка под заголовком упражнения */
+details.how{margin-top:-4px}
+details.how summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-size:.9rem;font-weight:600;padding:4px 0}
+details.how summary::-webkit-details-marker{display:none}
+details.how summary::after{content:"›";transform:rotate(90deg);display:inline-block;transition:transform .2s;font-size:1.1rem;line-height:1}
+details.how[open] summary::after{transform:rotate(-90deg)}
+.how-b{margin-top:8px;background:var(--accent-soft);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.how-b p{margin:0}
