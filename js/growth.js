@@ -91,10 +91,10 @@ function treeArtSVG(lv, opts, night){
   let lit="";
   if(night){ const [gx,gy,rx,ry]=TREE_GLOW[st]||[150,180,60,50];
     // лунный свет: растение чуть светлее и в серебристых тонах, без лучей и блёсток
-    lit=`<defs><radialGradient id="${id}r"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".6" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    lit=`<defs><radialGradient id="${id}r"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
       <mask id="${id}l"><rect width="300" height="300" fill="#000"/><ellipse cx="${gx}" cy="${gy}" rx="${rx*1.25}" ry="${ry*1.2}" fill="url(#${id}r)"/></mask>
-      <filter id="${id}s" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".46 .10 .10 0 .02  .08 .52 .12 0 .04  .10 .14 .66 0 .08  0 0 0 1 0"/></filter>
-      <radialGradient id="${id}h"><stop offset="0" stop-color="#F3F1E6" stop-opacity=".22"/><stop offset="1" stop-color="#F3F1E6" stop-opacity="0"/></radialGradient>
+      <filter id="${id}s" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".64 .10 .10 0 .03  .09 .70 .12 0 .05  .11 .15 .84 0 .09  0 0 0 1 0"/></filter>
+      <radialGradient id="${id}h"><stop offset="0" stop-color="#F3F1E6" stop-opacity=".32"/><stop offset="1" stop-color="#F3F1E6" stop-opacity="0"/></radialGradient>
       <radialGradient id="${id}mo" cx=".38" cy=".35"><stop offset="0" stop-color="#FBF8EE"/><stop offset="1" stop-color="#E4DEC8"/></radialGradient></defs>
       <image href="${href}" x="${ix}" y="${iy}" width="${iw}" height="${iw}" preserveAspectRatio="none" mask="url(#${id}l)" filter="url(#${id}s)"/>`;
     for(let i=0;i<16;i++) out.push(`<circle cx="${f1(18+R()*264)}" cy="${f1(18+R()*100)}" r="${f1(.45+R()*.7)}" fill="#fff" opacity="${f1(.3+R()*.5)}"/>`);
