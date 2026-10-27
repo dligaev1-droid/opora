@@ -87,12 +87,14 @@ function bindRipple(cv){
 }
 
 /* ---------- 3. Запотевшее стекло ---------- */
+// 10 спокойных видов из колоды МАК; при каждом заходе — следующий
+const MIST_VIEWS=["05","03","15","30","09","23","52","02","24","10"];
 function bindMist(cv){
   const G=setup(cv), fog=document.createElement("canvas"); fog.width=cv.width; fog.height=cv.height; const f=fog.getContext("2d"); f.setTransform(G.d,0,0,G.d,0,0);
   const fogCol = () => dark()?"rgba(58,68,82,":"rgba(226,233,238,";
   const fill = a => { f.globalCompositeOperation="source-over"; f.fillStyle=fogCol()+a+")"; f.fillRect(0,0,G.w,G.h); };
   fill(.93); f.fillStyle="rgba(255,255,255,.18)"; for(let i=0;i<260;i++){ f.beginPath(); f.arc(Math.random()*G.w,Math.random()*G.h,Math.random()*1.6+.3,0,7); f.fill(); }
-  const img=new Image(); let ok=false; img.onload=()=>ok=true; img.src="cards/05.webp";
+  const img=new Image(); let ok=false; img.onload=()=>ok=true; img.src=`cards/${MIST_VIEWS[(C().mi||0)%MIST_VIEWS.length]}.webp`;
   const wipe=(p,prev)=>{ f.globalCompositeOperation="destination-out"; const steps=prev?Math.max(1,Math.ceil(Math.hypot(p[0]-prev[0],p[1]-prev[1])/6)):1;
     for(let k=0;k<steps;k++){ const q=prev?[prev[0]+(p[0]-prev[0])*k/steps, prev[1]+(p[1]-prev[1])*k/steps]:p; const g=f.createRadialGradient(q[0],q[1],0,q[0],q[1],30); g.addColorStop(0,"rgba(0,0,0,.9)"); g.addColorStop(1,"rgba(0,0,0,0)"); f.fillStyle=g; f.beginPath(); f.arc(q[0],q[1],30,0,7); f.fill(); } };
   drag(cv,(p,prev)=>wipe(p,prev));
@@ -110,8 +112,7 @@ function bindSand(cv){
   const G=setup(cv), x=G.x, R=(a=>()=>(a=(a*16807)%2147483647)/2147483647)(7);
   const stones=[[.24,.3,26,18],[.72,.62,34,22],[.42,.8,18,13]].map(([a,b,rx,ry])=>[a*G.w,b*G.h,rx,ry]);
   const base = () => { x.fillStyle="#E9DCBD"; x.fillRect(0,0,G.w,G.h); for(let i=0;i<1600;i++){ x.fillStyle=R()<.5?"rgba(160,130,90,.10)":"rgba(255,255,255,.22)"; x.fillRect(R()*G.w,R()*G.h,1.2,1.2); }
-    // ровные круги вокруг камней, как в японском саду
-    stones.forEach(([sx,sy,rx,ry])=>{ for(let k=1;k<=3;k++){ x.beginPath(); x.ellipse(sx,sy,rx+k*9,ry+k*9,0,0,7); x.strokeStyle="rgba(150,120,80,.28)"; x.lineWidth=2; x.stroke(); x.beginPath(); x.ellipse(sx,sy-1,rx+k*9,ry+k*9,0,0,7); x.strokeStyle="rgba(255,250,235,.45)"; x.lineWidth=1; x.stroke(); } }); };
+  };
   const drawStones = () => stones.forEach(([sx,sy,rx,ry])=>{ x.fillStyle="rgba(60,50,40,.18)"; x.beginPath(); x.ellipse(sx+3,sy+5,rx,ry*.8,0,0,7); x.fill();
     const g=x.createRadialGradient(sx-rx*.3,sy-ry*.4,2,sx,sy,rx); g.addColorStop(0,"#A8A39B"); g.addColorStop(1,"#6E6A64"); x.fillStyle=g; x.beginPath(); x.ellipse(sx,sy,rx,ry,0,0,7); x.fill(); });
   base(); drawStones();
@@ -157,6 +158,7 @@ function vCalm(){
   if(m[0]==="pop") stage=vPop();
   else stage=`<canvas class="calm-cv" id="calmCv" role="img" aria-label="${m[1]}"></canvas>`;
   const extra = m[0]==="pop" ? `<label class="row calm-sw"><input type="checkbox" id="popBr"${c.breath?" checked":""}> <span class="small">С подсказкой дыхания: вдох 4 секунды, на выдохе — нажать</span></label>`
+    : m[0]==="mist" ? `<button class="btn quiet" id="mistNext">Другой вид</button>`
     : m[0]==="sand" ? `<button class="btn quiet" id="sandReset">Разровнять песок</button>`
     : m[0]==="leaves" ? `<div class="row" style="flex-wrap:nowrap"><input type="text" id="lvIn" maxlength="60" placeholder="Например: «я не справлюсь»" aria-label="Мысль" style="flex:1;min-width:0"><button class="btn" id="lvGo">На лист</button></div><p class="small muted">Можно просто коснуться воды — появится пустой лист.</p>` : "";
   return `${backBtn(from[0],from[1])}
@@ -171,9 +173,10 @@ function vCalm(){
 function bindCalm(){
   const c=C();
   bindRelief("calm");
-  $$("[data-cm]").forEach(b=>b.onclick=()=>{ if(c.mode===b.dataset.cm) return; c.mode=b.dataset.cm; save(); render(); });
+  $$("[data-cm]").forEach(b=>b.onclick=()=>{ if(c.mode===b.dataset.cm) return; c.mode=b.dataset.cm; if(c.mode==="mist") c.mi=((c.mi||0)+1)%MIST_VIEWS.length; save(); render(); });
   const sn=$("#calmSnd"); if(sn) sn.onclick=()=>{ c.snd=!c.snd; save(); sn.textContent=c.snd?"Звук: вкл":"Звук: выкл"; };
   const dn=$("#calmDone"); if(dn) dn.onclick=()=>{ touched(); reliefFinish("calm"); };
+  const mn=$("#mistNext"); if(mn) mn.onclick=()=>{ c.mi=((c.mi||0)+1)%MIST_VIEWS.length; save(); render(); };
   const br=$("#popBr"); if(br) br.onchange=()=>{ c.breath=br.checked; save(); PB&&clearInterval(PB.iv); render(); };
   cancelAnimationFrame(loop);
   if(c.mode==="pop") bindPop();
