@@ -839,3 +839,22 @@ input[type=search]:focus-visible,input[type=number]:focus-visible,input[type=tim
 .bd-p .progress{height:4px}
 .badges-card{gap:10px}
 .stg small{hyphens:auto;-webkit-hyphens:auto}
+
+/* «Сегодня» на главной: две плитки рядом и мысль дня под ними */
+.today-duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tday{position:relative;background:var(--surface);border:0;border-radius:var(--r);padding:10px 10px 14px;font:inherit;color:inherit;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:10px;min-width:0;transition:transform .15s}
+.tday:hover{background:var(--surface-2)}
+.tday:active{transform:scale(.98)}
+.tday-vis{position:relative;height:128px;border-radius:calc(var(--r) - 6px);display:grid;place-items:center;overflow:hidden}
+.tday-vis.mak{background:linear-gradient(160deg,var(--accent-soft),var(--surface-2))}
+.tday-c{position:absolute;width:66px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;box-shadow:0 6px 14px rgba(20,30,45,.22);transform:rotate(-5deg);left:calc(50% - 38px);top:calc(50% - 50px)}
+.tday-c.back{transform:rotate(8deg);left:calc(50% - 22px);top:calc(50% - 47px);opacity:.9}
+.tday-c .cart,.tday-c svg{width:100%;height:100%;display:block;object-fit:cover}
+.tday-vis.tree{background:transparent}
+.tday-vis.tree .tree{width:128px;height:128px}
+.tday-t{display:flex;flex-direction:column;gap:3px;padding:0 4px;min-width:0}
+.tday-t strong{font-weight:650}
+.tday-t .small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tday-t .progress{margin-top:5px;height:5px}
+.tday-ok{position:absolute;top:16px;right:16px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink,#fff);display:grid;place-items:center}
+@media (min-width:560px){.tday-vis{height:150px}.tday-vis.tree .tree{width:150px;height:150px}.tday-c{width:78px;left:calc(50% - 44px);top:calc(50% - 58px)}.tday-c.back{left:calc(50% - 26px);top:calc(50% - 55px)}}

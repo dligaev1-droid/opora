@@ -82,6 +82,17 @@ function bakNudge(){
   if(S.days.length<5 || (S.bak && Date.now()-S.bak<30*864e5)) return "";
   return `<button class="banner card" data-go="about" data-sub="data"><span class="bi">${ico("lock",20)}</span><span class="bt"><strong>Сохраните копию данных</strong><span class="small muted">${S.bak?"Прошёл месяц с прошлой копии":"Чтобы ничего не потерять при смене телефона"}</span></span><span class="chev">›</span></button>`;
 }
+// «Сегодня» на главной: две одинаковые плитки рядом — карта дня и моё дерево
+function todayDuo(){
+  let mak="", tree="";
+  if(typeof todayCard==="function"){ const c=todayCard(), st=c?(c.a.some(x=>x)?"Ответы сохранены":"Ответьте на вопросы"):"Вытяните карту";
+    mak=`<button class="tday" data-go="cards"><span class="tday-vis mak"><span class="tday-c back">${cardBack()}</span><span class="tday-c">${c?cardFront(c.id):cardBack()}</span></span>
+      <span class="tday-t"><strong>Карта дня</strong><span class="small muted">${st}</span></span>${c&&c.a.some(x=>x)?`<span class="tday-ok" aria-hidden="true">${ico("check",14)}</span>`:""}</button>`; }
+  if(typeof treeSVG==="function"){ const t=xpTotal(), lv=levelOf(t), sg=stageOf(lv), cur=lvXP(lv), nx=lv<MAX_LV?lvXP(lv+1):cur, pc=lv<MAX_LV?Math.round((t-cur)/(nx-cur)*100):100;
+    tree=`<button class="tday" data-go="growth"><span class="tday-vis tree">${treeSVG(lv)}</span>
+      <span class="tday-t"><strong>Мой рост</strong><span class="small muted">${t?`${STAGES[sg-1]} · ур. ${lv}`:"Посадите семечко"}</span><span class="progress"><i style="width:${pc}%"></i></span></span></button>`; }
+  return mak||tree ? `<div class="today-duo">${mak}${tree}</div>` : "";
+}
 function vHome(){
   if(needOnb()){ document.body.classList.add("onb-on"); return vOnb(); }
   document.body.classList.remove("onb-on");
@@ -96,8 +107,8 @@ function vHome(){
   if(fy){ const g=root.querySelector('.grid2'); if(g && g.querySelector('[data-sub="cbi"]')) g.remove(); }
   const sos=root.querySelector(".sos-banner"), disc=root.querySelector(".disclaimer");
   const frag=h=>{ const x=document.createElement("template"); x.innerHTML=h; return x.content; };
-  if(feed.length && sos){ const w=document.createElement("div"); w.className="stack-s"; w.innerHTML='<span class="label">Сегодня</span>';
-    const c=document.createElement("div"); c.className="carousel feed"; feed.forEach(el=>{ const it=document.createElement("div"); it.className="feed-i"; it.appendChild(el); c.appendChild(it); }); w.appendChild(c); sos.before(w); }
+  if(feed.length && sos){ const w=document.createElement("div"); w.className="stack-s today"; w.innerHTML='<span class="label">Сегодня</span>'+todayDuo();
+    const th=feed.find(el=>el.classList.contains("thought")); if(th) w.appendChild(th); sos.before(w); }
   if(fy && sos) sos.after(frag(fy));
   const bn=bakNudge(); if(bn && disc) disc.before(frag(bn));
   const d=document.createElement("div"); d.appendChild(root.cloneNode(true)); return d.innerHTML;
