@@ -19,7 +19,7 @@ function load(){
   if(!S.programs||typeof S.programs!=="object") S.programs={};
   if(S.xp && (typeof S.xp!=="object" || ["calm","res","aware","self"].some(k=>typeof S.xp[k]!=="number"))) S.xp=null;
   S.moods=S.moods.filter(m=>m && m.mood>=1 && m.mood<=5).map(m=>Object.assign({}, m, {tags:Array.isArray(m.tags)?m.tags:[], emotions:Array.isArray(m.emotions)?m.emotions:[]}));
-  S.tests=S.tests.filter(t=>t && ["gad7","phq9","cbi","rse"].includes(t.id) && typeof t.score==="number");
+  S.tests=S.tests.filter(t=>t && ["gad7","phq9","cbi","rse","who5"].includes(t.id) && typeof t.score==="number");
   S.grat=S.grat.filter(g=>g && typeof g.text==="string");
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
@@ -452,14 +452,22 @@ const TESTS={
             [14,"Умеренное снижение настроения","m2","Настроение заметно снижено. С этим стоит работать вместе со специалистом, самостоятельные усилия могут даваться тяжело. Рекомендую консультацию."],
             [19,"Умеренно‑тяжёлое снижение настроения","m1","Состояние серьёзное. Рекомендую не откладывать консультацию психолога и показаться врачу‑психиатру или психотерапевту."],
             [27,"Тяжёлое снижение настроения","m1","Состояние очень тяжёлое. Пожалуйста, обратитесь к врачу‑психиатру в ближайшее время. Вы не обязаны справляться с этим в одиночку."]],
-    risk:8}
+    risk:8},
+  who5:{src:"Официальная методика: индекс благополучия ВОЗ (WHO‑5) — Psychiatric Research Unit, WHO Collaborating Centre in Mental Health, 1998. Бесплатен и не требует разрешения. Балл 50 и ниже — повод проверить настроение тестом PHQ‑9, 28 и ниже — признак возможной депрессии.",
+    title:"Благополучие", code:"WHO‑5", min:1, icon:"star", desc:"5 вопросов о том, как вы себя чувствовали последние 2 недели. Индекс благополучия ВОЗ. 1 минута.",
+    intro:"Как часто за последние 2 недели:", max:100, unit:"из 100", score:"x4", next:"phq9",
+    opts:[["Всё время",5],["Большую часть времени",4],["Больше половины времени",3],["Меньше половины времени",2],["Иногда",1],["Ни разу",0]],
+    q:["Я был(а) бодрым и в хорошем настроении","Я был(а) спокойным и расслабленным","Я был(а) активным и энергичным","Я просыпался(ась) свежим и отдохнувшим","Моя повседневная жизнь была наполнена тем, что мне интересно"],
+    levels:[[28,"Низкое благополучие","m1","Последние две недели были очень тяжёлыми. Такой результат бывает при депрессии. Пройдите тест PHQ‑9 и, пожалуйста, обсудите своё состояние со специалистом — вы не обязаны справляться с этим в одиночку."],
+            [50,"Сниженное благополучие","m2","Сил и радости сейчас меньше, чем хотелось бы. Стоит проверить настроение тестом PHQ‑9 и добавить в неделю то, что вас поддерживает: сон, движение, общение."],
+            [100,"Хорошее благополучие","ok","Последние две недели вы в целом чувствовали себя хорошо. Проходите тест раз в месяц, чтобы замечать перемены вовремя."]]}
 };
 const qText = q => typeof q==="string"?q:q.t;
 function scoreOf(id, ans){
   const t=TESTS[id]; const maxOpt=Math.max(...t.opts.map(o=>o[1]));
   const vals=ans.map((v,i)=> (typeof t.q[i]==="object" && t.q[i].r) ? maxOpt-v : v);
   const sum=vals.reduce((a,b)=>a+b,0);
-  return t.score==="mean" ? Math.round(sum/vals.length) : sum;
+  return t.score==="mean" ? Math.round(sum/vals.length) : t.score==="x4" ? sum*4 : sum;
 }
 const level=(id,score)=>TESTS[id].levels.find(l=>score<=l[0]);
 const lvlColor = l => l[2]==="ok"?"var(--ok)":`var(--${l[2]})`;
@@ -506,6 +514,7 @@ function vResult(){
     <button class="btn" data-go="about" data-sub="book">Обсудить на консультации</button>
   </div>
   ${prog && l[2]!=="ok"?`<button class="banner card" data-go="programs" data-sub="${prog.id}"><span class="bi" style="background:var(--accent-soft);color:var(--accent)">${ico("practices",20)}</span><span class="bt"><strong>${esc(prog.title)}</strong><span class="small muted">Программа на ${prog.days.length} ${plural(prog.days.length,"день","дня","дней")}</span></span><span class="chev">›</span></button>`:""}
+  ${t.next && score<=50 && TESTS[t.next]?`<button class="banner card" data-test-next="${t.next}"><span class="bi" style="background:var(--accent-soft);color:var(--accent)">${ico("tests",20)}</span><span class="bt"><strong>Пройти ${esc(TESTS[t.next].code)}</strong><span class="small muted">${esc(TESTS[t.next].title)} · ${TESTS[t.next].min} мин</span></span><span class="chev">›</span></button>`:""}
   ${risk||l[2]==="m1"?"":`<button class="btn quiet block" id="storyBtn">${ico("image",18)} Карточка для сторис</button>`}
   ${t.src?`<p class="src-note">${esc(t.src)}</p>`:""}
   <p class="disclaimer">Опросник не ставит диагноз: это скрининг. Точную оценку даёт только специалист.</p>`;
@@ -519,6 +528,7 @@ function bindTests(){
   });
   const bk=$("#tBack"); if(bk) bk.onclick=()=>{ if(T.i>0){T.i--;} else T={id:null,i:0,a:[]}; render(); };
   const dn=$("#tDone"); if(dn) dn.onclick=()=>{T={id:null,i:0,a:[]}; render();};
+  $$("[data-test-next]").forEach(b=>b.onclick=()=>{ T={id:b.dataset.testNext,i:0,a:[]}; render(); scrollTo(0,0); });
   const sb=$("#storyBtn"); if(sb) sb.onclick=()=>{ const t=TESTS[T.id]; const l=level(T.id,scoreOf(T.id,T.a)); storyCard(t, l); };
 }
 
