@@ -347,5 +347,7 @@ window.CARD_FILES = [
   "31.webp", "32.webp", "33.webp", "34.webp", "35.webp", "36.webp", "37.webp", "38.webp", "39.webp", "40.webp",
   "41.webp", "42.webp", "43.webp", "44.webp", "45.webp", "46.webp", "47.webp", "48.webp", "49.webp", "50.webp",
   "51.webp", "52.webp", "53.webp", "54.webp", "55.webp", "56.webp", "57.webp", "58.webp", "59.webp", "60.webp",
-  "61.webp", "62.webp", "63.webp", "64.webp", "65.webp", "66.webp", "67.webp", "68.webp", "69.webp", "70.webp"
+  "61.webp", "62.webp", "63.webp", "64.webp", "65.webp", "66.webp", "67.webp", "68.webp", "69.webp", "70.webp",
+  "71.webp", "72.webp", "73.webp", "74.webp", "75.webp", "76.webp", "77.webp", "78.webp", "79.webp", "80.webp",
+  "81.webp", "82.webp", "83.webp", "84.webp", "85.webp"
 ];
