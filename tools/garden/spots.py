@@ -13,7 +13,7 @@ H, W = path.shape
 HOR = 388
 KINDS = ["tree", "bush", "flower", "grass", "lamp", "stone", "fly"]
 # высота спрайта у нижнего края картинки (у камня — ширина); вглубь уменьшается
-SIZE = {"tree": 215, "bush": 98, "flower": 84, "grass": 78, "lamp": 120, "stone": 70, "fly": 30}
+SIZE = {"tree": 215, "bush": 98, "flower": 72, "grass": 78, "lamp": 120, "stone": 70, "fly": 30}
 CAP = {"tree": 5, "bush": 7, "flower": 10, "grass": 16, "lamp": 6, "stone": 7}
 TONE = {"tree": (.93, .86), "bush": (.93, .86), "flower": (.95, .92), "grass": (.9, .82), "stone": (.97, 1.0), "lamp": (1, 1), "fly": (1, 1)}
 MAXS = {"tree": 240, "bush": 220, "flower": 200, "grass": 180, "lamp": 180, "stone": 200, "fly": 120}
