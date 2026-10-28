@@ -104,6 +104,8 @@ const SEAS_FX={ // оттенок картинки под время года
   winter:'<feColorMatrix type="saturate" values=".38"/><feColorMatrix type="matrix" values=".86 0 0 0 .1  0 .88 0 0 .12  0 0 .94 0 .19  0 0 0 1 0"/>'
 };
 const NIGHT_FX='<feColorMatrix type="matrix" values=".30 .05 .05 0 .01  .04 .34 .08 0 .03  .06 .10 .52 0 .08  0 0 0 1 0"/>';
+// лунный свет (тот же, что у ростка на дереве): светлее ночного и в серебристо-голубых тонах
+const MOON_FX='<feColorMatrix type="matrix" values=".64 .10 .10 0 .03  .09 .70 .12 0 .05  .11 .15 .84 0 .09  0 0 0 1 0"/>';
 // на 11 уровне картинка уже вечерняя, с огоньками: ночью затемняем слегка, чтобы гирлянда светилась
 const NIGHT_FX_EVE='<feColorMatrix type="matrix" values=".74 .04 .04 0 0  .03 .76 .06 0 0  .05 .07 .88 0 .02  0 0 0 1 0"/>';
 function gardenArtSVG(lv, ss, opts){
@@ -119,12 +121,24 @@ function gardenArtSVG(lv, ss, opts){
     top+=`<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="8" ry="5" fill="#F6C1D0" opacity=".92" transform="rotate(${a.toFixed(0)} ${f1(x)} ${f1(y)})"/>`; }
   if(night && ss!=="winter") top=`<g opacity=".55">${top}</g>`;
   if(night && lv<11) top=`<g fill="#fff">${[[80,60],[210,40],[330,95],[470,50],[600,30],[160,140],[400,150],[540,110],[690,70],[860,48],[980,120],[1120,60]].map(([x,y],k)=>`<circle cx="${x}" cy="${y}" r="${k%3?2:3}" opacity=".8"/>`).join("")}</g>`+top;
-  const href=opts.href||gardenArtURL(lv);
+  const href=opts.href||gardenArtURL(lv), moon=night && lv<11;
+  // ночью луна подсвечивает сад, как росток у дерева: земля и предметы светлее, в серебристых тонах
+  const mfx=moon?(ss==="winter"?'<feColorMatrix type="saturate" values=".5"/>':(SEAS_FX[ss]||""))+MOON_FX:"";
+  let lit="";
+  if(moon){
+    lit=`<radialGradient id="${id}r"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <mask id="${id}l"><rect width="1200" height="800" fill="#000"/><ellipse cx="560" cy="650" rx="720" ry="290" fill="url(#${id}r)"/></mask>
+    <filter id="${id}m" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">${mfx}</filter>
+    <radialGradient id="${id}h"><stop offset="0" stop-color="#F3F1E6" stop-opacity=".34"/><stop offset="1" stop-color="#F3F1E6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="${id}mo" cx=".38" cy=".35"><stop offset="0" stop-color="#FBF8EE"/><stop offset="1" stop-color="#E4DEC8"/></radialGradient>`;
+  }
   return `<svg viewBox="0 0 1200 800" ${opts.xmlns?'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="800"':'class="garden-svg garden-art" role="img" aria-label="Наш сад, уровень '+lv+'"'} preserveAspectRatio="${opts.slice?"xMidYMid slice":"xMidYMid meet"}">
     <defs>${fx?`<filter id="${id}f" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">${fx}</filter>`:""}
     <linearGradient id="${id}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="0"/><stop offset=".18" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="${night?.16:.34}"/><stop offset="1" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="${night?.22:.46}"/></linearGradient></defs>
     <image href="${href}" xlink:href="${href}" x="0" y="0" width="1200" height="800" preserveAspectRatio="xMidYMid slice"${fx?` filter="url(#${id}f)"`:""}/>
-    ${lv>=3?`<text x="244" y="592" text-anchor="middle" font-size="19" font-weight="800" letter-spacing=".3" fill="#4A2C17" opacity=".9" transform="rotate(-9 244 586)" font-family="Onest, system-ui, sans-serif"${fx?` filter="url(#${id}f)"`:""}>Наш сад</text>`:""}
+    ${moon?`<defs>${lit}</defs><image href="${href}" xlink:href="${href}" x="0" y="0" width="1200" height="800" preserveAspectRatio="xMidYMid slice" mask="url(#${id}l)" filter="url(#${id}m)"/>
+    <circle cx="1054" cy="283" r="110" fill="url(#${id}h)"/><circle cx="1054" cy="283" r="33" fill="url(#${id}mo)"/><circle cx="1065" cy="273" r="5" fill="#D9D2B9" opacity=".55"/><circle cx="1044" cy="294" r="3.4" fill="#D9D2B9" opacity=".45"/>`:""}
+    ${lv>=3?`<text x="244" y="592" text-anchor="middle" font-size="19" font-weight="800" letter-spacing=".3" fill="#4A2C17" opacity=".9" transform="rotate(-9 244 586)" font-family="Onest, system-ui, sans-serif"${moon?` filter="url(#${id}m)"`:fx?` filter="url(#${id}f)"`:""}>Наш сад</text>`:""}
     ${top}
   </svg>`;
 }
