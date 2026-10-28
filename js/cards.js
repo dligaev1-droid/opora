@@ -76,7 +76,16 @@ function mcard(i, faceUp, extra=""){
 }
 
 /* ---------- логика ---------- */
-function dayPick(n){ const r=rng((S.seed||1)+parseInt(dayKey().replace(/-/g,""),10)); const ids=new Set(); while(ids.size<n) ids.add(Math.floor(r()*DECK)); return [...ids]; }
+// сначала карты, которые человек ещё не открывал; когда все увидены — те, что открывались давнее всего
+function freshPick(n, r){
+  const last={}; S.cardLog.forEach(c=>(c.ids||[c.id]).forEach(i=>{ if(i>=0 && i<DECK) last[i]=Math.max(last[i]||0, c.ts||1); }));
+  const all=[...Array(DECK).keys()], unseen=all.filter(i=>!last[i]);
+  const shuffle=a=>{ for(let k=a.length-1;k>0;k--){ const j=Math.floor(r()*(k+1)); [a[k],a[j]]=[a[j],a[k]]; } return a; };
+  let pool=shuffle(unseen);
+  if(pool.length<n){ const old=all.filter(i=>last[i]).sort((x,y)=>last[x]-last[y]).slice(0, Math.max(n*4, Math.ceil(DECK/3))); pool=pool.concat(shuffle(old)); }
+  return pool.slice(0,n);
+}
+function dayPick(n){ return freshPick(n, rng((S.seed||1)+parseInt(dayKey().replace(/-/g,""),10))); }
 const todayCard = () => S.cardLog.find(c=>c.type==="day" && c.d===dayKey());
 function pickQ(){ const r=rng(Date.now()%1e9); return [CQ.see,CQ.feel,CQ.link].map(g=>g[Math.floor(r()*g.length)]); }
 
@@ -152,7 +161,7 @@ function bindCards(){
 /* ---------- расклад из 3 карт ---------- */
 let SP=null;
 function vSpread(){
-  if(!SP){ const r=rng(Date.now()%1e9); const ids=new Set(); while(ids.size<3) ids.add(Math.floor(r()*DECK)); SP={ids:[...ids], open:[false,false,false], a:["","",""], saved:false}; }
+  if(!SP){ const ids=freshPick(3, rng(Date.now()%1e9)); SP={ids, open:[false,false,false], a:["","",""], saved:false}; }
   const all=SP.open.every(Boolean);
   return `${backBtn("cards","Карты")}
   <div class="stack-s"><h1>Расклад</h1><p class="muted">Подумайте о ситуации, которая вас волнует. Открывайте карты по одной: откройте карту, ответьте на вопрос и только потом переходите к следующей.</p></div>
