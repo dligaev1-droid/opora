@@ -118,6 +118,15 @@ function makGuide(open){
     <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn quiet" data-go="breath">Дыхание</button><button class="btn quiet" data-go="about">Записаться к психологу</button></div>
   </div></details>`;
 }
+// карта выпадала раньше: прошлые ответы — свёрнуто, чтобы не подсказывать новые
+function cardBefore(c){
+  const prev=S.cardLog.filter(x=>x!==c && x.ts<c.ts && (x.ids||[x.id]).includes(c.id)).sort((a,b)=>b.ts-a.ts);
+  if(!prev.length) return "";
+  const p=prev[0], k=(p.ids||[p.id]).indexOf(c.id), qs=p.type==="day"?p.q:SPREAD.map(x=>x.t);
+  const ans=p.type==="day" ? p.a.map((a,i)=>a?`<p class="small"><strong>${esc(qs[i]||"")}</strong> ${esc(a)}</p>`:"").join("") : (p.a[k]?`<p class="small"><strong>${esc(SPREAD[k].t)}.</strong> ${esc(p.a[k])}</p>`:"");
+  return `<details class="more mak-before"><summary>Эта карта уже выпадала вам ${fmtDate(p.ts)}${prev.length>1?` · всего ${prev.length+1} раза`:""}</summary>
+    <div class="stack-s" style="margin-top:10px"><p class="small muted">Сначала ответьте сегодня, потом сравните: что изменилось в том, как вы её видите?</p>${ans||`<p class="small muted">Тогда вы не записали ответы.</p>`}</div></details>`;
+}
 let justFlipped=false;
 function vCards(){
   const c=todayCard();
@@ -134,6 +143,7 @@ function vCards(){
       <p class="small muted">Рассмотрите картинку минуту-две, не торопясь. Потом ответьте на вопросы — первое, что приходит в голову. Правильных ответов нет.</p>
       ${c.q.map((q,k)=>`<label class="field"><span>${esc(q)}</span><textarea id="cq${k}" rows="2" placeholder="Первое, что приходит в голову">${esc(c.a[k]||"")}</textarea></label>`).join("")}
       <button class="btn" id="cSave">Сохранить</button>
+      ${cardBefore(c)}
     </div>`;
   }
   justFlipped=false;
