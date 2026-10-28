@@ -108,6 +108,34 @@ const NIGHT_FX='<feColorMatrix type="matrix" values=".30 .05 .05 0 .01  .04 .34 
 const MOON_FX='<feColorMatrix type="matrix" values=".64 .10 .10 0 .03  .09 .70 .12 0 .05  .11 .15 .84 0 .09  0 0 0 1 0"/>';
 // на 11 уровне картинка уже вечерняя, с огоньками: ночью затемняем слегка, чтобы гирлянда светилась
 const NIGHT_FX_EVE='<feColorMatrix type="matrix" values=".74 .04 .04 0 0  .03 .76 .06 0 0  .05 .07 .88 0 .02  0 0 0 1 0"/>';
+/* Нарисованные ростки (art/items/вид-1..4.webp). Места на каждом уровне — js/garden-spots.js (не на тропе и не на предметах).
+   Видно ограниченное число каждого вида (сколько поместилось на клумбах), остальные ростки идут в счёт уровня. */
+const SPR=["tree","bush","flower","grass","lamp","stone"];
+const sprF = y => .3+.7*(y-388)/412;
+function gardenSprites(lv, ss, opts, night){
+  const SP=(window.GSPOTS||{})[lv], DIM=window.GSPR, SZ=window.GSIZE; if(!SP||!DIM) return {scene:"", glow:"", sky:""};
+  const c=counts(), seen=opts.seen||null, src=p=>(opts.data&&opts.data[p])||p, f1=v=>v.toFixed(1);
+  const items=[];
+  SPR.forEach(k=>{ const pts=SP[k]||[], m=Math.min(c[k]||0, pts.length); for(let i=0;i<m;i++) items.push({k, i, v:i%4, x:pts[i][0], y:pts[i][1]}); });
+  if(ss!=="winter" && !night && lv<11){ const m=Math.min(c.fly||0, 8); for(let i=0;i<m;i++){ const r=rng(lv*97+i*13+5); items.push({k:"fly", i, v:i%4, x:70+r()*1060, y:420+r()*210, fly:true}); } }
+  items.sort((a,b)=>a.y-b.y);
+  let scene="", glow="", n=0;
+  items.forEach(it=>{ const [w0,h0]=DIM[it.k][it.v], f=sprF(it.y); let w,h;
+    if(it.k==="stone"){ w=SZ.stone*f; h=w*h0/w0; } else if(it.fly){ w=SZ.fly*f+12; h=w*h0/w0; } else { h=SZ[it.k]*f; w=h*w0/h0; }
+    const fresh=seen && it.i>=(seen[it.k]||0), x=it.x-w/2, y=it.fly?it.y-h/2:it.y-h, href=src(`art/items/${it.k}-${it.v+1}.webp`);
+    const img=`<image href="${href}" xlink:href="${href}" x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(h)}"${it.fly?` class="g-bfly" style="animation-delay:-${(it.i*.17).toFixed(2)}s"`:""}/>`;
+    const shadow=it.fly?"":`<ellipse cx="${f1(it.x)}" cy="${f1(it.y-h*.02)}" rx="${f1(w*(it.k==="lamp"?.3:it.k==="stone"?.48:.4))}" ry="${f1(Math.max(2,h*(it.k==="stone"?.16:.055)))}" fill="#3A2A12" opacity="${it.k==="stone"?.26:.2}"/>`;
+    scene+= fresh?`<g class="g-pop" style="animation-delay:${(.25+(n++)*.18).toFixed(2)}s">${shadow}${img}</g>`:shadow+img;
+    if(it.k==="lamp"){ const gx=it.x, gy=it.y-h*.8, gr=w*2.1; glow+=`<circle cx="${f1(gx)}" cy="${f1(gy)}" r="${f1(gr)}" fill="url(#GLOW)" opacity="${night||lv>=11?.95:.45}"/>`; }
+  });
+  // звёзды за сбывшиеся желания — огоньки в небе
+  let sky=""; const ns=Math.min(c.star||0, 24);
+  for(let i=0;i<ns;i++){ const r=rng(lv*53+i*29+11); let x=40+r()*1120, y=24+r()*220; if(Math.hypot(x-1054,y-283)<120) x=(x+520)%1120+40;
+    const k=(i%3?7:10)*(night?1.15:1), fresh=seen && i>=(seen.star||0);
+    const star=`<path d="M${f1(x)} ${f1(y-k)} Q${f1(x+k*.16)} ${f1(y-k*.16)} ${f1(x+k)} ${f1(y)} Q${f1(x+k*.16)} ${f1(y+k*.16)} ${f1(x)} ${f1(y+k)} Q${f1(x-k*.16)} ${f1(y+k*.16)} ${f1(x-k)} ${f1(y)} Q${f1(x-k*.16)} ${f1(y-k*.16)} ${f1(x)} ${f1(y-k)}Z" fill="#FFF6D8" opacity="${night?.95:.8}"/><circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(k*1.6)}" fill="#FFF3C8" opacity="${night?.22:.14}"/>`;
+    sky+= fresh?`<g class="g-pop g-pop-c" style="animation-delay:${(.25+(n++)*.18).toFixed(2)}s">${star}</g>`:star; }
+  return {scene, glow, sky};
+}
 function gardenArtSVG(lv, ss, opts){
   const id="ga"+(gardenSVG.n=(gardenSVG.n||0)+1), R=rng(4242+lv), night=!!opts.dark, fx=(night&&ss==="winter"?'<feColorMatrix type="saturate" values=".5"/>':(SEAS_FX[ss]||""))+(night?(lv>=11?NIGHT_FX_EVE:NIGHT_FX):"");
   const f1=v=>v.toFixed(1); let top="";
@@ -121,7 +149,11 @@ function gardenArtSVG(lv, ss, opts){
     top+=`<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="8" ry="5" fill="#F6C1D0" opacity=".92" transform="rotate(${a.toFixed(0)} ${f1(x)} ${f1(y)})"/>`; }
   if(night && ss!=="winter") top=`<g opacity=".55">${top}</g>`;
   if(night && lv<11) top=`<g fill="#fff">${[[80,60],[210,40],[330,95],[470,50],[600,30],[160,140],[400,150],[540,110],[690,70],[860,48],[980,120],[1120,60]].map(([x,y],k)=>`<circle cx="${x}" cy="${y}" r="${k%3?2:3}" opacity=".8"/>`).join("")}</g>`+top;
-  const href=opts.href||gardenArtURL(lv), moon=night && lv<11;
+  const href=(opts.data&&opts.data[gardenArtURL(lv)])||gardenArtURL(lv), moon=night && lv<11;
+  const sp=gardenSprites(lv, ss, opts, night);
+  const sign=lv>=3?`<text x="244" y="592" text-anchor="middle" font-size="19" font-weight="800" letter-spacing=".3" fill="#4A2C17" opacity=".9" transform="rotate(-9 244 586)" font-family="Onest, system-ui, sans-serif">Наш сад</text>`:"";
+  // на 11 уровне вечер: ростки приглушаем под вечерний свет
+  const scene=`<image href="${href}" xlink:href="${href}" x="0" y="0" width="1200" height="800" preserveAspectRatio="xMidYMid slice"/>${sign}${lv>=11?`<g filter="url(#${id}e)">${sp.scene}</g>`:sp.scene}`;
   // ночью луна подсвечивает сад, как росток у дерева: земля и предметы светлее, в серебристых тонах
   const mfx=moon?(ss==="winter"?'<feColorMatrix type="saturate" values=".5"/>':(SEAS_FX[ss]||""))+MOON_FX:"";
   let lit="";
@@ -135,10 +167,12 @@ function gardenArtSVG(lv, ss, opts){
   return `<svg viewBox="0 0 1200 800" ${opts.xmlns?'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="800"':'class="garden-svg garden-art" role="img" aria-label="Наш сад, уровень '+lv+'"'} preserveAspectRatio="${opts.slice?"xMidYMid slice":"xMidYMid meet"}">
     <defs>${fx?`<filter id="${id}f" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">${fx}</filter>`:""}
     <linearGradient id="${id}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="0"/><stop offset=".18" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="${night?.16:.34}"/><stop offset="1" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="${night?.22:.46}"/></linearGradient></defs>
-    <image href="${href}" xlink:href="${href}" x="0" y="0" width="1200" height="800" preserveAspectRatio="xMidYMid slice"${fx?` filter="url(#${id}f)"`:""}/>
-    ${moon?`<defs>${lit}</defs><image href="${href}" xlink:href="${href}" x="0" y="0" width="1200" height="800" preserveAspectRatio="xMidYMid slice" mask="url(#${id}l)" filter="url(#${id}m)"/>
+    <filter id="${id}e" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".74 .05 0 0 0  .02 .62 .02 0 0  .02 .03 .6 0 .01  0 0 0 1 0"/></filter>
+    <radialGradient id="${id}G"><stop offset="0" stop-color="#FFD58A" stop-opacity=".75"/><stop offset=".35" stop-color="#FFC56A" stop-opacity=".3"/><stop offset="1" stop-color="#FFC56A" stop-opacity="0"/></radialGradient>
+    <g${fx?` filter="url(#${id}f)"`:""}>${scene}</g>
+    ${moon?`<defs>${lit}</defs><g mask="url(#${id}l)" filter="url(#${id}m)">${scene}</g>
     <circle cx="1054" cy="283" r="110" fill="url(#${id}h)"/><circle cx="1054" cy="283" r="33" fill="url(#${id}mo)"/><circle cx="1065" cy="273" r="5" fill="#D9D2B9" opacity=".55"/><circle cx="1044" cy="294" r="3.4" fill="#D9D2B9" opacity=".45"/>`:""}
-    ${lv>=3?`<text x="244" y="592" text-anchor="middle" font-size="19" font-weight="800" letter-spacing=".3" fill="#4A2C17" opacity=".9" transform="rotate(-9 244 586)" font-family="Onest, system-ui, sans-serif"${moon?` filter="url(#${id}m)"`:fx?` filter="url(#${id}f)"`:""}>Наш сад</text>`:""}
+    ${sp.glow.replace(/url\(#GLOW\)/g,`url(#${id}G)`)}${sp.sky}
     ${top}
   </svg>`;
 }
@@ -232,28 +266,32 @@ function vGarden(){
   const c=counts(), ms=milestones(), got=ms.filter(m=>m[1]).length, li=levelInfo(), ss=season(), own=SEAS[L().gs];
   return `${back()}
   <div class="stack-s"><h1>Наш сад</h1><p class="muted small">Каждое общее дело что-то сажает. Сад только растёт и никогда не вянет — даже если вы делаете паузу.</p></div>
-  <div class="garden-big">${gardenSVG({dark:dark()})}</div>
+  <div class="garden-big">${gardenSVG({dark:dark(), seen:L().gseen||null})}</div>
   <div class="row g-seas" role="group" aria-label="Время года в саду"><button class="chip" data-gs="" aria-pressed="${!own}">Как за окном</button>${Object.entries(SEAS).map(([k,t])=>`<button class="chip" data-gs="${k}" aria-pressed="${own&&ss===k}">${t}</button>`).join("")}</div>
   <div class="card"><div class="row" style="justify-content:space-between"><span class="stack-s" style="gap:2px"><span class="label">Уровень ${li.lv} из ${LEVELS.length}</span><strong>${LEVELS[li.i][1]}</strong></span><span class="tag">${li.n} ${plural(li.n,"росток","ростка","ростков")}</span></div>
     <div class="progress"><i style="width:${li.pct}%"></i></div>
     <p class="small muted">${li.next?`До уровня «${li.next[1]}»: ${li.left} ${plural(li.left,"росток","ростка","ростков")}. ${li.next[2]}.`:"Максимальный уровень. Ваш сад расцвёл полностью!"}</p>
     <details class="more"><summary>Все ${LEVELS.length} уровней</summary><ol class="mt-lv">${LEVELS.map(([v,t,d],i)=>`<li class="${i<=li.i?"on":""}${i===li.i?" cur":""}"><b>${i<li.i||(i===li.i&&!li.next)?"✓":i+1}</b><span><strong>${t}</strong><span class="small muted">${v} ${plural(v,"росток","ростка","ростков")} · ${d}</span></span></li>`).join("")}</ol></details></div>
   ${total()?"":`<p class="small muted" style="text-align:center">Пока здесь тихо. Ответьте на вопрос дня — и вырастет первая травинка.</p>`}
-  <div class="card"><span class="label">Что из чего растёт</span><div class="g-legend">${Object.entries(KINDS).map(([k,v])=>`<div class="g-row"><span class="g-ico g-${k}" aria-hidden="true"></span><span class="small"><strong>${v.t}</strong> — ${v.of}</span><b>${c[k]}</b></div>`).join("")}</div></div>
+  <div class="card"><span class="label">Что из чего растёт</span><div class="g-legend">${Object.entries(KINDS).map(([k,v])=>`<div class="g-row">${SPR.includes(k)||k==="fly"?`<img class="g-spr" src="art/items/${k}-1.webp" alt="" loading="lazy">`:`<span class="g-ico g-${k}" aria-hidden="true"></span>`}<span class="small"><strong>${v.t}</strong> — ${v.of}</span><b>${c[k]}</b></div>`).join("")}</div><p class="small muted" style="margin:8px 0 0">Новый росток появляется в саду сразу. Когда на клумбах не остаётся места, ростки всё равно идут в счёт уровня.</p></div>
   <div class="card"><span class="label">Тёплые отметки · ${got} из ${ms.length}</span><div class="chips">${ms.map(([t,ok])=>`<span class="g-ms${ok?" on":""}">${ok?ico("check",14):""}${t}</span>`).join("")}</div></div>
   ${total()?`<button class="btn quiet block" id="gShare">${ico("share",18)} Поделиться садом</button>`:""}`;
 }
 async function gardenStory(){
   try{ await document.fonts.ready; }catch(e){}
-  const lvNow=levelInfo().lv, art=GARDEN_ART.has(lvNow); let href=null;
-  if(art){ try{ const b=await (await fetch(gardenArtURL(lvNow))).blob(); href=await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(b); }); }catch(e){ href=null; } }
-  const svg=gardenSVG(art&&href?{xmlns:true, href}:{xmlns:true, drawn:true}); const img=new Image(); const url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
+  // картинка в сторис рисуется через <img>, а ему нельзя подгружать файлы — вкладываем все картинки сада прямо в SVG
+  const lvNow=levelInfo().lv; let data=null;
+  if(GARDEN_ART.has(lvNow)){ try{ data={};
+    const paths=[...new Set([...gardenSVG({xmlns:true}).matchAll(/href="(art\/[^"]+)"/g)].map(m=>m[1]))];
+    await Promise.all(paths.map(async p=>{ const b=await (await fetch(p)).blob(); data[p]=await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(b); }); }));
+  }catch(e){ data=null; } }
+  const svg=gardenSVG(data?{xmlns:true, data}:{xmlns:true, drawn:true}); const img=new Image(); const url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
   try{ await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=url; }); }catch(e){ toast("Не получилось нарисовать картинку"); return; }
   const W=1080,H=1920,cv=document.createElement("canvas"); cv.width=W; cv.height=H; const x=cv.getContext("2d");
   const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,"#F8EFEA"); g.addColorStop(1,"#F3DCD6"); x.fillStyle=g; x.fillRect(0,0,W,H);
   const f='"Onest", system-ui, sans-serif'; x.textAlign="center"; x.fillStyle="#A84B5A"; x.font=`700 40px ${f}`; x.fillText("ОПОРА · ДЛЯ ПАРЫ", W/2, 220);
   x.fillStyle="#2B2023"; x.font=`800 104px ${f}`; x.fillText("Наш сад", W/2, 380);
-  const ih=art&&href?640:693, iy=470+(693-ih)/2;
+  const ih=data?640:693, iy=470+(693-ih)/2;
   x.save(); x.beginPath(); x.roundRect?x.roundRect(60,iy,960,ih,48):x.rect(60,iy,960,ih); x.clip(); x.drawImage(img,60,iy,960,ih); x.restore(); URL.revokeObjectURL(url);
   const n=total(), li=levelInfo(); x.fillStyle="#2B2023"; x.font=`700 64px ${f}`; x.fillText(`Уровень ${li.lv} · ${li.name}`, W/2, 1320);
   x.fillStyle="#6B5659"; x.font=`500 44px ${f}`; x.fillText(`${n} ${plural(n,"росток","ростка","ростков")} из общих дел`, W/2, 1400);
@@ -262,6 +300,7 @@ async function gardenStory(){
 }
 function bindGarden(){
   const s=$("#gShare"); if(s) s.onclick=gardenStory;
+  { const l=L(), c=counts(); if(JSON.stringify(l.gseen)!==JSON.stringify(c)){ l.gseen=c; save(); } }
   $$("[data-gs]").forEach(b=>b.onclick=()=>{ const l=L(); if(b.dataset.gs) l.gs=b.dataset.gs; else delete l.gs; save(); render(); });
 }
 

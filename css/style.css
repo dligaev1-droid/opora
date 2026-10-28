@@ -558,9 +558,9 @@ input[type=date]{font:inherit;color:var(--ink);background:var(--surface-2);borde
 .garden-mini svg{width:100%;height:150px;display:block}
 .garden-big svg{width:100%;height:auto;display:block;border-radius:var(--r)}
 .g-legend{display:flex;flex-direction:column;gap:8px}
-.g-row{display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:center}
+.g-row{display:grid;grid-template-columns:30px 1fr auto;justify-items:start;gap:10px;align-items:center}
 .g-row b{color:var(--accent);font-family:var(--f-display)}
-.g-ico{width:14px;height:14px;border-radius:50%;display:inline-block}
+.g-ico{width:14px;height:14px;border-radius:50%;display:inline-block;justify-self:center}
 .g-grass{background:#7FA36A;border-radius:2px 2px 8px 8px}.g-flower{background:#E58FA0}.g-tree{background:#6E9C64}.g-bush{background:#9DBF84;border-radius:7px 7px 4px 4px}
 .g-stone{background:#B9AFA5;border-radius:50%/60%}.g-fly{background:#B9A2D8}.g-lamp{background:#FFD58A;box-shadow:0 0 6px #FFD58A}.g-star{background:#FFE3A8;box-shadow:0 0 6px #FFE3A8}
 .g-ms{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:6px 12px;font-size:.82rem;background:var(--surface-2);color:var(--muted)}
@@ -980,3 +980,13 @@ details.how[open] summary::after{transform:rotate(-90deg)}
 .mcard.live .mc-front{animation:mcGlow 4s ease-in-out 1.2s infinite}
 @keyframes mcGlow{0%,100%{box-shadow:0 8px 22px rgba(20,30,45,.22),0 0 0 1px rgba(232,199,122,.25)}50%{box-shadow:0 10px 26px rgba(20,30,45,.26),0 0 16px 3px rgba(255,214,130,.45)}}
 @media (prefers-reduced-motion:reduce){.mc-back::after,.fan-c .mcard,.mcard.live .mc-front,.mc-burst{animation:none!important}.mcard.reveal .mc-in{animation:none}.mcard.live{transform:none}}
+
+/* «Наш сад»: нарисованные ростки — новые вырастают на глазах, бабочки машут крыльями */
+.garden-art .g-pop{transform-box:fill-box;transform-origin:50% 100%;animation:gPop .9s cubic-bezier(.2,1.4,.4,1) both}
+.garden-art .g-pop-c{transform-origin:50% 50%}
+@keyframes gPop{0%{transform:scale(0);opacity:0}50%{opacity:1}100%{transform:scale(1);opacity:1}}
+.garden-art .g-bfly{transform-box:fill-box;transform-origin:50% 50%;animation:gFlap .55s ease-in-out infinite alternate}
+@keyframes gFlap{to{transform:scaleX(.5)}}
+@media (prefers-reduced-motion:reduce){.garden-art .g-pop,.garden-art .g-bfly{animation:none}}
+
+.g-spr{width:30px;height:30px;object-fit:contain;display:block}
