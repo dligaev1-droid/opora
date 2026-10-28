@@ -942,3 +942,10 @@ details.how[open] summary::after{transform:rotate(-90deg)}
 .sm-one .tday-vis.tree .tree{width:96px;height:96px}
 .sm-new{margin:0 0 4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .sm-more{text-align:center}
+
+/* экскурсия при первом входе */
+.tour{position:fixed;inset:0;z-index:200}
+.tour-hole{position:fixed;border-radius:16px;box-shadow:0 0 0 9999px rgba(10,16,24,.62);transition:all .25s ease;pointer-events:none}
+.tour-tip{position:fixed;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:6px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.tour-tip p{margin:0}
+.tour-tip .row{justify-content:space-between;align-items:center;margin-top:6px}

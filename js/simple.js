@@ -51,7 +51,7 @@ function vHomeS(){
   const today=pick(".today"), sos=pick(".sos-banner"), disc=pick(".disclaimer");
   const f=document.createDocumentFragment(), add=x=>{ if(x) f.appendChild(typeof x==="string"?tpl(x):x); };
   add(top);
-  if(st===0 && !sm.introOk) add(gotIt("smIntro","Добро пожаловать","Начнём с простого","Опора помогает справляться с тревогой и стрессом. Сегодня — только главное: отметьте, как вы, и сделайте один маленький шаг. Остальное будет открываться в ближайшие дни."));
+  if(st===0 && !sm.introOk && sm.tourOk) add(gotIt("smIntro","Добро пожаловать","Начнём с простого","Опора помогает справляться с тревогой и стрессом. Сегодня — только главное: отметьте, как вы, и сделайте один маленький шаг. Остальное будет открываться в ближайшие дни."));
   add(greet); add(moods);
   add(stepCard(st));
   if(st===0){
@@ -72,7 +72,44 @@ function bHomeS(){
   const sm=SM(); if(!sm) return;
   $$("[data-sm-ok]").forEach(b=>b.onclick=()=>{ const k=b.dataset.smOk; if(k==="smIntro") sm.introOk=1; if(k==="smNew") sm.newOk=1; if(k==="smAll"){ sm.allOk=1; if(!isObj(S.tipsSeen)) S.tipsSeen={}; S.tipsSeen.home=1; } save(); render(); });
   const a=$("#smAllNow"); if(a) a.onclick=()=>{ sm.done=true; sm.doneDay=dayKey(); save(); render(); window.scrollTo(0,0); };
+  if(!sm.tourOk && stage(sm)===0) setTimeout(tour, 350);
+}
+
+/* ---------- Экскурсия при первом входе: подсветка + одна фраза «что это» ---------- */
+const TOUR=[
+  [".sos-pill","SOS","Если накрыла тревога или паника — нажмите. Дыхание и помощь за 2 минуты."],
+  [".moods","Как вы сейчас?","Отмечайте настроение 1–2 раза в день — это 30 секунд. Через пару недель увидите, что на него влияет."],
+  [".step-card","Шаг на сегодня","Одно маленькое дело на 2–10 минут. Этого достаточно, чтобы почувствовать разницу."],
+  ["nav.tabs","Всё остальное — внизу","Тесты, дневник, практики и запись к психологу — заглядывайте в любой момент."]
+];
+let TI=0;
+function tour(){
+  if(route!=="home" || document.querySelector(".tour")) return;
+  TI=0; const ov=document.createElement("div"); ov.className="tour"; ov.setAttribute("role","dialog"); ov.setAttribute("aria-label","Знакомство с приложением");
+  ov.innerHTML=`<div class="tour-hole"></div><div class="tour-tip"><span class="label" id="tourN"></span><strong id="tourT"></strong><p class="small" id="tourD"></p><div class="row"><button class="linkbtn small" id="tourSkip">Пропустить</button><button class="btn sm" id="tourNext">Далее</button></div></div>`;
+  document.body.appendChild(ov);
+  const end=()=>{ const sm=SM(); if(sm){ sm.tourOk=1; sm.introOk=1; save(); } ov.remove(); window.removeEventListener("resize",place); };
+  $("#tourSkip",ov).onclick=end;
+  $("#tourNext",ov).onclick=()=>{ TI++; if(TI>=TOUR.length) end(); else place(); };
+  window.addEventListener("resize",place);
+  place();
+  function place(){
+    const [sel,t,d]=TOUR[TI], el=document.querySelector(sel); if(!el){ TI++; if(TI>=TOUR.length){ end(); return; } return place(); }
+    if(sel!=="nav.tabs") el.scrollIntoView({block:"center", behavior:"instant"});
+    const r=el.getBoundingClientRect(), pad=6, hole=$(".tour-hole",ov), tip=$(".tour-tip",ov);
+    Object.assign(hole.style,{left:(r.left-pad)+"px", top:(r.top-pad)+"px", width:(r.width+pad*2)+"px", height:(r.height+pad*2)+"px"});
+    $("#tourN",ov).textContent=`${TI+1} из ${TOUR.length}`; $("#tourT",ov).textContent=t; $("#tourD",ov).textContent=d;
+    $("#tourNext",ov).textContent=TI===TOUR.length-1?"Понятно":"Далее";
+    const below = r.bottom + 12 + 150 < innerHeight;
+    tip.style.top = below ? (r.bottom+14)+"px" : "auto";
+    tip.style.bottom = below ? "auto" : (innerHeight - r.top + 14)+"px";
+    tip.style.left = Math.max(12, Math.min(innerWidth-12-Math.min(340,innerWidth-24), r.left+r.width/2-170))+"px";
+    tip.classList.toggle("up", !below);
+  }
 }
 VIEWS.home=[vHomeS,bHomeS];
+// на компьютере — обычные всплывающие подсказки при наведении
+const TT={".sos-pill":"Быстрая помощь при тревоге и панике", ".mode-sw [data-go=home]":"«Я» — забота о себе", ".mode-sw [data-go=love]":"«Мы» — для пары", ".mode-sw [data-go=gtoday]":"«Цели» — цели и привычки без выгорания"};
+const r0=window.render; window.render=function(){ r0.apply(this,arguments); Object.entries(TT).forEach(([s,t])=>document.querySelectorAll(s).forEach(e=>{ if(!e.title) e.title=t; })); };
 window.SIMPLE={SM, stage:()=>{ const s=SM(); return s?stage(s):2; }};
 })();
