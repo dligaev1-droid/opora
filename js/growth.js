@@ -5,7 +5,7 @@
 
 const SKILLS = {
   calm:  {t:"Спокойствие",  c:"#5B8FD0", d:"дыхание, заземление, расслабление"},
-  res:   {t:"Ресурс",       c:"#4FA37C", d:"благодарности, отдых, программа о выгорании"},
+  res:   {t:"Ресурс",       c:"#4FA37C", d:"благодарности, сон, энергия, цели, привычки и фокус"},
   aware: {t:"Осознанность", c:"#E0A93B", d:"дневник, эмоции, тесты, карты"},
   self:  {t:"Опора на себя",c:"#9B7BD0", d:"дневник мыслей, границы, статьи"}
 };
@@ -285,8 +285,8 @@ function vGrowth(){
   </div>
   <div class="stack-s"><span class="label">Навыки</span>
     <div class="list">${Object.entries(SKILLS).map(([k,s])=>{ const x=S.xp[k], l=skillLv(x), a=skillNext(l-1), b=skillNext(l), p=l>=10?100:Math.round((x-a)/(b-a)*100);
-      return `<div class="li skill"><span class="sdot" style="background:${s.c}"></span><span class="dt" style="flex:1"><span class="row" style="justify-content:space-between"><strong>${s.t}</strong><span class="small muted">ур. ${l} · ${SKILL_TITLES[l-1]}</span></span><span class="progress" style="display:block"><i style="width:${p}%;background:${s.c}"></i></span><span class="small sk-next">${l>=10?"Максимальный уровень навыка":`До уровня ${l+1} «${SKILL_TITLES[l]}»: ещё ${b-x} ${plural(b-x,"очко","очка","очков")}`}</span><span class="small muted">${s.d}</span></span></div>`; }).join("")}</div>
-    <p class="small muted">Полоска показывает путь до следующего уровня навыка. Когда уровень повышается, она начинается заново.</p>
+      return `<div class="li skill"><span class="sdot" style="background:${s.c}"></span><span class="dt" style="flex:1"><span class="row" style="justify-content:space-between"><strong>${s.t}</strong><span class="small muted">ур. ${l} · ${SKILL_TITLES[l-1]}</span></span><span class="progress" style="display:block"><i style="width:${p}%;background:${s.c}"></i></span><span class="small sk-next">${l>=10?"Максимальный уровень навыка":`${x-a} из ${b-a} ${plural(b-a,"очка","очков","очков")} до уровня ${l+1} «${SKILL_TITLES[l]}»`}</span><span class="small muted">${s.d}</span></span></div>`; }).join("")}</div>
+    <p class="small muted">Очки приносят дела во всех разделах — «Я», «Мы» и «Цели». Полоска показывает путь до следующего уровня навыка; когда уровень повышается, она начинается заново.</p>
   </div>
   <div class="stack-s"><span class="label">Стадии</span>
     <div class="stages">${STAGES.map((n,i)=>`<div class="stg ${i+1<=st?"on":""}"><span>${i+1<=st?ico("check",14):i+1}</span><small>${n}</small></div>`).join("")}</div>
@@ -297,6 +297,8 @@ function vGrowth(){
       <li>Упражнение с оценкой до/после: +10 к спокойствию</li>
       <li>Запись в дневнике: +10 к осознанности, с эмоцией +5</li>
       <li>Благодарность: +10 к ресурсу</li>
+      <li>«Цели»: шаг +8, фокус +10, ритуал +10, привычка и отметка энергии +3 — всё к ресурсу</li>
+      <li>Запись сна: +5 к ресурсу</li>
       <li>Разобранная мысль: +20 к опоре на себя</li>
       <li>День программы: +25</li>
       <li>Тест, новая статья: +10 и +5</li>
