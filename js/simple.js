@@ -83,12 +83,14 @@ const TOUR=[
   ["nav.tabs","Всё остальное — внизу","Тесты, дневник, практики и запись к психологу — заглядывайте в любой момент."]
 ];
 let TI=0;
-function tour(){
-  if(route!=="home" || document.querySelector(".tour")) return;
+function tour(){ if(route!=="home") return; runTour(TOUR, ()=>{ const sm=SM(); if(sm){ sm.tourOk=1; sm.introOk=1; save(); } }); }
+function runTour(STEPS, onEnd){
+  if(document.querySelector(".tour")) return;
+  const TOUR=STEPS;
   TI=0; const ov=document.createElement("div"); ov.className="tour"; ov.setAttribute("role","dialog"); ov.setAttribute("aria-label","Знакомство с приложением");
   ov.innerHTML=`<div class="tour-hole"></div><div class="tour-tip"><span class="label" id="tourN"></span><strong id="tourT"></strong><p class="small" id="tourD"></p><div class="row"><button class="linkbtn small" id="tourSkip">Пропустить</button><button class="btn sm" id="tourNext">Далее</button></div></div>`;
   document.body.appendChild(ov);
-  const end=()=>{ const sm=SM(); if(sm){ sm.tourOk=1; sm.introOk=1; save(); } ov.remove(); window.removeEventListener("resize",place); };
+  const end=()=>{ if(onEnd) onEnd(); ov.remove(); window.removeEventListener("resize",place); };
   $("#tourSkip",ov).onclick=end;
   $("#tourNext",ov).onclick=()=>{ TI++; if(TI>=TOUR.length) end(); else place(); };
   window.addEventListener("resize",place);
@@ -108,8 +110,39 @@ function tour(){
   }
 }
 VIEWS.home=[vHomeS,bHomeS];
+/* ---------- Экскурсии по разделам «Мы», «Цели», «Близость» — один раз при первом входе ---------- */
+const ROOM_TOURS={
+  love:[
+    [".mode-sw","Я · Мы · Цели","Переключатель разделов: «Я» — забота о себе, «Мы» — для пары, «Цели» — цели и привычки."],
+    [".dq-card","Вопрос дня","Каждый день новый вопрос. Ответьте и отправьте партнёру ссылкой — увидите ответы друг друга."],
+    [".sos-pair","Поссорились?","Пауза, дыхание и слова, чтобы помириться, — когда разговор пошёл не туда."],
+    [".our-path","Наш путь","Каждое общее дело сажает что-то в «Нашем саду». А раз в неделю — «Погода в паре»: как вам вместе."],
+    ["nav.tabs","Всё для пары — внизу","«Вместе» — вопросы и игры, «Свидания» — 40 идей, «Путь» — программы и разбор ссор, «Психолог» — запись на консультацию."]],
+  gtoday:[
+    [".main-step","Главный шаг дня","Поставьте цель — и здесь каждый день будет один маленький шаг к ней. Можно взять готовую из «100 целей»."],
+    [".rit-card","Ритуал дня","Утро или вечер из 3–5 простых шагов. Решение принято заранее — сила воли не нужна."],
+    [".batt","Энергия сегодня","Отмечайте, сколько сегодня сил: трудное — на сильные дни, лёгкое — на слабые."],
+    [".mt-card","Тропа к вершине","Каждый шаг, привычка и фокус-сессия продвигают вас вверх: 11 уровней."],
+    ["nav.tabs","Внизу","«Цели» и «Привычки», «Фокус» — таймер для дела и для чтения, «Путь» — программа, разбор откладывания, статистика."]],
+  itoday:[
+    [".feat-i","С чего начать","Карта близости за 3 минуты: покажет, какие сферы сейчас проседают, и даст личный план."],
+    [".grid2","Курсы, практика, челлендж","Короткие курсы по дням, практики с таймером и мягкие задания для пары."],
+    [".list","Знания","Тест «Тормоза и газ», квиз «Мифы и факты» и статьи — бережно, без стыда и откровенных картинок."],
+    ["nav.tabs","Внизу","«Курсы», «Пара» — упражнения вдвоём, «Знания» и «Помощь» — когда нужен специалист. Всё хранится только на вашем телефоне."]]
+};
+function roomTour(){
+  const steps=ROOM_TOURS[route]; if(!steps) return;
+  if(!isObj(S.tours)) S.tours={};
+  if(S.tours[route] || !steps.some(st=>document.querySelector(st[0])) || !document.querySelector(steps[0][0]) && route==="itoday") return;
+  if(document.querySelector(".age-gate")) return;
+  const r=route; const tc=document.querySelector(".tip-card"); if(tc) tc.remove();
+  if(!isObj(S.tipsSeen)) S.tipsSeen={}; S.tipsSeen[r]=1; S.tours[r]=1; save();
+  runTour(steps, null);
+}
+
 // на компьютере — обычные всплывающие подсказки при наведении
 const TT={".sos-pill":"Быстрая помощь при тревоге и панике", ".mode-sw [data-go=home]":"«Я» — забота о себе", ".mode-sw [data-go=love]":"«Мы» — для пары", ".mode-sw [data-go=gtoday]":"«Цели» — цели и привычки без выгорания"};
-const r0=window.render; window.render=function(){ r0.apply(this,arguments); Object.entries(TT).forEach(([s,t])=>document.querySelectorAll(s).forEach(e=>{ if(!e.title) e.title=t; })); };
+const r0=window.render; window.render=function(){ r0.apply(this,arguments); Object.entries(TT).forEach(([s,t])=>document.querySelectorAll(s).forEach(e=>{ if(!e.title) e.title=t; }));
+  if(ROOM_TOURS[route] && !(isObj(S.tours) && S.tours[route])) setTimeout(()=>{ if(ROOM_TOURS[route]) roomTour(); }, 400); };
 window.SIMPLE={SM, stage:()=>{ const s=SM(); return s?stage(s):2; }};
 })();
