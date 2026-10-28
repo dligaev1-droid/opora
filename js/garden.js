@@ -95,7 +95,7 @@ const FL=["#E58FA0","#F2B38A","#B9A2D8","#F2D06B","#F09AB0"];
 const DECO=[[3,96,250,14],[4,0,0,0],[5,78,206,26],[6,304,238,48],[7,96,178,26],[8,0,0,0],[9,312,160,30]];
 /* Нарисованные художником картинки уровней (art/garden-NN.webp, 1200×800, одна сцена).
    Уровень без картинки пока рисуется кодом, как раньше. Время года и ночь — поверх картинки. */
-const GARDEN_ART=new Set([1,2]);
+const GARDEN_ART=new Set([1,2,3,4,5,6,7,8,9,10,11]);
 const gardenArtURL = lv => `art/garden-${String(lv).padStart(2,"0")}.webp`;
 const SEAS_FX={ // оттенок картинки под время года
   spring:'<feColorMatrix type="matrix" values=".96 .03 0 0 0  .01 1.02 .02 0 .015  0 .04 .98 0 .02  0 0 0 1 0"/>',
@@ -104,8 +104,10 @@ const SEAS_FX={ // оттенок картинки под время года
   winter:'<feColorMatrix type="saturate" values=".38"/><feColorMatrix type="matrix" values=".86 0 0 0 .1  0 .88 0 0 .12  0 0 .94 0 .19  0 0 0 1 0"/>'
 };
 const NIGHT_FX='<feColorMatrix type="matrix" values=".30 .05 .05 0 .01  .04 .34 .08 0 .03  .06 .10 .52 0 .08  0 0 0 1 0"/>';
+// на 11 уровне картинка уже вечерняя, с огоньками: ночью затемняем слегка, чтобы гирлянда светилась
+const NIGHT_FX_EVE='<feColorMatrix type="matrix" values=".74 .04 .04 0 0  .03 .76 .06 0 0  .05 .07 .88 0 .02  0 0 0 1 0"/>';
 function gardenArtSVG(lv, ss, opts){
-  const id="ga"+(gardenSVG.n=(gardenSVG.n||0)+1), R=rng(4242+lv), night=!!opts.dark, fx=(night&&ss==="winter"?'<feColorMatrix type="saturate" values=".5"/>':(SEAS_FX[ss]||""))+(night?NIGHT_FX:"");
+  const id="ga"+(gardenSVG.n=(gardenSVG.n||0)+1), R=rng(4242+lv), night=!!opts.dark, fx=(night&&ss==="winter"?'<feColorMatrix type="saturate" values=".5"/>':(SEAS_FX[ss]||""))+(night?(lv>=11?NIGHT_FX_EVE:NIGHT_FX):"");
   const f1=v=>v.toFixed(1); let top="";
   if(ss==="winter"){
     top+=`<rect x="0" y="470" width="1200" height="330" fill="url(#${id}w)"/>`;
@@ -116,12 +118,13 @@ function gardenArtSVG(lv, ss, opts){
   if(ss==="spring") for(let i=0;i<32;i++){ const x=R()*1200, y=60+R()*700, a=R()*180;
     top+=`<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="8" ry="5" fill="#F6C1D0" opacity=".92" transform="rotate(${a.toFixed(0)} ${f1(x)} ${f1(y)})"/>`; }
   if(night && ss!=="winter") top=`<g opacity=".55">${top}</g>`;
-  if(night) top=`<g fill="#fff">${[[80,60],[210,40],[330,95],[470,50],[600,30],[160,140],[400,150],[540,110],[690,70],[860,48],[980,120],[1120,60]].map(([x,y],k)=>`<circle cx="${x}" cy="${y}" r="${k%3?2:3}" opacity=".8"/>`).join("")}</g>`+top;
+  if(night && lv<11) top=`<g fill="#fff">${[[80,60],[210,40],[330,95],[470,50],[600,30],[160,140],[400,150],[540,110],[690,70],[860,48],[980,120],[1120,60]].map(([x,y],k)=>`<circle cx="${x}" cy="${y}" r="${k%3?2:3}" opacity=".8"/>`).join("")}</g>`+top;
   const href=opts.href||gardenArtURL(lv);
   return `<svg viewBox="0 0 1200 800" ${opts.xmlns?'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="800"':'class="garden-svg garden-art" role="img" aria-label="Наш сад, уровень '+lv+'"'} preserveAspectRatio="${opts.slice?"xMidYMid slice":"xMidYMid meet"}">
     <defs>${fx?`<filter id="${id}f" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">${fx}</filter>`:""}
     <linearGradient id="${id}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="0"/><stop offset=".18" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="${night?.16:.34}"/><stop offset="1" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="${night?.22:.46}"/></linearGradient></defs>
     <image href="${href}" xlink:href="${href}" x="0" y="0" width="1200" height="800" preserveAspectRatio="xMidYMid slice"${fx?` filter="url(#${id}f)"`:""}/>
+    ${lv>=3?`<text x="244" y="592" text-anchor="middle" font-size="19" font-weight="800" letter-spacing=".3" fill="#4A2C17" opacity=".9" transform="rotate(-9 244 586)" font-family="Onest, system-ui, sans-serif"${fx?` filter="url(#${id}f)"`:""}>Наш сад</text>`:""}
     ${top}
   </svg>`;
 }
