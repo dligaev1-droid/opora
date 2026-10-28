@@ -76,7 +76,32 @@ const PATH=[[40,186],[120,178],[70,160],[160,148],[110,128],[190,114],[150,96],[
 function along(f){ const seg=[]; let tot=0; for(let i=1;i<PATH.length;i++){ const d=Math.hypot(PATH[i][0]-PATH[i-1][0],PATH[i][1]-PATH[i-1][1]); seg.push(d); tot+=d; }
   let need=f*tot; for(let i=0;i<seg.length;i++){ if(need<=seg[i]){ const t=need/seg[i]; return [PATH[i][0]+(PATH[i+1][0]-PATH[i][0])*t, PATH[i][1]+(PATH[i+1][1]-PATH[i][1])*t]; } need-=seg[i]; } return PATH[PATH.length-1]; }
 function campOf(p){ const q=p%LAP; let c=0; CAMPS.forEach((x,i)=>{ if(q>=x[0]) c=i; }); return c; }
+/* Нарисованная гора (art/mountain.webp, 1200×800) и тропа, обведённая по рисунку */
+const MT_ART="art/mountain.webp";
+const MT_PATH=[[298,790],[322,736],[362,696],[346,660],[322,636],[362,618],[426,604],[514,594],[570,586],[586,560],[626,546],[682,530],[726,512],[718,488],[730,472],[778,452],[826,432],[862,412],[866,396],[842,385],[830,370],[865,352],[910,340],[950,327],[972,320],[930,307],[905,292],[915,280],[950,265],[972,255],[960,235],[970,217],[935,197],[932,190],[960,180],[992,167],[992,152],[965,137],[965,125],[990,112],[970,100],[950,85],[957,67],[962,50],[957,30]];
+function alongP(P,f){ const seg=[]; let tot=0; for(let i=1;i<P.length;i++){ const d=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]); seg.push(d); tot+=d; }
+  let need=Math.max(0,Math.min(1,f))*tot; for(let i=0;i<seg.length;i++){ if(need<=seg[i]){ const t=seg[i]?need/seg[i]:0; return [P[i][0]+(P[i+1][0]-P[i][0])*t, P[i][1]+(P[i+1][1]-P[i][1])*t, i]; } need-=seg[i]; } const L=P[P.length-1]; return [L[0],L[1],P.length-2]; }
+function mountainArt(){
+  const p=points(), lap=Math.floor(p/LAP), q=p%LAP, f=q/LAP, id="ma"+(mountain.n=(mountain.n||0)+1);
+  const night=document.documentElement.getAttribute("data-theme")==="dark" || (!document.documentElement.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+  const [mx,my,mi]=alongP(MT_PATH,f), done=MT_PATH.slice(0,mi+1).concat([[mx,my]]);
+  const camps=CAMPS.map(([v,t],i)=>{ const [x,y]=alongP(MT_PATH,v/LAP); return {x,y,i,t,on:q>=v}; });
+  const flag=c=>`<g transform="translate(${c.x.toFixed(0)} ${c.y.toFixed(0)}) scale(1.9)"><rect x="-2" y="-34" width="4" height="34" rx="2" fill="${night?"#D9E2DC":"#3F4A42"}"/><path d="M2 -34 L26 -26 L2 -18Z" fill="${c.on?"var(--accent)":"#FFFFFF"}" stroke="${c.on?"#fff":"#3F4A42"}" stroke-width="1.5"/>${c.i===CAMPS.length-1?`<circle cx="0" cy="-36" r="4" fill="#FFD27A"/>`:""}</g>`;
+  return `<svg viewBox="0 0 1200 800" class="mt-svg mt-art" role="img" aria-label="Тропа к вершине: ${CAMPS[campOf(p)][1]}">
+  <defs><filter id="${id}n" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".30 .05 .05 0 .01  .04 .34 .08 0 .03  .06 .10 .52 0 .08  0 0 0 1 0"/></filter>
+  <filter id="${id}g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>
+  <image href="${MT_ART}" x="0" y="0" width="1200" height="800" preserveAspectRatio="xMidYMid slice"${night?` filter="url(#${id}n)"`:""}/>
+  ${night?`<g fill="#fff">${[[80,60],[210,40],[330,95],[470,50],[600,30],[160,140],[400,150],[540,110],[690,70],[1120,60]].map(([x,y],k)=>`<circle cx="${x}" cy="${y}" r="${k%3?1.6:2.4}" opacity=".8"/>`).join("")}</g>`:""}
+  <polyline points="${done.map(x=>x.map(v=>v.toFixed(0)).join(",")).join(" ")}" fill="none" stroke="#fff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+  <polyline points="${done.map(x=>x.map(v=>v.toFixed(0)).join(",")).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  ${camps.map(flag).join("")}
+  <circle cx="${mx.toFixed(0)}" cy="${my.toFixed(0)}" r="40" fill="#fff" opacity=".7" filter="url(#${id}g)"/>
+  <circle cx="${mx.toFixed(0)}" cy="${my.toFixed(0)}" r="20" fill="var(--accent)" stroke="#fff" stroke-width="7"/>
+  ${lap?`<g transform="translate(40 64) scale(1.6)"><rect x="-14" y="-30" width="${lap>9?190:170}" height="44" rx="22" fill="rgba(255,255,255,.85)"/><text x="6" y="0" class="mt-lap" style="font-size:26px">Вершин: ${lap}</text></g>`:""}
+  </svg>`;
+}
 function mountain(){
+  if(MT_ART) return mountainArt();
   const p=points(), lap=Math.floor(p/LAP), q=p%LAP, f=q/LAP, [mx,my]=along(f), id="mt"+(mountain.n=(mountain.n||0)+1);
   const camps=CAMPS.slice(1).map(([v])=>along(v/LAP));
   return `<svg viewBox="0 0 360 200" class="mt-svg" role="img" aria-label="Тропа к вершине: ${CAMPS[campOf(p)][1]}">
