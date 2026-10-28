@@ -339,7 +339,7 @@ function bindPrg(){
 function vToday(){
   const g=X(), h=new Date().getHours(), hi=h<6?"Доброй ночи":h<12?"Доброе утро":h<18?"Добрый день":"Добрый вечер", e=g.energy[dayNum()];
   return `<div class="top"><div class="brand"><div class="logo goals-logo">${nico("gtoday",18)}</div><div><div style="font-weight:700">Опора</div><div class="small muted">цели без выгорания</div></div></div><div class="top-r">${modeSwitch("goals")}<button class="sos-pill" data-go="sos">SOS</button></div></div>
-  <div class="stack-s"><h1>${hi}</h1><p class="muted">Маленький шаг — тоже шаг</p></div>
+  <div class="stack-s"><h1 class="hello">${hi}</h1><p class="muted">Маленький шаг — тоже шаг</p></div>
   ${ritCard()}
   ${N.mainCard()}
   ${weekPlanCard()}
@@ -385,7 +385,7 @@ function vPath(){
   <h2 class="h-sec">Почитать · ${GA.length}</h2>
   <div class="list">${GA.map((a,i)=>li("gart",a.id,ico("book",18),a.t,`${a.m} мин`,i>0&&!plus())).join("")}</div>
   ${plus()?"":`<button class="banner card plus-banner" data-go="gplus"><span class="bi">${LOCK}</span><span class="bt"><strong>Открыть всё — Опора+</strong><span class="small muted">Ритуалы, статистика, итоги недели, ${1+PG.length} программы</span></span><span class="chev">›</span></button>`}
-  <div class="card"><p class="small">Не получается сдвинуться с места, хотя очень хочется? Иногда за этим стоит что-то важное — разберём на консультации.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к ${esc(PSY.nameTo)}</button></div>
+  <div class="card"><p class="small">Не получается сдвинуться с места, хотя очень хочется? Иногда за этим стоит что-то важное — разберём на консультации.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к психологу</button></div>
   <button class="btn quiet block" data-go="home">← Вернуться в Опору для себя</button>`;
 }
 

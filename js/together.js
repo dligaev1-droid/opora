@@ -81,22 +81,24 @@ function bindMood(){ $$("[data-ms]").forEach(b=>b.onclick=()=>{ const i=+b.datas
 /* ---------- Наши даты ---------- */
 const DT = () => { const l=L(); if(!l.dates || typeof l.dates!=="object") l.dates={start:"", list:[]}; if(!Array.isArray(l.dates.list)) l.dates.list=[]; return l.dates; };
 const daysTo = md => { const now=new Date(); now.setHours(0,0,0,0); const [m,d]=md.split("-").map(Number); let t=new Date(now.getFullYear(),m-1,d); if(t<now) t=new Date(now.getFullYear()+1,m-1,d); return Math.round((t-now)/864e5); };
+const inDays = n => n===0?"сегодня":n===1?"завтра":`через ${n} ${plural(n,"день","дня","дней")}`;
 function upcoming(){
   const D=DT(), all=[]; if(D.start) all.push({t:"Годовщина", md:D.start.slice(5)});
   D.list.forEach(x=>{ if(/^\d{4}-\d{2}-\d{2}$/.test(x.d)) all.push({t:x.t, md:x.d.slice(5)}); });
   return all.map(x=>Object.assign(x,{n:daysTo(x.md)})).sort((a,b)=>a.n-b.n);
 }
-function datesCard(){
+function datesCard(here){
   const D=DT(); if(!D.start && !D.list.length) return "";
   const together=D.start?Math.max(0,Math.floor((Date.now()-new Date(D.start).getTime())/864e5)):null, nx=upcoming()[0];
-  return `<button class="card dates-card" data-go="lovedt">${together!=null?`<span><b>${together.toLocaleString("ru-RU")}</b><span class="small muted">${plural(together,"день","дня","дней")} вместе</span></span>`:""}${nx?`<span><b>${nx.n||"Сегодня!"}</b><span class="small muted">${nx.n?`${plural(nx.n,"день","дня","дней")} до: ${esc(nx.t)}`:esc(nx.t)}</span></span>`:""}<span class="chev">›</span></button>`;
+  const tag=here?"div":"button";
+  return `<${tag} class="card dates-card"${here?"":` data-go="lovedt"`}>${together!=null?`<span><b>${together.toLocaleString("ru-RU")}</b><span class="small muted">${plural(together,"день","дня","дней")} вместе</span></span>`:""}${nx?`<span><b>${nx.n||"Сегодня!"}</b><span class="small muted">${nx.n?`${plural(nx.n,"день","дня","дней")} до: ${esc(nx.t)}`:esc(nx.t)}</span></span>`:""}${here?"":`<span class="chev">›</span>`}</${tag}>`;
 }
 function vDates(){
   const D=DT(), up=upcoming();
   return `${back()}<div class="stack-s"><h1>Наши даты</h1><p class="muted small">Сколько вы вместе и что скоро</p></div>
-  <div class="card"><label class="field"><span>Когда вы вместе</span><input type="date" id="dStart" value="${esc(D.start)}"></label>${datesCard()}</div>
+  <div class="card"><label class="field"><span>С какого дня вы вместе</span><input type="date" id="dStart" value="${esc(D.start)}"></label>${datesCard(true)}</div>
   <div class="card"><span class="label">Важные даты</span>
-    ${up.filter(x=>x.t!=="Годовщина"||!D.start).length||D.list.length?D.list.map((x,i)=>`<div class="entry"><div class="body"><strong>${esc(x.t)}</strong><span class="small muted">${x.d?new Date(x.d).toLocaleDateString("ru-RU",{day:"numeric",month:"long"}):""} · через ${daysTo(x.d.slice(5))} дн.</span></div><button class="linkbtn small" data-ddel="${i}">Удалить</button></div>`).join(""):`<p class="small muted">День рождения партнёра, день знакомства, первая поездка…</p>`}
+    ${up.filter(x=>x.t!=="Годовщина"||!D.start).length||D.list.length?D.list.map((x,i)=>`<div class="entry"><div class="body"><strong>${esc(x.t)}</strong><span class="small muted">${x.d?new Date(x.d).toLocaleDateString("ru-RU",{day:"numeric",month:"long"}):""} · ${inDays(daysTo(x.d.slice(5)))}</span></div><button class="linkbtn small" data-ddel="${i}">Удалить</button></div>`).join(""):`<p class="small muted">День рождения партнёра, день знакомства, первая поездка…</p>`}
     <div class="row" style="flex-wrap:nowrap"><input type="text" id="dName" placeholder="Название" aria-label="Название даты" style="flex:1;min-width:0" maxlength="40"><input type="date" id="dDate" aria-label="Дата" style="width:auto"></div>
     <button class="btn quiet" id="dAdd">Добавить дату</button></div>`;
 }

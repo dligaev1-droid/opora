@@ -141,7 +141,7 @@ const tileL = (go, icon, t, s) => `<button class="tile" data-go="${go}"><span cl
 function vLove(){
   const h=new Date().getHours(), hi=h<6?"Доброй ночи":h<12?"Доброе утро":h<18?"Добрый день":"Добрый вечер";
   return `${roomHead()}
-  <div class="stack-s"><h1>${hi}</h1><p class="muted">Минутка друг для друга</p></div>
+  <div class="stack-s"><h1 class="hello">${hi}</h1><p class="muted">Минутка друг для друга</p></div>
   ${T()?T().dqCard():""}
   <div class="quick2"><button class="btn quiet" data-go="lovemd">${ico("heart",18)} Как ты сейчас?</button><button class="btn quiet" data-go="lovedt">${ico("cal",18)} Наши даты</button></div>
   ${T()?T().datesCard():""}
@@ -176,7 +176,7 @@ function vPath(){
 /* Психолог */
 function vPsy(){
   return `<div class="card">
-    <div class="row" style="gap:16px;flex-wrap:nowrap">${psyAva("avatar")}<div class="stack-s" style="min-width:0"><h2>${esc(PSY.name)}</h2><p class="small muted">${esc(PSY.role)}</p></div></div>
+    <div class="row" style="gap:16px;flex-wrap:nowrap">${psyAva("avatar")}<div class="stack-s" style="min-width:0"><h2>${esc(PSY.fullName||PSY.name)}</h2><p class="small muted">${esc(PSY.role)}</p></div></div>
     <p>Когда самим не получается договориться, помогает взгляд со стороны. Можно прийти одному или вдвоём: ссоры, ревность, доверие, расставание.</p>
     <button class="btn" data-go="about" data-sub="book">Записаться на консультацию</button>
   </div>

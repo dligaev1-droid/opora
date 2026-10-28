@@ -156,7 +156,7 @@ function vPair(){
     ${li("iwish",null,ico("heart",18),"Карта желаний","Вдвоём на одном телефоне: чего хочется больше",!all())}
     ${li("isens",null,nico("ipair",18),"Близость без спешки","Упражнение на внимание и доверие",!all())}
   </div>
-  <div class="card soft"><p class="small">Если разговоры заходят в тупик, можно прийти на консультацию вдвоём — это нормальная часть заботы об отношениях.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к ${esc(PSY.nameTo)}</button></div>`;
+  <div class="card soft"><p class="small">Если разговоры заходят в тупик, можно прийти на консультацию вдвоём — это нормальная часть заботы об отношениях.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к психологу</button></div>`;
 }
 function vCons(){
   return `${iback()}<div class="stack-s"><span class="label">Важно для всех</span><h1>Согласие и границы</h1></div>
@@ -241,7 +241,7 @@ function vHelp(){
     <div class="m-row"><strong>Эндокринолог</strong><span class="small">Подозрение на гормональные нарушения, щитовидная железа</span></div>
     <div class="m-row"><strong>Врач-сексолог</strong><span class="small">Сексуальные трудности, которые не объясняются другими причинами</span></div>
     <div class="m-row"><strong>Психолог</strong><span class="small">Когда причина в отношениях, стрессе, тревоге, стыде или прошлом опыте</span></div></div>
-  <div class="card soft"><p class="small">Я психолог и помогаю с психологической стороной близости: желание и его различия в паре, тревога, стыд, разговоры о сложном. Можно прийти одному или вдвоём.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к ${esc(PSY.nameTo)}</button></div>
+  <div class="card soft"><p class="small">Я психолог и помогаю с психологической стороной близости: желание и его различия в паре, тревога, стыд, разговоры о сложном. Можно прийти одному или вдвоём.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к психологу</button></div>
   <div class="card sos"><h3>Если есть насилие или принуждение</h3>
     <div class="stack-s"><div><div class="label">Экстренные службы</div><a class="phone" href="tel:112">112</a></div>
     <div><div class="label">Горячая линия для пострадавших от домашнего насилия, бесплатно</div><a class="phone" href="tel:88007000600">8 800 7000‑600</a></div></div></div>

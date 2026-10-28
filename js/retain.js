@@ -94,7 +94,7 @@ function forYou(){
   const recs=recsOf(o.f), names=o.f.map(k=>(FOC.find(x=>x[0]===k)||[,""])[1].toLowerCase()).join(", ");
   return `<div class="stack-s"><div class="row" style="justify-content:space-between"><span class="label">Для вас · ${esc(names)}</span><button class="linkbtn small" id="fyEdit">Изменить</button></div>
   <div class="grid2">${recs.map(r=>`<button class="tile" data-go="${r[0]}"${r[1]?` data-sub="${r[1]}"`:""}><span class="ico">${ico(r[4])}</span><strong>${r[2]}</strong><span class="small muted">${r[3]}</span></button>`).join("")}
-    <button class="tile" data-go="about" data-sub="book"><span class="ico">${ico("cal")}</span><strong>Записаться</strong><span class="small muted">к ${esc(PSY.nameTo)}</span></button></div></div>`;
+    <button class="tile" data-go="about" data-sub="book"><span class="ico">${ico("cal")}</span><strong>Записаться</strong><span class="small muted">к психологу</span></button></div></div>`;
 }
 function bakNudge(){
   if(S.days.length<5 || (S.bak && Date.now()-S.bak<30*864e5)) return "";
@@ -151,7 +151,7 @@ const RM={
 const pad = n => String(n).padStart(2,"0");
 const ie = t => String(t).replace(/[\\,;]/g, m=>"\\"+m);
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
-function ics(kind, time){
+function ics(kind, time, asFile){
   // На iPhone файл из памяти открывается окном «Поделиться», а готовый файл с сайта — сразу календарём «Добавить в календарь».
   // Поэтому на iPhone открываем заранее подготовленный файл cal/<вид>-ЧЧММ.ics (время округляется до 15 минут).
   if(isIOS() && RM[kind]){ const [h0,m0]=(time||RM[kind].def).split(":").map(Number); let t=(h0||0)*60+Math.round((m0||0)/15)*15; t=t%1440;
@@ -161,6 +161,14 @@ function ics(kind, time){
   if(r.by==="SU") while(st.getDay()!==0) st.setDate(st.getDate()+1);
   const f=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
   const url=PSY.siteUrl||"";
+  // Android и компьютер: сразу открываем Google Календарь с готовым повторяющимся событием — без скачивания файла (отзыв Веры).
+  // Файл .ics остаётся запасным вариантом по ссылке «Другой календарь».
+  if(!asFile){ let tz=""; try{ tz=Intl.DateTimeFormat().resolvedOptions().timeZone||""; }catch(e){}
+    const en=new Date(st.getTime()+5*60000), q=new URLSearchParams({action:"TEMPLATE", text:r.t, details:r.d+(url?"\n"+url:""), dates:`${f(st)}/${f(en)}`, recur:`RRULE:FREQ=${r.freq}${r.by?";BYDAY="+r.by:""}`});
+    if(tz) q.set("ctz",tz);
+    toast("Откроется Google Календарь — нажмите «Сохранить»");
+    const w=window.open("https://calendar.google.com/calendar/render?"+q.toString(),"_blank","noopener"); if(!w) setTimeout(()=>{ window.location.href="https://calendar.google.com/calendar/render?"+q.toString(); },400);
+    return; }
   const txt=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Opora//RU","CALSCALE:GREGORIAN","BEGIN:VEVENT",
     `UID:${Date.now().toString(36)}-${kind}@opora`, `DTSTAMP:${f(now)}`, `DTSTART:${f(st)}`, `DURATION:PT5M`,
     `RRULE:FREQ=${r.freq}${r.by?";BYDAY="+r.by:""}`, `SUMMARY:${ie(r.t)}`, `DESCRIPTION:${ie(r.d)}${url?"\\n"+url:""}`, url?`URL:${url}`:"",
@@ -177,10 +185,12 @@ async function saveFile(blob, name, hint){
 }
 function vRemind(){
   return `${backTo("about","Психолог")}<div class="stack-s"><h1>Напоминания</h1><p class="muted small">Опора не присылает уведомлений с сервера и ничего о вас не знает. Вместо этого напоминание добавляется в календарь вашего телефона — его легко изменить или удалить там же.</p></div>
-  ${Object.entries(RM).map(([k,r])=>`<div class="card rm-card"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="stack-s" style="gap:2px;min-width:0"><strong>${r.name}</strong><span class="small muted">${r.s}</span></span><input type="time" data-rt="${k}" value="${r.def}" aria-label="Время: ${r.name}"></div><button class="btn quiet" data-rc="${k}">Добавить в календарь</button></div>`).join("")}
-  <p class="small muted">После нажатия откроется файл календаря: подтвердите добавление. На Android файл может сначала скачаться — откройте его из уведомления о загрузке.</p>`;
+  ${Object.entries(RM).map(([k,r])=>`<div class="card rm-card"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="stack-s" style="gap:2px;min-width:0"><strong>${r.name}</strong><span class="small muted">${r.s}</span></span><input type="time" data-rt="${k}" value="${r.def}" aria-label="Время: ${r.name}"></div><button class="btn quiet" data-rc="${k}">Добавить в календарь</button>${isIOS()?"":`<button class="linkbtn small rm-file" data-rf="${k}">Другой календарь — добавить файлом</button>`}</div>`).join("")}
+  <p class="small muted">${isIOS()?"После нажатия откроется календарь iPhone: нажмите «Добавить в календарь».":"После нажатия откроется Google Календарь с готовым напоминанием: нажмите «Сохранить»."}</p>`;
 }
-function bindRemind(){ $$("[data-rc]").forEach(b=>b.onclick=()=>{ const k=b.dataset.rc, t=$(`[data-rt="${k}"]`); ics(k, t?t.value:RM[k].def); }); }
+function bindRemind(){ const tm=k=>{ const t=$(`[data-rt="${k}"]`); return t?t.value:RM[k].def; };
+  $$("[data-rc]").forEach(b=>b.onclick=()=>ics(b.dataset.rc, tm(b.dataset.rc)));
+  $$("[data-rf]").forEach(b=>b.onclick=()=>ics(b.dataset.rf, tm(b.dataset.rf), true)); }
 
 /* ================= Сохранение данных в файл ================= */
 function exportData(){
@@ -359,7 +369,7 @@ function script(){
 function vLoveSos(){
   const top=`${backTo("love","Сегодня")}<div class="stack-s"><span class="label">SOS для пары · шаг ${LS.st+1} из 4</span>`;
   if(LS.st===0) return `${top}<h1>Стоп. Сначала пауза</h1></div>
-    <div class="card"><p>Когда спор накаляется, пульс растёт, и тело переходит в режим «бей или беги». В таком состоянии почти невозможно слышать друг друга — даже если очень хочется договориться.</p><p class="small muted">Пауза — не бегство и не наказание молчанием. Это забота о разговоре: после неё вы вернётесь и договорите.</p></div>
+    <div class="card"><p>Когда спор накаляется, пульс растёт, и тело переходит в режим «бей или беги». В таком состоянии почти невозможно слышать друг друга — даже если очень хочется договориться.</p><p class="small muted">Пауза — это не уход от разговора и не молчание в наказание. Вы берёте время, чтобы успокоиться, а потом возвращаетесь и договариваете.</p></div>
     <div class="card soft"><span class="label">Скажите партнёру</span><p class="q-text" id="lsPh">«Мне нужно ${LS.min} минут, чтобы успокоиться. Я не ухожу от разговора — я вернусь, и мы договорим».</p><button class="btn quiet sm" id="lsCopy" style="align-self:flex-start">Скопировать</button></div>
     <div class="stack-s"><span class="small muted">Сколько нужно на паузу</span><div class="chips">${[10,20,30].map(m=>`<button class="chip" data-lm="${m}" aria-pressed="${LS.min===m}">${m} минут</button>`).join("")}</div></div>
     <button class="btn block" id="lsGo">Начать паузу</button>
@@ -384,7 +394,7 @@ function vLoveSos(){
     <div class="row"><button class="btn quiet sm" id="lsCopy2">Скопировать</button><button class="btn quiet sm" id="lsEdit">Изменить</button></div></div>
   <div class="card"><span class="label">Как говорить</span><ul class="talk-list ok"><li>По очереди: 5–10 минут говорит один, второй только слушает и пересказывает услышанное</li><li>О себе: «я почувствовал(а)», а не «ты меня довёл(а)»</li><li>Об одном случае — без «всегда», «никогда» и старых обид</li><li>Если снова накаляется — ещё одна пауза. Это нормально</li></ul></div>
   <button class="btn quiet block" data-go="lovef">Разобрать ссору подробнее</button>
-  <div class="card"><p class="small">Если ссоры повторяются по одному кругу, на консультации вдвоём можно найти, что их запускает.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к ${esc(PSY.nameTo)}</button></div>
+  <div class="card"><p class="small">Если ссоры повторяются по одному кругу, на консультации вдвоём можно найти, что их запускает.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к психологу</button></div>
   <button class="linkbtn small" id="lsReset" style="align-self:center">Начать заново</button>`;
 }
 function bindLoveSos(){

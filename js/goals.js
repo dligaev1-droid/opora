@@ -170,7 +170,7 @@ function habToday(){
 function vToday(){
   const h=new Date().getHours(), hi=h<6?"Доброй ночи":h<12?"Доброе утро":h<18?"Добрый день":"Добрый вечер";
   return `<div class="top"><div class="brand"><div class="logo goals-logo">${nico("gtoday",18)}</div><div><div style="font-weight:700">Опора</div><div class="small muted">цели без выгорания</div></div></div><div class="top-r">${modeSwitch("goals")}<button class="sos-pill" data-go="sos">SOS</button></div></div>
-  <div class="stack-s"><h1>${hi}</h1><p class="muted">Маленький шаг — тоже шаг</p></div>
+  <div class="stack-s"><h1 class="hello">${hi}</h1><p class="muted">Маленький шаг — тоже шаг</p></div>
   ${mainCard()}
   ${energyCard()}
   ${habToday()}
@@ -449,7 +449,7 @@ function vArt(){
   const i=Math.max(0,GA.findIndex(a=>a.id===sub)), a=GA[i];
   if(i>0&&!plus()) return `${gback()}<div class="stack-s"><h1>${a.t}</h1></div>${lockCard("Статья доступна в Опора+")}`;
   return `${gback()}<article class="stack"><div class="stack-s"><span class="label">${a.m} мин чтения</span><h1>${a.t}</h1></div>${a.p.map(t=>`<p>${t}</p>`).join("")}</article>
-  <div class="card soft"><p class="small">Если чувствуете, что сил нет совсем, — это повод поговорить со специалистом.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к ${esc(PSY.nameTo)}</button></div>`;
+  <div class="card soft"><p class="small">Если чувствуете, что сил нет совсем, — это повод поговорить со специалистом.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к психологу</button></div>`;
 }
 function vPath(){
   const n=Object.keys(G().prog.done).length;
@@ -461,7 +461,7 @@ function vPath(){
   </div></div>
   <div class="stack-s"><span class="label">Почитать</span><div class="list">${GA.map((a,i)=>li("gart",a.id,ico("book",18),a.t,`${a.m} мин`,i>0&&!plus())).join("")}</div></div>
   ${plus()?"":`<button class="banner card plus-banner" data-go="gplus"><span class="bi">${LOCK}</span><span class="bt"><strong>Открыть всё — Опора+</strong><span class="small muted">Цели и отношения без ограничений</span></span><span class="chev">›</span></button>`}
-  <div class="card"><p class="small">Не получается сдвинуться с места, хотя очень хочется? Иногда за этим стоит что-то важное — разберём на консультации.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к ${esc(PSY.nameTo)}</button></div>
+  <div class="card"><p class="small">Не получается сдвинуться с места, хотя очень хочется? Иногда за этим стоит что-то важное — разберём на консультации.</p><button class="btn" data-go="about" data-sub="book" style="align-self:flex-start">Записаться к психологу</button></div>
   <button class="btn quiet block" data-go="home">← Вернуться в Опору для себя</button>`;
 }
 /* Опора+ в зелёном режиме */

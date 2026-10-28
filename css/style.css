@@ -990,3 +990,29 @@ details.how[open] summary::after{transform:rotate(-90deg)}
 @media (prefers-reduced-motion:reduce){.garden-art .g-pop,.garden-art .g-bfly{animation:none}}
 
 .g-spr{width:30px;height:30px;object-fit:contain;display:block}
+div.dates-card{cursor:default}
+/* v66: «Что из чего растёт» — все значки в одинаковых кружках (отзыв Веры) */
+.g-row{grid-template-columns:40px 1fr auto}
+.g-badge{width:40px;height:40px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;overflow:hidden}
+.g-badge .g-spr{width:28px;height:28px}
+.g-badge .g-ico{width:14px;height:14px;border-radius:50%}
+.rm-file{align-self:center;margin-top:2px}
+/* v66: фон ярче — мягкие цветные сияния поверх спокойного фона (отзыв Веры). Цвета — свои для каждой комнаты */
+:root{--glow1:rgba(110,172,236,.42);--glow2:rgba(255,184,140,.38);--glow3:rgba(255,222,140,.30)}
+:root[data-room="love"]{--glow1:rgba(240,140,165,.38);--glow2:rgba(255,196,140,.34);--glow3:rgba(196,164,240,.26)}
+:root[data-room="goals"]{--glow1:rgba(120,206,160,.40);--glow2:rgba(140,196,240,.32);--glow3:rgba(248,222,130,.30)}
+:root[data-room="intim"]{--glow1:rgba(214,130,196,.34);--glow2:rgba(250,164,164,.28);--glow3:rgba(170,150,236,.24)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--glow1:rgba(70,120,200,.20);--glow2:rgba(200,120,90,.12);--glow3:rgba(120,90,200,.12)}
+  :root[data-room="love"]:not([data-theme="light"]){--glow1:rgba(200,90,120,.18);--glow2:rgba(200,130,80,.10);--glow3:rgba(140,100,200,.12)}
+  :root[data-room="goals"]:not([data-theme="light"]){--glow1:rgba(70,170,120,.16);--glow2:rgba(70,130,200,.12);--glow3:rgba(190,170,80,.08)}
+  :root[data-room="intim"]:not([data-theme="light"]){--glow1:rgba(180,80,160,.18);--glow2:rgba(200,90,110,.10);--glow3:rgba(120,90,200,.12)}}
+:root[data-theme="dark"]{--glow1:rgba(70,120,200,.20);--glow2:rgba(200,120,90,.12);--glow3:rgba(120,90,200,.12)}
+:root[data-theme="dark"][data-room="love"]{--glow1:rgba(200,90,120,.18);--glow2:rgba(200,130,80,.10);--glow3:rgba(140,100,200,.12)}
+:root[data-theme="dark"][data-room="goals"]{--glow1:rgba(70,170,120,.16);--glow2:rgba(70,130,200,.12);--glow3:rgba(190,170,80,.08)}
+:root[data-theme="dark"][data-room="intim"]{--glow1:rgba(180,80,160,.18);--glow2:rgba(200,90,110,.10);--glow3:rgba(120,90,200,.12)}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(75% 42% at 100% 0%,var(--glow1),transparent 72%),
+             radial-gradient(70% 38% at 0% 34%,var(--glow2),transparent 72%),
+             radial-gradient(85% 45% at 75% 100%,var(--glow3),transparent 72%)}
+/* приветствие на главных — спокойнее, не кричит */
+h1.hello{font-size:1.55rem;font-weight:600;letter-spacing:-.01em}

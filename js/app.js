@@ -219,7 +219,7 @@ function vHome(){
   const hi = h<6?"Доброй ночи":h<12?"Доброе утро":h<18?"Добрый день":"Добрый вечер";
   const today = S.moods.filter(m=>new Date(m.ts).toDateString()===new Date().toDateString()).pop();
   return `${header()}
-  <div class="stack-s"><h1>${hi}</h1><p class="muted">Как вы себя чувствуете сейчас?</p></div>
+  <div class="stack-s"><h1 class="hello">${hi}</h1><p class="muted">Как вы себя чувствуете сейчас?</p></div>
   <div class="card">
     <div class="moods">${MOODS.map(m=>`<button class="mood" data-qm="${m.v}" ${today&&today.mood===m.v?'aria-pressed="true"':''}>${face(m.v)}<span>${m.t}</span></button>`).join("")}</div>
   </div>
@@ -232,7 +232,7 @@ function vHome(){
     <button class="tile" data-go="tests" data-sub="cbi"><span class="ico">${ico("tests")}</span><strong>Тест на выгорание</strong><span class="small muted">1 минута</span></button>
     <button class="tile" data-go="breath"><span class="ico">${ico("wind")}</span><strong>Снять напряжение</strong><span class="small muted">2 минуты</span></button>
     <button class="tile" data-go="sounds"><span class="ico">${ico("moon")}</span><strong>Звуки для сна</strong><span class="small muted">Дождь, море, лес</span></button>
-    <button class="tile" data-go="about" data-sub="book"><span class="ico">${ico("cal")}</span><strong>Записаться</strong><span class="small muted">к ${esc(PSY.nameTo)}</span></button>
+    <button class="tile" data-go="about" data-sub="book"><span class="ico">${ico("cal")}</span><strong>Записаться</strong><span class="small muted">к психологу</span></button>
   </div>
   ${window.roomsRow?roomsRow():window.loveBanner?loveBanner():""}
   ${S.days.length>=2?installCard():""}
@@ -919,7 +919,7 @@ function vArticle(){
     ${a.body.map(t=>`<p>${esc(t)}</p>`).join("")}
   </article>
   <div class="card soft">
-    <div class="row">${psyAva()}<strong>${esc(PSY.name)}, ${esc(PSY.role.toLowerCase())}</strong></div>
+    <div class="row">${psyAva()}<span class="stack-s" style="gap:0"><strong>${esc(PSY.fullName||PSY.name)}</strong><span class="small muted">${esc(PSY.roleLc||PSY.role)}</span></span></div>
     <p class="small">Узнали себя? Разберём вашу ситуацию.</p>
     <div class="row"><button class="btn" data-go="about" data-sub="book">Записаться</button><button class="btn quiet" data-share>${ico("share",18)} Поделиться</button></div>
   </div>`;
@@ -930,8 +930,8 @@ let bookText="", BK={name:"",fmt:"Онлайн",time:"",req:""};
 function vAbout(){
   const contact = PSY.telegram?`<a class="btn ghost" href="https://t.me/${encodeURIComponent(PSY.telegram)}" target="_blank" rel="noopener">Открыть Telegram</a>`:"";
   return `<div class="card${PSY.photoBig?" psy-card":""}">
-    ${PSY.photoBig?`<img class="psy-hero" src="${esc(PSY.photoBig)}" alt="${esc(PSY.name)}, ${esc(PSY.role.toLowerCase())}">`:""}
-    <div class="row" style="gap:16px;flex-wrap:nowrap">${PSY.photoBig?"":psyAva("avatar")}<div class="stack-s" style="min-width:0"><h2>${esc(PSY.name)}</h2><p class="small muted">${esc(PSY.role)}</p><p class="small muted">${esc(PSY.formats)}</p></div></div>
+    ${PSY.photoBig?`<img class="psy-hero" src="${esc(PSY.photoBig)}" alt="${esc(PSY.fullName||PSY.name)}, ${esc(PSY.roleLc||PSY.role)}">`:""}
+    <div class="row" style="gap:16px;flex-wrap:nowrap">${PSY.photoBig?"":psyAva("avatar")}<div class="stack-s" style="min-width:0"><h2>${esc(PSY.fullName||PSY.name)}</h2><p class="small muted">${esc(PSY.role)}</p>${PSY.author?`<p class="small muted">${esc(PSY.author)}</p>`:""}<p class="small muted">${esc(PSY.formats)}</p></div></div>
     <p>${esc(PSY.about)}</p>
     <div class="stack-s"><span class="label">С чем работаю</span><div class="chips">${PSY.topics.map(t=>`<span class="tag" style="font-size:.85rem;padding:5px 12px">${esc(t)}</span>`).join("")}</div></div>
   </div>

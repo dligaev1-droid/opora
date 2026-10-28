@@ -20,11 +20,32 @@ const dark = () => document.documentElement.getAttribute("data-theme")==="dark" 
 
 /* ---------- звук и вибрация ---------- */
 let ac=null;
-function A(){ if(!C().snd) return null; if(!ac){ const K=window.AudioContext||window.webkitAudioContext; if(!K) return null; try{ ac=new K(); }catch(e){ return null; } } if(ac.state==="suspended") ac.resume().catch(()=>{}); return ac; }
-function popSnd(){ const c=A(); if(!c) return; const t=c.currentTime, o=c.createOscillator(), g=c.createGain(), f=c.createBiquadFilter();
-  o.type="sine"; o.frequency.setValueAtTime(560+Math.random()*160,t); o.frequency.exponentialRampToValueAtTime(130,t+.09);
-  f.type="lowpass"; f.frequency.value=2200; g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.32,t+.004); g.gain.exponentialRampToValueAtTime(.0001,t+.12);
-  o.connect(f); f.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.15); }
+function A(){ if(!C().snd) return null;
+  // iPhone: без этого звук сайта молчит, когда на телефоне включён беззвучный режим
+  try{ if(navigator.audioSession && navigator.audioSession.type!=="playback") navigator.audioSession.type="playback"; }catch(e){}
+  if(!ac){ const K=window.AudioContext||window.webkitAudioContext; if(!K) return null; try{ ac=new K(); }catch(e){ return null; } } if(ac.state==="suspended") ac.resume().catch(()=>{}); return ac; }
+let noiseBuf=null;
+function noise(c){ if(noiseBuf && noiseBuf.sampleRate===c.sampleRate) return noiseBuf; const n=Math.floor(c.sampleRate*.25); noiseBuf=c.createBuffer(1,n,c.sampleRate); const d=noiseBuf.getChannelData(0); for(let i=0;i<n;i++) d[i]=Math.random()*2-1; return noiseBuf; }
+// Пупырка: сухой щелчок лопнувшего пузырька (короткий всплеск шума) + мягкий «пук» воздуха
+function popSnd(){ const c=A(); if(!c) return; const t=c.currentTime+.005, out=c.createGain(); out.gain.value=.9; out.connect(c.destination);
+  const s1=c.createBufferSource(); s1.buffer=noise(c); s1.playbackRate.value=.9+Math.random()*.3;
+  const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1500+Math.random()*900; bp.Q.value=1.1;
+  const g1=c.createGain(); g1.gain.setValueAtTime(.0001,t); g1.gain.exponentialRampToValueAtTime(.9,t+.002); g1.gain.exponentialRampToValueAtTime(.0001,t+.035);
+  s1.connect(bp); bp.connect(g1); g1.connect(out); s1.start(t, Math.random()*.15, .06);
+  const o=c.createOscillator(), g2=c.createGain(); o.type="sine"; o.frequency.setValueAtTime(240+Math.random()*60,t); o.frequency.exponentialRampToValueAtTime(70,t+.06);
+  g2.gain.setValueAtTime(.0001,t); g2.gain.exponentialRampToValueAtTime(.35,t+.003); g2.gain.exponentialRampToValueAtTime(.0001,t+.08);
+  o.connect(g2); g2.connect(out); o.start(t); o.stop(t+.1); }
+// Спиннер: тихое «тиканье» подшипника — щелчки чаще и громче, чем быстрее крутится
+function tickSnd(v){ const c=A(); if(!c) return; const t=c.currentTime+.003, s1=c.createBufferSource(); s1.buffer=noise(c);
+  const hp=c.createBiquadFilter(); hp.type="bandpass"; hp.frequency.value=2600+v*900; hp.Q.value=2.2;
+  const g=c.createGain(), vol=.05+.22*v; g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.0015); g.gain.exponentialRampToValueAtTime(.0001,t+.022);
+  s1.connect(hp); hp.connect(g); g.connect(c.destination); s1.start(t, Math.random()*.2, .03); }
+let whir=null;
+function whirSet(v){ const c=ac; if(!c || !C().snd){ if(whir){ try{ whir.g.gain.value=0; }catch(e){} } return; }
+  if(!whir){ const s1=c.createBufferSource(); s1.buffer=noise(c); s1.loop=true; const lp=c.createBiquadFilter(); lp.type="lowpass"; const g=c.createGain(); g.gain.value=0;
+    s1.connect(lp); lp.connect(g); g.connect(c.destination); s1.start(); whir={s:s1,lp,g}; }
+  whir.lp.frequency.setTargetAtTime(300+v*1400, c.currentTime, .05); whir.g.gain.setTargetAtTime(v*.05, c.currentTime, .08); }
+function whirStop(){ if(whir){ try{ whir.s.stop(); }catch(e){} whir=null; } }
 function note(freq, vol=.1, dur=2.4){ const c=A(); if(!c) return; const t=c.currentTime, g=c.createGain(); g.connect(c.destination);
   g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   [[1,1],[2,.18],[3.01,.05]].forEach(([m,a])=>{ const o=c.createOscillator(), pg=c.createGain(); o.type="sine"; o.frequency.value=freq*m; pg.gain.value=a; o.connect(pg); pg.connect(g); o.start(t); o.stop(t+dur+.05); }); }
@@ -41,7 +62,7 @@ const touched = () => { if(!RL || RL.ex!=="calm" || RL.stage==="before") reliefS
 let loop=null;
 function setup(cv){ const r=cv.getBoundingClientRect(), d=Math.min(2,window.devicePixelRatio||1); cv.width=Math.max(1,Math.round(r.width*d)); cv.height=Math.max(1,Math.round(r.height*d)); const x=cv.getContext("2d"); x.setTransform(d,0,0,d,0,0); return {x, w:r.width, h:r.height, d}; }
 const pt = (cv,e) => { const r=cv.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
-function run(cv, fn){ cancelAnimationFrame(loop); const step=t=>{ if(!cv.isConnected){ loop=null; return; } fn(t); loop=requestAnimationFrame(step); }; loop=requestAnimationFrame(step); }
+function run(cv, fn){ cancelAnimationFrame(loop); whirStop(); const step=t=>{ if(!cv.isConnected){ loop=null; whirStop(); return; } fn(t); loop=requestAnimationFrame(step); }; loop=requestAnimationFrame(step); }
 function drag(cv, on){ let down=false, last=null;
   cv.addEventListener("pointerdown", e=>{ down=true; last=pt(cv,e); try{ cv.setPointerCapture(e.pointerId); }catch(_){} touched(); on(last, null, true); e.preventDefault(); });
   cv.addEventListener("pointermove", e=>{ if(!down) return; const p=pt(cv,e); on(p, last, false); last=p; });
@@ -220,14 +241,40 @@ function petal(r1,r2,a,w){ const [x1,y1]=pol(r1,a),[x2,y2]=pol(r2,a),[c1x,c1y]=p
   return `M${f2(x1)} ${f2(y1)} Q${f2(c1x)} ${f2(c1y)} ${f2(x2)} ${f2(y2)} Q${f2(c2x)} ${f2(c2y)} ${f2(x1)} ${f2(y1)}Z`; }
 function sector(r1,r2,a1,a2){ const p=(r,a)=>pol(r,a).map(f2).join(" ");
   return `M${p(r1,a1)} L${p(r2,a1)} A${r2} ${r2} 0 0 1 ${p(r2,a2)} L${p(r1,a2)} A${r1} ${r1} 0 0 0 ${p(r1,a1)}Z`; }
+// v66: 8 разных узоров × 4 вида симметрии (отзыв Веры: «побольше узоров»). Кнопка «Новый узор» листает их по кругу.
+function tri(r1,r2,a,w){ const [x1,y1]=pol(r1,a-w),[x2,y2]=pol(r2,a),[x3,y3]=pol(r1,a+w); return `M${f2(x1)} ${f2(y1)} L${f2(x2)} ${f2(y2)} L${f2(x3)} ${f2(y3)}Z`; }
+function kite(r1,r2,a,w){ const m=(r1+r2)/2, [x1,y1]=pol(r1,a),[x2,y2]=pol(m,a-w),[x3,y3]=pol(r2,a),[x4,y4]=pol(m,a+w); return `M${f2(x1)} ${f2(y1)} L${f2(x2)} ${f2(y2)} L${f2(x3)} ${f2(y3)} L${f2(x4)} ${f2(y4)}Z`; }
+function scal(r,a1,a2){ const p1=pol(r,a1), p2=pol(r,a2), rr=Math.hypot(p2[0]-p1[0],p2[1]-p1[1])/2; return `M${f2(p1[0])} ${f2(p1[1])} A${f2(rr)} ${f2(rr)} 0 0 1 ${f2(p2[0])} ${f2(p2[1])}Z`; }
+function ring(r1,r2){ return `M${150-r2} 150 a${r2} ${r2} 0 1 0 ${2*r2} 0 a${r2} ${r2} 0 1 0 ${-2*r2} 0Z M${150-r1} 150 a${r1} ${r1} 0 1 1 ${2*r1} 0 a${r1} ${r1} 0 1 1 ${-2*r1} 0Z`; }
+const MDES=[
+  // 0 — классика: лепестки, бусины, рамка
+  n=>[["c",18],["p",20,56,0,.32,n],["d",64,7,0,2*n],["p",72,116,.5,.34,n],["p",80,108,0,.16,n],["s",122,138,0,2*n]],
+  // 1 — звезда
+  n=>[["c",16],["t",18,62,0,.5,n],["r",64,72],["k",76,114,.5,.36,n],["d",118,5.5,0,2*n],["s",124,138,0,n]],
+  // 2 — цветок
+  n=>[["c",14],["p",16,46,0,.42,n],["p",30,64,.5,.3,n],["sc",72,2*n],["p",82,130,0,.38,n],["p",100,126,.5,.18,n],["d",134,5.5,.5,n]],
+  // 3 — лотос
+  n=>[["c",20],["r",22,30],["p",32,58,0,.16,2*n],["p",60,102,0,.36,n],["p",68,122,.5,.3,n],["s",126,138,0,3*n]],
+  // 4 — снежинка
+  n=>[["c",14],["k",16,72,0,.26,n],["d",52,6,.5,n],["k",78,124,0,.13,n],["k",88,122,.5,.2,n],["s",126,140,.25,2*n]],
+  // 5 — кружево
+  n=>[["c",22],["d",36,10,0,n],["d",58,7,.5,n],["p",68,100,0,.3,n],["sc",106,2*n],["d",122,6,0,2*n],["d",135,5,.5,2*n]],
+  // 6 — солнце
+  n=>[["c",26],["t",28,62,.5,.42,2*n],["r",64,74],["p",76,122,0,.4,n],["p",92,138,.5,.15,n]],
+  // 7 — витраж
+  n=>[["c",18],["s",20,50,0,n],["s",50,80,.5,n],["s",80,110,0,2*n],["s",110,138,.5,2*n]]
+];
+const MSYM=[8,10,12,6];
 function mandala(seed){
-  const n=[8,10,12][seed%3], st=Math.PI*2/n, segs=[];
-  segs.push(`<circle cx="150" cy="150" r="18"/>`);
-  for(let i=0;i<n;i++) segs.push(`<path d="${petal(20,56,i*st,st*.32)}"/>`);
-  for(let i=0;i<n*2;i++){ const [x,y]=pol(64,i*st/2); segs.push(`<circle cx="${f2(x)}" cy="${f2(y)}" r="${seed%2?6:7}"/>`); }
-  for(let i=0;i<n;i++) segs.push(`<path d="${petal(72,116,(i+.5)*st,st*.34)}"/>`);
-  for(let i=0;i<n;i++) segs.push(`<path d="${petal(80,108,i*st,st*.16)}"/>`);
-  for(let i=0;i<n*2;i++) segs.push(`<path d="${sector(122,138,i*st/2+.01,(i+1)*st/2-.01)}"/>`);
+  const d=MDES[seed%MDES.length], n=MSYM[Math.floor(seed/MDES.length)%MSYM.length], segs=[];
+  d(n).forEach(L=>{ const k=L[0];
+    if(k==="c") segs.push(`<circle cx="150" cy="150" r="${L[1]}"/>`);
+    else if(k==="r") segs.push(`<path fill-rule="evenodd" d="${ring(L[1],L[2])}"/>`);
+    else if(k==="sc"){ const m=L[2], st=Math.PI*2/m; for(let i=0;i<m;i++) segs.push(`<path d="${scal(L[1],i*st+.02,(i+1)*st-.02)}"/>`); }
+    else if(k==="d"){ const [,r,rad,off,m]=L, st=Math.PI*2/m; for(let i=0;i<m;i++){ const [x,y]=pol(r,(i+off)*st); segs.push(`<circle cx="${f2(x)}" cy="${f2(y)}" r="${rad}"/>`); } }
+    else if(k==="s"){ const [,r1,r2,off,m]=L, st=Math.PI*2/m; for(let i=0;i<m;i++) segs.push(`<path d="${sector(r1,r2,(i+off)*st+.012,(i+1+off)*st-.012)}"/>`); }
+    else { const [,r1,r2,off,w,m]=L, st=Math.PI*2/m, fn=k==="p"?petal:k==="t"?tri:kite; for(let i=0;i<m;i++) segs.push(`<path d="${fn(r1,r2,(i+off)*st,st*w)}"/>`); }
+  });
   return segs;
 }
 function vMandala(){
@@ -255,7 +302,9 @@ function bindSpin(cv){
   run(cv,now=>{ const dt=Math.min(.05,(now-lastT)/1000); lastT=now;
     if(pa==null){ w*=Math.exp(-dt*.13); const s=Math.sign(w); w-=s*Math.min(Math.abs(w),.06*dt*10); a+=w*dt;
       if(peak>3 && Math.abs(w)<.05){ peak=0; w=0; hint="Остановился. Можно ещё раз"; bell(523.25,.05,3); buzz([30,60,30]); } }
-    const seg=Math.floor(a/(Math.PI*2/3)); if(seg!==bindSpin.seg){ bindSpin.seg=seg; if(Math.abs(w)>1.5 && Math.abs(w)<30) buzz(Math.abs(w)>12?4:7); }
+    const seg=Math.floor(a/(Math.PI*2/3)); if(seg!==bindSpin.seg){ bindSpin.seg=seg; if(Math.abs(w)>1.5 && Math.abs(w)<30) buzz(Math.abs(w)>12?4:7);
+      const v=Math.min(1,Math.abs(w)/25); if(Math.abs(w)>.6 && now-(bindSpin.lt||0)>28){ bindSpin.lt=now; tickSnd(v); } }
+    whirSet(Math.min(1,Math.abs(w)/30));
     const x=G.x, nt=dark(); x.fillStyle=nt?"#141B26":"#EEF2F6"; x.fillRect(0,0,G.w,G.h);
     const ghosts=Math.min(5,Math.floor(Math.abs(w)/6));
     for(let gI=ghosts;gI>=0;gI--){ x.save(); x.globalAlpha=gI?.12:1; x.translate(cx,cy); x.rotate(a-gI*w*.012);
