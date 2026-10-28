@@ -923,3 +923,11 @@ details.how[open] summary::after{transform:rotate(-90deg)}
 .mnd-pal{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .mcol{width:34px;height:34px;border-radius:50%;border:2px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.18);cursor:pointer}
 .mcol.on{border-color:var(--ink);transform:scale(1.1)}
+
+/* фокус: режим чтения и своё время */
+.f-mode{margin-bottom:-4px}
+.f-mode button{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.f-own{justify-content:center;align-items:center;gap:8px;flex-wrap:nowrap}
+.f-own input{width:84px;text-align:center;font-size:1.1rem;font-weight:700}
+.f-ask{gap:10px}
+.rd-time .btn{flex:none;display:inline-flex;align-items:center;gap:6px}

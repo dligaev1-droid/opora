@@ -19,6 +19,8 @@ const X = () => {
   if(!isObj(r.log)) r.log={};
   Object.keys(r.log).forEach(k=>{ const v=Math.round(+r.log[k]); if(!(v>0) || !(+k>0)) delete r.log[k]; else r.log[k]=Math.min(v,3000); });
   r.goal=[10,20,30,50].includes(+r.goal)?+r.goal:20;
+  if(!isObj(r.min)) r.min={};
+  Object.keys(r.min).forEach(k=>{ const v=Math.round(+r.min[k]); if(!(v>0) || !(+k>0)) delete r.min[k]; else r.min[k]=Math.min(v,1440); });
   return g;
 };
 
@@ -240,7 +242,8 @@ function readStats(r){
   const now=new Date(), m0=Math.round(Date.UTC(now.getFullYear(),now.getMonth(),1)/864e5), y0=Math.round(Date.UTC(now.getFullYear(),0,1)/864e5);
   let st=0, k=d; if(!r.log[k]) k--; while(r.log[k]){ st++; k--; }
   const all=Object.values(r.log).reduce((a,b)=>a+b,0), yearBooks=r.books.filter(b=>b.done && new Date(b.done).getFullYear()===now.getFullYear()).length;
-  return {today:+r.log[d]||0, week:sum(weekStart(d),d), month:sum(m0,d), year:sum(y0,d), st, all, yearBooks};
+  let wm=0; for(let k=weekStart(d);k<=d;k++) wm+=+r.min[k]||0;
+  return {today:+r.log[d]||0, week:sum(weekStart(d),d), month:sum(m0,d), year:sum(y0,d), st, all, yearBooks, minToday:+r.min[d]||0, minWeek:wm};
 }
 function addPages(b, n){
   const g=X(), r=g.rd, d=dayNum(); n=Math.round(n); if(!n) return;
@@ -253,6 +256,7 @@ function addPages(b, n){
   if(b && b.cur>=b.p && !b.done){ b.done=Date.now(); if(window.SND) SND.cue("done"); toast(`Книга «${b.t}» прочитана!`); }
   save();
 }
+const hmin = m => m>=60?`${Math.floor(m/60)} ч ${m%60?m%60+" мин":""}`.trim():`${m} мин`;
 function vRead(){
   const g=X(), r=g.rd, s=readStats(r), cur=r.books.filter(b=>!b.done), fin=r.books.filter(b=>b.done).sort((a,b)=>b.done-a.done), d=dayNum();
   const days=[...Array(14)].map((_,i)=>d-13+i), mx=Math.max(r.goal,...days.map(k=>+r.log[k]||0));
@@ -261,6 +265,7 @@ function vRead(){
   <div class="card rd-top"><div class="rd-ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" class="fr-bg" style="stroke-width:8"/><circle cx="50" cy="50" r="44" class="fr-fg" style="stroke-width:8" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct/100)}" transform="rotate(-90 50 50)"/></svg><span class="rd-n"><b>${s.today}</b><span class="small muted">из ${r.goal}</span></span></div>
     <div class="stack-s" style="gap:4px"><strong>${s.today>=r.goal?"Норма на сегодня выполнена":"Страниц сегодня"}</strong><span class="small muted">${s.st>1?`${s.st} ${pl(s.st,"день","дня","дней")} подряд с книгой`:"Читайте каждый день — появится серия"}</span>
     <div class="chips">${[10,20,30,50].map(n=>`<button class="chip" data-rg="${n}" aria-pressed="${r.goal===n}">${n} в день</button>`).join("")}</div></div></div>
+  <div class="card rd-time"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="stack-s" style="gap:2px"><span class="label">Время чтения</span><strong>${s.minToday?`Сегодня ${hmin(s.minToday)}`:"Сегодня ещё не читали"}</strong><span class="small muted">${s.minWeek?`За неделю ${hmin(s.minWeek)}`:"Таймер сам запишет время, а потом спросит страницы"}</span></span><button class="btn sm" data-go="gfocus" data-sub="__read">${ico("book",16)} Читать с таймером</button></div></div>
   <div class="st-grid">${[[s.week,"за неделю"],[s.month,"за месяц"],[s.year,"за год"],[s.yearBooks,pl(s.yearBooks,"книга в этом году","книги в этом году","книг в этом году")]].map(([v,t])=>`<div class="st-cell"><b>${v}</b><span class="small muted">${t}${t.startsWith("за")?" · стр.":""}</span></div>`).join("")}</div>
   ${cur.map(b=>`<div class="card rd-book"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="stack-s" style="gap:2px;min-width:0"><strong>${esc(b.t)}</strong>${b.a?`<span class="small muted">${esc(b.a)}</span>`:""}</span><button class="linkbtn small" data-rx="${b.id}" aria-label="Убрать книгу">✕</button></div>
     <span class="progress" style="display:block;width:100%"><i style="width:${b.cur/b.p*100}%"></i></span><span class="small muted">Страница ${b.cur} из ${b.p} · осталось ${b.p-b.cur}</span>
@@ -298,5 +303,5 @@ VIEWS.ghab=[()=>{ const h=vHab0(), mark='<h2 class="h-sec">Привычки</h2>
 /* ---------- Регистрация ---------- */
 Object.assign(VIEWS,{glib:[vLib,bindLib], glibg:[vLibG,bindLibG], gread:[vRead,bindRead]});
 NEW.forEach(r=>TAB_OF[r]="practices");
-N.GL=GL;
+N.GL=GL; N.addPages=addPages;
 })();

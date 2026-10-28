@@ -269,20 +269,37 @@ function bindHab(){
 }
 
 /* ---------- Фокус ---------- */
-let FT={min:25, end:0, left:25*60, run:false, brk:false, label:"", snd:""}, fTimer=null;
+let FT={min:25, end:0, left:25*60, run:false, brk:false, label:"", snd:"", mode:"work", book:"", ask:null, own:false}, fTimer=null;
 const SNDS=[["","Тишина"],["rain","Дождь"],["noise","Шум"],["forest","Лес"]];
 function fmt(s){ s=Math.max(0,Math.ceil(s)); return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; }
 function ring(){ const tot=FT.min*60, f=FT.run||FT.left<tot?1-FT.left/tot:0, R=88, C=2*Math.PI*R;
   return `<svg viewBox="0 0 200 200" class="f-ring" aria-hidden="true"><circle cx="100" cy="100" r="${R}" class="fr-bg"/><circle cx="100" cy="100" r="${R}" class="fr-fg" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-f)}" transform="rotate(-90 100 100)"/></svg>`; }
+// книги из «Чтения» (сам счётчик — в goals3.js, он подключается позже)
+const N_add = () => window.GOALS && window.GOALS.addPages;
+const books = () => { const r=G().rd; return r && Array.isArray(r.books) ? r.books.filter(b=>b && !b.done && typeof b.t==="string") : []; };
+function pagesAsk(){
+  const a=FT.ask, b=books().find(x=>x.id===a.book);
+  return `<div class="card soft f-ask"><span class="label">Чтение · ${a.min} ${plural(a.min,"минута","минуты","минут")}</span><strong>Сколько страниц прочитали?</strong>${b?`<span class="small muted">«${esc(b.t)}» · сейчас страница ${b.cur} из ${b.p}</span>`:""}
+    <div class="chips">${[5,10,15,20,30].map(n=>`<button class="chip" data-fp="${n}">${n}</button>`).join("")}</div>
+    <div class="row" style="flex-wrap:nowrap"><input type="number" inputmode="numeric" id="fPg" min="1" max="500" placeholder="Своё число" aria-label="Прочитано страниц" style="flex:1;min-width:0"><button class="btn" id="fPgOk">Сохранить</button></div>
+    <button class="linkbtn small" id="fPgNo" style="align-self:flex-start">Пропустить</button></div>`;
+}
 function vFocus(){
+  if(sub==="__read" && !FT.run){ FT.mode="read"; sub=null; }
   if(sub && !FT.run){ FT.label=String(sub).slice(0,80); sub=null; }
-  const today=+(G().focus[dayNum()]||0);
-  return `<div class="stack-s"><h1>Фокус</h1><p class="muted">Одно дело, без отвлечений. Телефон — экраном вниз.</p></div>
+  const g0=G(); if(!FT.run && !FT.brk && FT.own && +g0.fown>0 && FT.min!==+g0.fown){ FT.min=+g0.fown; FT.left=FT.min*60; }
+  const today=+(G().focus[dayNum()]||0), rd=FT.mode==="read", bs=books();
+  if(rd && bs.length && !bs.some(b=>b.id===FT.book)) FT.book=bs[0].id;
+  return `<div class="stack-s"><h1>Фокус</h1><p class="muted">${rd?"Время для книги. Телефон — экраном вниз, после таймера отметите страницы.":"Одно дело, без отвлечений. Телефон — экраном вниз."}</p></div>
+  ${FT.ask?pagesAsk():""}
+  ${FT.run||FT.brk?"":`<div class="seg f-mode" role="tablist"><button role="tab" aria-selected="${!rd}" data-fmode="work">Работа</button><button role="tab" aria-selected="${rd}" data-fmode="read">${ico("book",16)} Чтение</button></div>`}
   <div class="card f-card">
     <div class="f-wrap">${ring()}<div class="f-mid"><span class="f-time" id="fTime">${fmt(FT.left)}</span><span class="small muted">${FT.brk?"перерыв":FT.run?"фокус":"готовы?"}</span></div></div>
-    ${FT.run?"":`<div class="chips f-min">${[10,25,45].map(m=>`<button class="chip" data-fm="${m}" aria-pressed="${FT.min===m&&!FT.brk}">${m} мин</button>`).join("")}</div>
-      <input type="text" id="fLab" placeholder="Над чем работаете? (необязательно)" aria-label="Над чем работаете" value="${esc(FT.label)}" maxlength="80">`}
-    ${FT.run&&FT.label?`<p class="f-lab">${esc(FT.label)}</p>`:""}
+    ${FT.run?"":`<div class="chips f-min">${[10,25,45].map(m=>`<button class="chip" data-fm="${m}" aria-pressed="${FT.min===m&&!FT.brk&&!FT.own}">${m} мин</button>`).join("")}<button class="chip" data-fm="own" aria-pressed="${FT.own&&!FT.brk}">Своё${FT.own?`: ${FT.min} мин`:""}</button></div>
+      ${FT.own&&!FT.brk?`<div class="row f-own"><button class="btn quiet sm" data-fo="-5" aria-label="Меньше на 5 минут">−5</button><input type="number" inputmode="numeric" id="fOwn" min="1" max="180" value="${FT.min}" aria-label="Минут"><span class="small muted">мин</span><button class="btn quiet sm" data-fo="5" aria-label="Больше на 5 минут">+5</button></div>`:""}
+      ${rd?(bs.length?`<div class="stack-s"><span class="small muted">Что читаете</span><div class="chips">${bs.map(b=>`<button class="chip" data-fb="${b.id}" aria-pressed="${FT.book===b.id}">${esc(b.t.length>28?b.t.slice(0,27)+"…":b.t)}</button>`).join("")}</div></div>`:`<p class="small muted">Добавьте книгу в <button class="linkbtn small" data-go="gread" style="display:inline">«Чтении»</button> — тогда страницы будут считаться и для неё. Можно читать и без этого.</p>`)
+        :`<input type="text" id="fLab" placeholder="Над чем работаете? (необязательно)" aria-label="Над чем работаете" value="${esc(FT.label)}" maxlength="80">`}`}
+    ${FT.run&&rd?`<p class="f-lab">${ico("book",16)} ${esc((bs.find(b=>b.id===FT.book)||{}).t||"Чтение")}</p>`:FT.run&&FT.label?`<p class="f-lab">${esc(FT.label)}</p>`:""}
     <button class="btn block" id="fGo">${FT.run?"Остановить":FT.brk?"Начать перерыв":"Начать"}</button>
     <div class="stack-s"><span class="small muted">Звук на фон</span><div class="chips">${SNDS.map(([k,t])=>`<button class="chip" data-fs="${k}" aria-pressed="${FT.snd===k}">${t}</button>`).join("")}</div></div>
   </div>
@@ -301,15 +318,33 @@ function tick(){
   const fg=document.querySelector(".fr-fg"); if(fg){ const C=2*Math.PI*88; fg.setAttribute("stroke-dashoffset", C*(FT.left/(FT.min*60))); }
   if(FT.left<=0){ clearInterval(fTimer); fTimer=null; FT.run=false; FT.full=false; if(window.SND) SND.cue("done");
     if(FT.brk){ FT.brk=false; FT.min=25; FT.left=25*60; toast("Перерыв окончен"); }
-    else { const g=G(), d=dayNum(); g.focus[d]=(+g.focus[d]||0)+1; g.fmin[d]=(+g.fmin[d]||0)+FT.min; save(); markDay(); award("res",10); FT.brk=true; FT.min=5; FT.left=5*60; toast("Сессия фокуса завершена. Отдохните 5 минут"); }
+    else { const g=G(), d=dayNum(), m=FT.min; g.focus[d]=(+g.focus[d]||0)+1; g.fmin[d]=(+g.fmin[d]||0)+m; if(FT.mode==="read") readMin(m); save(); markDay(); award("res",10);
+      FT.brk=true; FT.min=5; FT.left=5*60; FT.after=m;
+      if(FT.mode==="read"){ FT.ask={min:m, book:FT.book}; toast("Время чтения вышло. Отметьте страницы"); } else toast("Сессия фокуса завершена. Отдохните 5 минут"); }
     if(route==="gfocus") render();
   }
 }
+// минуты чтения по дням: G().rd.min
+function readMin(m){ const g=G(); if(!isObj(g.rd)) g.rd={}; if(!isObj(g.rd.min)) g.rd.min={}; const d=dayNum(); g.rd.min[d]=(+g.rd.min[d]||0)+m; }
+const setMin = m => { m=Math.max(1,Math.min(180,Math.round(+m)||25)); FT.min=m; FT.left=m*60; FT.brk=false; if(FT.own){ G().fown=m; save(); } };
 function bindFocus(){
-  $$("[data-fm]").forEach(b=>b.onclick=()=>{ FT.min=+b.dataset.fm; FT.left=FT.min*60; FT.brk=false; render(); });
+  $$("[data-fm]").forEach(b=>b.onclick=()=>{ if(b.dataset.fm==="own"){ FT.own=true; setMin(+G().fown||FT.min); } else { FT.own=false; setMin(+b.dataset.fm); } render(); });
+  const ow=$("#fOwn"); if(ow){ ow.onchange=()=>{ setMin(ow.value); setTimeout(()=>{ if(route==="gfocus" && !FT.run) render(); },0); }; ow.onkeydown=e=>{ if(e.key==="Enter") ow.blur(); }; }
+  $$("[data-fo]").forEach(b=>b.onclick=()=>{ setMin(FT.min+(+b.dataset.fo)); render(); });
+  $$("[data-fmode]").forEach(b=>b.onclick=()=>{ FT.mode=b.dataset.fmode; render(); });
+  $$("[data-fb]").forEach(b=>b.onclick=()=>{ FT.book=b.dataset.fb; render(); });
+  const savePages = n => { n=Math.round(+n); if(!(n>0)){ toast("Сколько страниц?"); return; } const a=FT.ask, bk=books().find(x=>x.id===a.book);
+    if(N_add()) N_add()(bk||null, n); toast(`+${n} ${plural(n,"страница","страницы","страниц")} в «Чтение»`); FT.ask=null; render(); };
+  $$("[data-fp]").forEach(b=>b.onclick=()=>savePages(b.dataset.fp));
+  const po=$("#fPgOk"); if(po) po.onclick=()=>savePages(($("#fPg")||{}).value);
+  const pi=$("#fPg"); if(pi) pi.onkeydown=e=>{ if(e.key==="Enter") savePages(pi.value); };
+  const pn=$("#fPgNo"); if(pn) pn.onclick=()=>{ FT.ask=null; render(); };
   const lb=$("#fLab"); if(lb) lb.oninput=()=>{ FT.label=lb.value; };
   $("#fGo").onclick=()=>{
-    if(FT.run){ clearInterval(fTimer); fTimer=null; FT.run=false; FT.full=false; FT.brk=false; FT.left=FT.min*60; render(); return; }
+    if(FT.run){ const done=Math.floor((FT.min*60-FT.left)/60);
+      clearInterval(fTimer); fTimer=null; FT.run=false; FT.full=false;
+      if(FT.mode==="read" && !FT.brk && done>=1){ readMin(done); const g=G(), d=dayNum(); g.fmin[d]=(+g.fmin[d]||0)+done; save(); markDay(); FT.ask={min:done, book:FT.book}; }
+      FT.brk=false; FT.left=FT.min*60; render(); return; }
     FT.run=true; FT.end=Date.now()+FT.left*1000; if(window.SND) SND.cue("tense"); fTimer=setInterval(tick, 500); render();
   };
   const ff=$("#fFull"); if(ff) ff.onclick=()=>{ FT.full=true; render(); };

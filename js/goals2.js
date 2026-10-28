@@ -380,7 +380,7 @@ function vPath(){
   <h2 class="h-sec">Инструменты</h2>
   <div class="list">
     ${li("gproc",null,ico("thoughts",18),"Разбор прокрастинации","Чувство, мысль-ловушка, маленький шаг",!plus()&&g.proc.length>=FREE.proc)}
-    ${li("gfocus",null,nico("gfocus",18),"Фокус-таймер","10, 25 или 45 минут со звуками",false)}
+    ${li("gfocus",null,nico("gfocus",18),"Фокус-таймер","Своё время, режим чтения со счётом страниц, звуки",false)}
   </div>
   <h2 class="h-sec">Почитать · ${GA.length}</h2>
   <div class="list">${GA.map((a,i)=>li("gart",a.id,ico("book",18),a.t,`${a.m} мин`,i>0&&!plus())).join("")}</div>
