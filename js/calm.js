@@ -32,7 +32,7 @@ function plop(){ const c=A(); if(!c) return; const t=c.currentTime, o=c.createOs
   o.frequency.setValueAtTime(260,t); o.frequency.exponentialRampToValueAtTime(620,t+.12); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.12,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+.25);
   o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.3); }
 const PENTA=[261.63,293.66,329.63,392,440,523.25,587.33,659.25,783.99];
-const buzz = ms => { try{ if(navigator.vibrate && !matchMedia("(prefers-reduced-motion: reduce)").matches) navigator.vibrate(ms); }catch(e){} };
+const buzz = ms => { if(window.HAP) return HAP(ms); try{ if(navigator.vibrate && !matchMedia("(prefers-reduced-motion: reduce)").matches) navigator.vibrate(ms); }catch(e){} };
 
 /* ---------- напряжение до и после (общий механизм упражнений) ---------- */
 const touched = () => { if(!RL || RL.ex!=="calm" || RL.stage==="before") reliefStart("calm"); };
@@ -102,7 +102,7 @@ function bindMist(cv){
   const img=new Image(); let ok=false; img.onload=()=>ok=true; img.src=`cards/${MIST_VIEWS[(C().mi||0)%MIST_VIEWS.length]}.webp`;
   const wipe=(p,prev)=>{ f.globalCompositeOperation="destination-out"; const steps=prev?Math.max(1,Math.ceil(Math.hypot(p[0]-prev[0],p[1]-prev[1])/6)):1;
     for(let k=0;k<steps;k++){ const q=prev?[prev[0]+(p[0]-prev[0])*k/steps, prev[1]+(p[1]-prev[1])*k/steps]:p; const g=f.createRadialGradient(q[0],q[1],0,q[0],q[1],30); g.addColorStop(0,"rgba(0,0,0,.9)"); g.addColorStop(1,"rgba(0,0,0,0)"); f.fillStyle=g; f.beginPath(); f.arc(q[0],q[1],30,0,7); f.fill(); } };
-  drag(cv,(p,prev)=>wipe(p,prev));
+  let wv=0; drag(cv,(p,prev)=>{ wipe(p,prev); const n=performance.now(); if(n-wv>140){ wv=n; buzz(4); } });
   let lastFog=0;
   run(cv,t=>{ const x=G.x;
     if(ok){ const s=Math.max(G.w/img.width,G.h/img.height), w=img.width*s, h=img.height*s; x.drawImage(img,(G.w-w)/2,(G.h-h)/2,w,h); if(dark()){ x.fillStyle="rgba(10,20,35,.35)"; x.fillRect(0,0,G.w,G.h); } }
@@ -121,7 +121,8 @@ function bindSand(cv){
   const drawStones = () => stones.forEach(([sx,sy,rx,ry])=>{ x.fillStyle="rgba(60,50,40,.18)"; x.beginPath(); x.ellipse(sx+3,sy+5,rx,ry*.8,0,0,7); x.fill();
     const g=x.createRadialGradient(sx-rx*.3,sy-ry*.4,2,sx,sy,rx); g.addColorStop(0,"#A8A39B"); g.addColorStop(1,"#6E6A64"); x.fillStyle=g; x.beginPath(); x.ellipse(sx,sy,rx,ry,0,0,7); x.fill(); });
   base(); drawStones();
-  drag(cv,(p,prev)=>{ if(!prev) return; const dx=p[0]-prev[0], dy=p[1]-prev[1], L=Math.hypot(dx,dy); if(L<1.5) return; const nx=-dy/L, ny=dx/L;
+  let sv=0, sd=0; drag(cv,(p,prev)=>{ if(!prev) return; const dx=p[0]-prev[0], dy=p[1]-prev[1], L=Math.hypot(dx,dy); if(L<1.5) return; const nx=-dy/L, ny=dx/L;
+    sd+=L; if(sd>26){ sd=0; const n=performance.now(); if(n-sv>90){ sv=n; buzz(5); } }
     for(let k=-1.5;k<=1.5;k++){ const o=k*8; x.lineCap="round";
       x.beginPath(); x.moveTo(prev[0]+nx*o,prev[1]+ny*o); x.lineTo(p[0]+nx*o,p[1]+ny*o); x.strokeStyle="rgba(150,118,78,.38)"; x.lineWidth=2.6; x.stroke();
       x.beginPath(); x.moveTo(prev[0]+nx*(o-1.6),prev[1]+ny*(o-1.6)); x.lineTo(p[0]+nx*(o-1.6),p[1]+ny*(o-1.6)); x.strokeStyle="rgba(255,250,235,.55)"; x.lineWidth=1; x.stroke(); }
@@ -194,7 +195,7 @@ function bindLava(cv){
   const o=off.getContext("2d"), im=o.createImageData(W,H);
   const B=Array.from({length:7},()=>({x:14+Math.random()*(W-28), y:Math.random()*H, r:9+Math.random()*8, vy:(Math.random()-.5)*3, ph:Math.random()*6}));
   drag(cv,(p,prev,first)=>{ if(!first) return; const px=p[0]/G.w*W, py=p[1]/G.h*H; let best=null, bd=1e9; B.forEach(b=>{ const d=Math.hypot(b.x-px,b.y-py); if(d<bd){ bd=d; best=b; } });
-    if(best){ best.vy+= py>best.y?-4:4; note(196,.05,2.5); } });
+    if(best){ best.vy+= py>best.y?-4:4; note(196,.05,2.5); buzz(40); } });
   let prevT=performance.now();
   const mix=(a,b,t)=>a+(b-a)*t;
   run(cv,now=>{ const dt=Math.min(.05,(now-prevT)/1000); prevT=now;
@@ -253,7 +254,8 @@ function bindSpin(cv){
   const up=()=>{ pa=null; if(Math.abs(w)>3){ peak=Math.abs(w); hint="Медленный выдох… пока не остановится"; } }; cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",up);
   run(cv,now=>{ const dt=Math.min(.05,(now-lastT)/1000); lastT=now;
     if(pa==null){ w*=Math.exp(-dt*.13); const s=Math.sign(w); w-=s*Math.min(Math.abs(w),.06*dt*10); a+=w*dt;
-      if(peak>3 && Math.abs(w)<.05){ peak=0; w=0; hint="Остановился. Можно ещё раз"; bell(523.25,.05,3); } }
+      if(peak>3 && Math.abs(w)<.05){ peak=0; w=0; hint="Остановился. Можно ещё раз"; bell(523.25,.05,3); buzz([30,60,30]); } }
+    const seg=Math.floor(a/(Math.PI*2/3)); if(seg!==bindSpin.seg){ bindSpin.seg=seg; if(Math.abs(w)>1.5 && Math.abs(w)<30) buzz(Math.abs(w)>12?4:7); }
     const x=G.x, nt=dark(); x.fillStyle=nt?"#141B26":"#EEF2F6"; x.fillRect(0,0,G.w,G.h);
     const ghosts=Math.min(5,Math.floor(Math.abs(w)/6));
     for(let gI=ghosts;gI>=0;gI--){ x.save(); x.globalAlpha=gI?.12:1; x.translate(cx,cy); x.rotate(a-gI*w*.012);
@@ -274,7 +276,7 @@ function bindJar(cv){
   drag(cv,(p,prev)=>{ const dx=prev?p[0]-prev[0]:0, dy=prev?p[1]-prev[1]:-30, mcx=J.x+J.w/2, mcy=J.y+J.h/2;
     P.forEach(q=>{ q.vx+=dx*(.8+Math.random()*.6)+(Math.random()-.5)*60 - (q.y-mcy)*.25; q.vy+=dy*(.8+Math.random()*.6)-Math.random()*90 + (q.x-mcx)*.25; });
     hint="Смотрите, как блёстки оседают. Мысли тоже оседают, если им не мешать";
-    const n=performance.now(); if(n-lastSnd>350){ lastSnd=n; bell([1046.5,1174.66,1318.5,1567.98][Math.floor(Math.random()*4)],.02,2.2); } });
+    const n=performance.now(); if(n-lastSnd>350){ lastSnd=n; buzz([10,30,10,30,10]); bell([1046.5,1174.66,1318.5,1567.98][Math.floor(Math.random()*4)],.02,2.2); } });
   let lastT=performance.now();
   run(cv,now=>{ const dt=Math.min(.05,(now-lastT)/1000); lastT=now; const x=G.x, nt=dark();
     P.forEach(q=>{ q.vy+=14*dt; const k=Math.exp(-dt*1.1); q.vx*=k; q.vy*=k; q.x+=q.vx*dt; q.y+=q.vy*dt;
@@ -318,7 +320,7 @@ function bindCalm(){
   bindRelief("calm");
   $$("[data-cm]").forEach(b=>b.onclick=()=>{ if(c.mode===b.dataset.cm) return; c.mode=b.dataset.cm; if(c.mode==="mist") c.mi=((c.mi||0)+1)%MIST_VIEWS.length; save(); render(); });
   const sn=$("#calmSnd"); if(sn) sn.onclick=()=>{ c.snd=!c.snd; save(); sn.textContent=c.snd?"Звук: вкл":"Звук: выкл"; };
-  const dn=$("#calmDone"); if(dn) dn.onclick=()=>{ touched(); reliefFinish("calm"); };
+  const dn=$("#calmDone"); if(dn) dn.onclick=()=>{ touched(); buzz([40,60,40]); reliefFinish("calm"); };
   const mn=$("#mistNext"); if(mn) mn.onclick=()=>{ c.mi=((c.mi||0)+1)%MIST_VIEWS.length; save(); render(); };
   const br=$("#popBr"); if(br) br.onchange=()=>{ c.breath=br.checked; save(); PB&&clearInterval(PB.iv); render(); };
   cancelAnimationFrame(loop);

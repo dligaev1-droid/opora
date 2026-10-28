@@ -1051,6 +1051,6 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
 
 /* Лёгкий тактильный отклик на отметки (Android); отключается при «уменьшить движение» */
 document.addEventListener("click", e=>{
-  if(!navigator.vibrate || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if(!navigator.vibrate || matchMedia("(prefers-reduced-motion: reduce)").matches || S.vib===false) return;
   if(e.target.closest(".mood,.opt,.hw,.bt-v,.chip,[data-ev],[data-qm],input[type=checkbox],#bBtn,#pmrBtn,#fGo")) { try{ navigator.vibrate(8); }catch(_){} }
 }, {passive:true});

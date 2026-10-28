@@ -66,8 +66,9 @@ function cardFront(i){
 function cardBack(){
   const gid="cbk"+(cardBack.n=(cardBack.n||0)+1);
   return `<svg viewBox="0 0 200 300" class="cart" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3F86C8"/><stop offset="1" stop-color="#1C4670"/></linearGradient></defs>
-    <rect width="200" height="300" fill="url(#${gid})"/><rect x="10" y="10" width="180" height="280" rx="12" fill="none" stroke="#fff" stroke-opacity=".35"/>
-    ${[70,52,34].map(r=>`<circle cx="100" cy="150" r="${r}" fill="none" stroke="#fff" stroke-opacity=".22"/>`).join("")}
+    <rect width="200" height="300" fill="url(#${gid})"/><rect x="9" y="9" width="182" height="282" rx="12" fill="none" stroke="#E8C77A" stroke-opacity=".75" stroke-width="1.6"/><rect x="15" y="15" width="170" height="270" rx="9" fill="none" stroke="#E8C77A" stroke-opacity=".35"/>
+    ${[70,52,34].map((r,k)=>`<circle cx="100" cy="150" r="${r}" fill="none" stroke="${k?"#fff":"#E8C77A"}" stroke-opacity="${k?.22:.55}"/>`).join("")}
+    ${[[100,40],[100,260],[30,150],[170,150]].map(([x,y])=>`<path d="M${x} ${y-5} L${x+4} ${y} L${x} ${y+5} L${x-4} ${y}Z" fill="#E8C77A" opacity=".7"/>`).join("")}
     <text x="100" y="166" text-anchor="middle" font-family="Onest, system-ui, sans-serif" font-weight="800" font-size="44" fill="#fff">О</text></svg>`;
 }
 function mcard(i, faceUp, extra=""){
