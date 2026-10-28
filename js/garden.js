@@ -93,10 +93,43 @@ const SPAL={
 const FL=["#E58FA0","#F2B38A","#B9A2D8","#F2D06B","#F09AB0"];
 // места украшений: в них не сажаем ростки
 const DECO=[[3,96,250,14],[4,0,0,0],[5,78,206,26],[6,304,238,48],[7,96,178,26],[8,0,0,0],[9,312,160,30]];
+/* Нарисованные художником картинки уровней (art/garden-NN.webp, 1200×800, одна сцена).
+   Уровень без картинки пока рисуется кодом, как раньше. Время года и ночь — поверх картинки. */
+const GARDEN_ART=new Set([1,2]);
+const gardenArtURL = lv => `art/garden-${String(lv).padStart(2,"0")}.webp`;
+const SEAS_FX={ // оттенок картинки под время года
+  spring:'<feColorMatrix type="matrix" values=".96 .03 0 0 0  .01 1.02 .02 0 .015  0 .04 .98 0 .02  0 0 0 1 0"/>',
+  summer:"",
+  autumn:'<feColorMatrix type="matrix" values="1.06 .1 0 0 .02  .04 .9 0 0 0  0 0 .78 0 0  0 0 0 1 0"/>',
+  winter:'<feColorMatrix type="saturate" values=".38"/><feColorMatrix type="matrix" values=".86 0 0 0 .1  0 .88 0 0 .12  0 0 .94 0 .19  0 0 0 1 0"/>'
+};
+const NIGHT_FX='<feColorMatrix type="matrix" values=".30 .05 .05 0 .01  .04 .34 .08 0 .03  .06 .10 .52 0 .08  0 0 0 1 0"/>';
+function gardenArtSVG(lv, ss, opts){
+  const id="ga"+(gardenSVG.n=(gardenSVG.n||0)+1), R=rng(4242+lv), night=!!opts.dark, fx=(night&&ss==="winter"?'<feColorMatrix type="saturate" values=".5"/>':(SEAS_FX[ss]||""))+(night?NIGHT_FX:"");
+  const f1=v=>v.toFixed(1); let top="";
+  if(ss==="winter"){
+    top+=`<rect x="0" y="470" width="1200" height="330" fill="url(#${id}w)"/>`;
+    for(let i=0;i<80;i++){ const r=2+R()*4.4; top+=`<circle cx="${f1(R()*1200)}" cy="${f1(R()*790)}" r="${f1(r)}" fill="#fff" opacity="${(.55+R()*.4).toFixed(2)}"/>`; }
+  }
+  if(ss==="autumn") for(let i=0;i<34;i++){ const x=R()*1200, y=60+R()*700, a=R()*180, k=1.3+R()*.9;
+    top+=`<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${f1(10*k)}" ry="${f1(4.2*k)}" fill="${R()<.5?"#E0A458":"#C9773F"}" opacity=".9" transform="rotate(${a.toFixed(0)} ${f1(x)} ${f1(y)})"/>`; }
+  if(ss==="spring") for(let i=0;i<32;i++){ const x=R()*1200, y=60+R()*700, a=R()*180;
+    top+=`<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="8" ry="5" fill="#F6C1D0" opacity=".92" transform="rotate(${a.toFixed(0)} ${f1(x)} ${f1(y)})"/>`; }
+  if(night && ss!=="winter") top=`<g opacity=".55">${top}</g>`;
+  if(night) top=`<g fill="#fff">${[[80,60],[210,40],[330,95],[470,50],[600,30],[160,140],[400,150],[540,110],[690,70],[860,48],[980,120],[1120,60]].map(([x,y],k)=>`<circle cx="${x}" cy="${y}" r="${k%3?2:3}" opacity=".8"/>`).join("")}</g>`+top;
+  const href=opts.href||gardenArtURL(lv);
+  return `<svg viewBox="0 0 1200 800" ${opts.xmlns?'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="800"':'class="garden-svg garden-art" role="img" aria-label="Наш сад, уровень '+lv+'"'} preserveAspectRatio="${opts.slice?"xMidYMid slice":"xMidYMid meet"}">
+    <defs>${fx?`<filter id="${id}f" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">${fx}</filter>`:""}
+    <linearGradient id="${id}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="0"/><stop offset=".18" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="${night?.16:.34}"/><stop offset="1" stop-color="${night?"#9AA8C0":"#FFFFFF"}" stop-opacity="${night?.22:.46}"/></linearGradient></defs>
+    <image href="${href}" xlink:href="${href}" x="0" y="0" width="1200" height="800" preserveAspectRatio="xMidYMid slice"${fx?` filter="url(#${id}f)"`:""}/>
+    ${top}
+  </svg>`;
+}
 function gardenSVG(opts={}){
   const ss=opts.season||season(), mode=opts.dark?"dark":"light";
   const P=Object.assign({}, PAL[mode], SPAL[ss][mode]), c=counts(), n=Object.values(c).reduce((a,b)=>a+b,0);
   const lv=opts.level!=null?opts.level:levelOf(n)+1, items=[], winter=ss==="winter";
+  if(GARDEN_ART.has(lv) && !opts.drawn) return gardenArtSVG(lv, ss, opts);
   const zones=DECO.filter(z=>lv>=z[0]&&z[3]);
   const cap={grass:80, flower:40, tree:14, bush:24, stone:24, fly:12, lamp:12, star:30};
   Object.keys(cap).forEach((k,ki)=>{ const m=Math.min(c[k],cap[k]);
@@ -195,13 +228,16 @@ function vGarden(){
 }
 async function gardenStory(){
   try{ await document.fonts.ready; }catch(e){}
-  const svg=gardenSVG({xmlns:true}); const img=new Image(); const url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
+  const lvNow=levelInfo().lv, art=GARDEN_ART.has(lvNow); let href=null;
+  if(art){ try{ const b=await (await fetch(gardenArtURL(lvNow))).blob(); href=await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(b); }); }catch(e){ href=null; } }
+  const svg=gardenSVG(art&&href?{xmlns:true, href}:{xmlns:true, drawn:true}); const img=new Image(); const url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
   try{ await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=url; }); }catch(e){ toast("Не получилось нарисовать картинку"); return; }
   const W=1080,H=1920,cv=document.createElement("canvas"); cv.width=W; cv.height=H; const x=cv.getContext("2d");
   const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,"#F8EFEA"); g.addColorStop(1,"#F3DCD6"); x.fillStyle=g; x.fillRect(0,0,W,H);
   const f='"Onest", system-ui, sans-serif'; x.textAlign="center"; x.fillStyle="#A84B5A"; x.font=`700 40px ${f}`; x.fillText("ОПОРА · ДЛЯ ПАРЫ", W/2, 220);
   x.fillStyle="#2B2023"; x.font=`800 104px ${f}`; x.fillText("Наш сад", W/2, 380);
-  x.save(); x.beginPath(); x.roundRect?x.roundRect(60,470,960,693,48):x.rect(60,470,960,693); x.clip(); x.drawImage(img,60,470,960,693); x.restore(); URL.revokeObjectURL(url);
+  const ih=art&&href?640:693, iy=470+(693-ih)/2;
+  x.save(); x.beginPath(); x.roundRect?x.roundRect(60,iy,960,ih,48):x.rect(60,iy,960,ih); x.clip(); x.drawImage(img,60,iy,960,ih); x.restore(); URL.revokeObjectURL(url);
   const n=total(), li=levelInfo(); x.fillStyle="#2B2023"; x.font=`700 64px ${f}`; x.fillText(`Уровень ${li.lv} · ${li.name}`, W/2, 1320);
   x.fillStyle="#6B5659"; x.font=`500 44px ${f}`; x.fillText(`${n} ${plural(n,"росток","ростка","ростков")} из общих дел`, W/2, 1400);
   x.fillStyle="#A84B5A"; x.font=`600 40px ${f}`; x.fillText((PSY.siteUrl||"").replace(/^https?:\/\//,"").replace(/\/$/,""), W/2, 1760);
