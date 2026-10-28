@@ -931,3 +931,14 @@ details.how[open] summary::after{transform:rotate(-90deg)}
 .f-own input{width:84px;text-align:center;font-size:1.1rem;font-weight:700}
 .f-ask{gap:10px}
 .rd-time .btn{flex:none;display:inline-flex;align-items:center;gap:6px}
+.onb-skip{align-self:center;color:var(--muted)!important;font-weight:500;font-size:.82rem;opacity:.85}
+
+/* «спокойная» главная для новичков */
+.step-card{gap:8px}
+.step-card p{margin:0}
+.step-card .li{background:var(--accent-soft);border-radius:var(--r)}
+.sm-one .tday{width:100%;flex-direction:row;align-items:center}
+.sm-one .tday-vis{width:96px;height:96px;flex:none}
+.sm-one .tday-vis.tree .tree{width:96px;height:96px}
+.sm-new{margin:0 0 4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sm-more{text-align:center}

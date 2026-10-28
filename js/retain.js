@@ -41,22 +41,26 @@ function recsOf(f){ const out=[], seen=new Set(); (f.length?f:["stress"]).forEac
 // шаг знакомства: как устроено приложение, разделы и дерево с очками
 function obHow(dots){
   const tr=typeof treeSVG==="function"?`<span class="onb-tree">${treeSVG(1,{colors:{night:false}})}</span>`:"";
-  return `<div class="onb">${dots}<h2>Как устроена Опора</h2>
-    <div class="card soft onb-grow">${tr}<span class="stack-s" style="gap:4px"><strong>Ваше дерево растёт вместе с вами</strong><span class="small">За каждое дело для себя — очки: запись в дневнике +10, тест +10, упражнение +10. Из семечка вырастет дерево, а потом целая роща — 11 стадий. Очки не сгорают, даже если сделать паузу.</span></span></div>
+  return `<div class="onb">${dots}<h2>Как это работает</h2>
     <ul class="onb-list">
-      <li>${ico("home",18)}<span><strong>«Я»</strong> — забота о себе: дневник настроения, тесты, практики, карты</span></li>
-      <li>${ico("heart",18)}<span><strong>«Мы»</strong> — для пары: вопрос дня, свидания, разбор ссор и «Наш сад»</span></li>
-      <li>${ico("star",18)}<span><strong>«Цели»</strong> — цели и привычки без выгорания</span></li>
-      <li>${ico("hand",18)}<span>Переключатель «Я · Мы · Цели» и кнопка <strong>SOS</strong> — всегда вверху экрана</span></li>
+      <li>${ico("check",18)}<span><strong>Каждый день — один маленький шаг</strong> на 2–10 минут. Мы подскажем какой.</span></li>
+      <li>${ico("hand",18)}<span><strong>Если накрыло</strong> — кнопка SOS всегда вверху экрана.</span></li>
     </ul>
+    <div class="card soft onb-grow">${tr}<span class="stack-s" style="gap:4px"><strong>За заботу о себе растёт ваше дерево</strong><span class="small">Из семечка — в большое дерево. Это просто способ видеть свой путь, очки не сгорают.</span></span></div>
+    <p class="small muted">Остальное — карты, программы, раздел для пары и цели — будет открываться постепенно, чтобы не было слишком много сразу.</p>
     <button class="btn block" id="obNext">Понятно, дальше</button><button class="linkbtn small" id="obBack" style="align-self:center">Назад</button></div>`;
 }
+window.RECS_OF = f => recsOf(f||[]);
 function vOnb(){
   const dots=`<div class="onb-dots">${[0,1,2,3,4].map(i=>`<i class="${i<=OB.i?"on":""}"></i>`).join("")}</div>`;
   if(OB.i===0) return `<div class="onb">${dots}<div class="logo onb-logo">О</div>
-    <h1>Опора</h1><p class="lead">Карманная поддержка от психолога ${esc(PSY.nameFrom||PSY.name)}</p>
-    <ul class="onb-list"><li>${ico("heart",18)}<span>Быстрая помощь, когда накрыло</span></li><li>${ico("diary",18)}<span>Дневник, тесты и программы по 5–10 минут</span></li><li>${ico("lock",18)}<span>Без регистрации. Всё хранится только на вашем телефоне</span></li></ul>
-    <button class="btn block" id="obNext">Начать</button><button class="linkbtn small" id="obSkip" style="align-self:center">Пропустить</button></div>`;
+    <h1>Опора</h1><p class="lead">Помогает справляться с тревогой, стрессом и выгоранием — по 5 минут в день, с методиками, которыми пользуются психологи.</p>
+    <ul class="onb-list">
+      <li>${ico("hand",18)}<span><strong>Успокоиться, когда накрыло</strong> — дыхание и упражнения за 2 минуты</span></li>
+      <li>${ico("diary",18)}<span><strong>Понять, что с вами происходит</strong> — дневник настроения и научные тесты</span></li>
+      <li>${ico("heart",18)}<span><strong>Чувствовать себя лучше день за днём</strong> — короткие программы и практики</span></li></ul>
+    <p class="small muted">Создано психологом ${esc(PSY.nameWith||PSY.name)}. Без регистрации — всё хранится только на вашем телефоне.</p>
+    <button class="btn block" id="obNext">Начать — 1 минута</button><button class="linkbtn small onb-skip" id="obSkip">Я уже пользовался, пропустить</button></div>`;
   if(OB.i===1) return `<div class="onb">${dots}<h2>Что вас сейчас беспокоит?</h2><p class="muted small">Можно выбрать до трёх. Это поможет показать самое нужное.</p>
     <div class="chips">${FOC.map(([k,t])=>`<button class="chip" data-of="${k}" aria-pressed="${OB.f.includes(k)}">${t}</button>`).join("")}</div>
     <button class="btn block" id="obNext">${OB.f.length?"Дальше":"Пока ничего — дальше"}</button><button class="linkbtn small" id="obBack" style="align-self:center">Назад</button></div>`;
