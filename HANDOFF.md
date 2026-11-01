@@ -13,7 +13,7 @@
 - **Ссылки:**
   - Сайт: https://dligaev1-droid.github.io/opora/ (GitHub Pages из ветки main)
   - Репозиторий: `dligaev1-droid/opora`
-  - Копия у Дмитрия: `C:\Users\Dima\Documents\opora` (через связь с его компьютером)
+  - Копия у Дмитрия: `C:\Users\ЛИГАЁВ\Desktop\opora` (с 2.11; старая — `C:\Users\Dima\Documents\opora`). Подключается в приложении: «+» → «Add folder». Папки `cal/` и `shots/` туда не копируем — они нужны только на сайте.
   - Демо-артефакт в Claude: https://claude.ai/artifact/Ke8LSpUzMvGkwHrsTQqLgs (однофайловая сборка)
   - Документ со скриптами аудиопрактик: https://claude.ai/artifact/7yCCu8LmyRjDeiEgbQFQoe
 
@@ -43,7 +43,7 @@
 2. Проверка: `python3 -m http.server 8767` из корня (сервер умирает между ходами — перезапускать), затем Playwright: телефон 390×844, светлая и тёмная тема, скриншоты смотреть глазами. `python3 tools/sweep.py` — все экраны без ошибок (должно быть `90 routes []`).
 3. Повысить VERSION в `sw.js`.
 4. Коммит: `git -c user.name="Claude" -c user.email="noreply@anthropic.com" commit` с трейлерами из системного напоминания (Co-Authored-By и Claude-Session), затем `git push -q origin main`.
-5. Скопировать изменённые файлы в `/mnt/user-data/outputs/opora/...` и записать на компьютер Дмитрия инструментом device_commit_files (`force:true`) в `C:\Users\Dima\Documents\opora\...`.
+5. Скопировать изменённые файлы в `/mnt/user-data/outputs/opora/...` и записать на компьютер Дмитрия инструментом device_commit_files (`force:true`) в `C:\Users\ЛИГАЁВ\Desktop\opora\...`.
 6. Демо: `python3 tools/build_demo.py` → `../opora.html`, опубликовать артефактом в тот же URL; новые картинки передавать параметром `files` (например `{"cards/71.webp": "..."}`).
 
 Фото с iPhone (HEIC): `python3 tools/heic2jpg.py in.heic out.jpg` (свой декодер через ffmpeg — pip/npm в окружении часто недоступны).
