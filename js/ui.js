@@ -39,8 +39,16 @@ function enhance(c){
   requestAnimationFrame(()=>update(w,c));
 }
 function enhanceAll(){ document.querySelectorAll("#app .carousel").forEach(enhance); }
+// Нарисованные картинки (гора, сад, дерево) при перерисовке экрана не пересоздаём, если они не изменились:
+// иначе телефон заново декодирует картинку и она «мигает» (отзыв Алёны: нажала «Энергию» — гора мигнула).
+const ART=".mt-wrap,.garden-big,.garden-mini,.tday-vis,.tree-mini";
+const sig = el => el.innerHTML.replace(/\b(ma|mt|ga|gd|ta)\d+/g,"#");
 const r0=window.render;
-window.render=function(){ const out=r0.apply(this, arguments); try{ enhanceAll(); }catch(e){} return out; };
+window.render=function(){
+  const app=document.getElementById("app"), old=app?[...app.querySelectorAll(ART)].map(el=>({el, s:sig(el)})):[];
+  const out=r0.apply(this, arguments);
+  try{ if(app && old.length){ const now=[...app.querySelectorAll(ART)]; now.forEach((el,i)=>{ const o=old[i]; if(o && o.el.className===el.className && o.s===sig(el)) el.replaceWith(o.el); }); } }catch(e){}
+  try{ enhanceAll(); }catch(e){} return out; };
 window.addEventListener("resize", ()=>document.querySelectorAll(".car-wrap").forEach(w=>{ const c=w.querySelector(".carousel"); if(c) update(w,c); }));
 if(document.readyState!=="loading") setTimeout(enhanceAll,0); else document.addEventListener("DOMContentLoaded", ()=>setTimeout(enhanceAll,0));
 })();

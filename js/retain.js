@@ -53,14 +53,18 @@ function obHow(dots){
 window.RECS_OF = f => recsOf(f||[]);
 function vOnb(){
   const dots=`<div class="onb-dots">${[0,1,2,3,4].map(i=>`<i class="${i<=OB.i?"on":""}"></i>`).join("")}</div>`;
-  if(OB.i===0) return `<div class="onb">${dots}<div class="logo onb-logo">О</div>
-    <h1>Опора</h1><p class="lead">Помогает справляться с тревогой, стрессом и выгоранием — по 5 минут в день, с методиками, которыми пользуются психологи.</p>
-    <ul class="onb-list">
-      <li>${ico("hand",18)}<span><strong>Успокоиться, когда накрыло</strong> — дыхание и упражнения за 2 минуты</span></li>
-      <li>${ico("diary",18)}<span><strong>Понять, что с вами происходит</strong> — дневник настроения и научные тесты</span></li>
-      <li>${ico("heart",18)}<span><strong>Чувствовать себя лучше день за днём</strong> — короткие программы и практики</span></li></ul>
+  // Первый экран — один вопрос и сразу польза (отзывы Ивана, Тины и других: «много текста, ничего не понял»).
+  // Вопросы про темы и время — потом, по кнопке «Изменить» в блоке «Для вас».
+  if(OB.i===0) return `<div class="onb onb-first"><div class="logo onb-logo">О</div>
+    <h1>Опора</h1><p class="lead">Карманная поддержка от психолога — когда тревожно, тяжело или хочется разобраться в себе.</p>
+    <h2>С чего начнём?</h2>
+    <div class="opts onb-pick">
+      <button class="opt" data-ob1="calm"><span class="ico">${ico("wind",20)}</span><span><strong>Мне неспокойно</strong><br><span class="small muted">Дыхание, которое успокаивает · 2 минуты</span></span></button>
+      <button class="opt" data-ob1="check"><span class="ico">${ico("tests",20)}</span><span><strong>Понять, как я сейчас</strong><br><span class="small muted">5 вопросов от ВОЗ · 1 минута</span></span></button>
+      <button class="opt" data-ob1="look"><span class="ico">${ico("home",20)}</span><span><strong>Просто посмотреть</strong><br><span class="small muted">Что есть в приложении</span></span></button>
+    </div>
     <p class="small muted">Создано психологом ${esc(PSY.nameWith||PSY.name)}. Без регистрации — всё хранится только на вашем телефоне.</p>
-    <button class="btn block" id="obNext">Начать — 1 минута</button><button class="linkbtn small onb-skip" id="obSkip">Я уже пользовался, пропустить</button></div>`;
+    ${window.INAPP?`<button class="linkbtn small onb-tg" id="obTg">Вы открыли «Опору» в ${esc(window.INAPP)} — здесь прогресс может не сохраниться. Как открыть в браузере</button>`:""}</div>`;
   if(OB.i===1) return `<div class="onb">${dots}<h2>Что вас сейчас беспокоит?</h2><p class="muted small">Можно выбрать до трёх. Это поможет показать самое нужное.</p>
     <div class="chips">${FOC.map(([k,t])=>`<button class="chip" data-of="${k}" aria-pressed="${OB.f.includes(k)}">${t}</button>`).join("")}</div>
     <button class="btn block" id="obNext">${OB.f.length?"Дальше":"Пока ничего — дальше"}</button><button class="linkbtn small" id="obBack" style="align-self:center">Назад</button></div>`;
@@ -80,6 +84,10 @@ function bindOnb(){
   const n=$("#obNext"); if(n) n.onclick=()=>{ OB.i++; render(); window.scrollTo(0,0); };
   const b=$("#obBack"); if(b) b.onclick=()=>{ OB.i--; render(); };
   const s=$("#obSkip"); if(s) s.onclick=()=>{ S.onb={f:[], skip:true, ts:Date.now()}; delete S._onbForce; save(); render(); };
+  $$("[data-ob1]").forEach(b=>b.onclick=()=>{ const k=b.dataset.ob1, f=k==="calm"?["anx"]:k==="check"?["mood"]:[];
+    S.onb={f, min:5, ts:Date.now(), first:k}; delete S._onbForce; save();
+    if(k==="calm") go("breath"); else if(k==="check") go("tests","who5"); else { render(); window.scrollTo(0,0); } });
+  const tg=$("#obTg"); if(tg) tg.onclick=()=>{ if(window.INAPP_SHOW) INAPP_SHOW(true); };
   $$("[data-of]").forEach(c=>c.onclick=()=>{ const k=c.dataset.of, i=OB.f.indexOf(k); if(i>=0) OB.f.splice(i,1); else if(OB.f.length<3) OB.f.push(k); else { toast("Не больше трёх"); return; } render(); });
   $$("[data-om]").forEach(o=>o.onclick=()=>{ OB.min=+o.dataset.om; render(); });
   const c=$("#obCal"); if(c) c.onclick=()=>ics("mood", $("#obT").value||"21:00");

@@ -18,10 +18,16 @@ window.INAPP=APP;
 if(!APP) return;
 const IOS=/iphone|ipad|ipod/i.test(ua);
 const URL0=location.origin+location.pathname;
-function show(){
+function show(force){
   if(document.querySelector(".inapp-m")) return;
-  try{ if(sessionStorage.getItem("opora_inapp")) return; }catch(e){}
-  if(typeof S!=="undefined" && S && S.inappHide) return;
+  if(!force){
+    try{ if(sessionStorage.getItem("opora_inapp")) return; }catch(e){}
+    if(typeof S!=="undefined" && S && S.inappHide) return;
+    // не мешаем первому экрану и упражнению: показываем, когда человек уже на главной
+    if(document.body.classList.contains("onb-on") || (typeof route!=="undefined" && route!=="home")) return;
+    // не поверх экскурсии: подождём, пока её закроют
+    if(document.querySelector(".tour")){ setTimeout(()=>show(), 1200); return; }
+  }
   const how = IOS
     ? `Нажмите <b>⋯</b> вверху справа → <b>«Открыть в Safari»</b>. Потом в Safari: «Поделиться» → <b>«На экран Домой»</b> — и «Опора» будет открываться как обычное приложение.`
     : `Нажмите <b>⋮</b> вверху справа → <b>«Открыть в браузере»</b>. Потом в меню браузера → <b>«Добавить на главный экран»</b> — и «Опора» будет открываться как обычное приложение.`;
@@ -42,7 +48,11 @@ function show(){
     if(typeof toast==="function") toast(ok?"Ссылка скопирована — вставьте её в Safari или Chrome":URL0);
   };
 }
-// после экрана знакомства (он сам по себе модальный) — чуть позже
-function later(){ setTimeout(show, 900); }
+window.INAPP_SHOW=show;
+// первый раз — когда человек впервые окажется на главной (после первого экрана или упражнения)
+function later(){ setTimeout(()=>show(), 900); }
 if(document.readyState==="complete") later(); else window.addEventListener("load", later);
+const r0=window.render; window.render=function(){ const out=r0.apply(this, arguments); later(); return out; };
+// первый экран мог отрисоваться раньше, чем загрузился этот файл — перерисуем, чтобы появилась строчка про Telegram
+if(document.body.classList.contains("onb-on")) window.render();
 })();

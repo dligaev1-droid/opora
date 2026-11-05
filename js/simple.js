@@ -86,25 +86,44 @@ let TI=0;
 function tour(){ if(route!=="home") return; runTour(TOUR, ()=>{ const sm=SM(); if(sm){ sm.tourOk=1; sm.introOk=1; save(); } }); }
 function runTour(STEPS, onEnd){
   if(document.querySelector(".tour")) return;
+  // сначала пусть закроют подсказку «откройте в браузере» — экскурсия начнётся после неё
+  if(document.querySelector(".inapp-m")){ setTimeout(()=>runTour(STEPS,onEnd), 800); return; }
   const TOUR=STEPS;
   TI=0; const ov=document.createElement("div"); ov.className="tour"; ov.setAttribute("role","dialog"); ov.setAttribute("aria-label","Знакомство с приложением");
   ov.innerHTML=`<div class="tour-hole"></div><div class="tour-tip"><span class="label" id="tourN"></span><strong id="tourT"></strong><p class="small" id="tourD"></p><div class="row"><button class="linkbtn small" id="tourSkip">Пропустить</button><button class="btn sm" id="tourNext">Далее</button></div></div>`;
   document.body.appendChild(ov);
-  const end=()=>{ if(onEnd) onEnd(); ov.remove(); window.removeEventListener("resize",place); };
+  // пока идёт экскурсия, страницу листать нельзя (отзыв Алёны: подсветка «уезжала» вместе со страницей)
+  const root=document.documentElement; root.classList.add("tour-lock");
+  const stop=e=>e.preventDefault(); ov.addEventListener("touchmove",stop,{passive:false}); ov.addEventListener("wheel",stop,{passive:false});
+  const end=()=>{ if(onEnd) onEnd(); ov.remove(); root.classList.remove("tour-lock"); window.removeEventListener("resize",place); };
   $("#tourSkip",ov).onclick=end;
   $("#tourNext",ov).onclick=()=>{ TI++; if(TI>=TOUR.length) end(); else place(); };
   window.addEventListener("resize",place);
+  // верхний отступ — ниже часов и выреза телефона
+  const probe=document.createElement("div"); probe.style.cssText="position:fixed;top:0;height:0;padding-top:env(safe-area-inset-top,0px);visibility:hidden"; document.body.appendChild(probe);
+  const safeTop=probe.offsetHeight; probe.remove();
   place();
   function place(){
     const [sel,t,d]=TOUR[TI], el=document.querySelector(sel); if(!el){ TI++; if(TI>=TOUR.length){ end(); return; } return place(); }
-    if(sel!=="nav.tabs") el.scrollIntoView({block:"center", behavior:"instant"});
-    const r=el.getBoundingClientRect(), pad=6, hole=$(".tour-hole",ov), tip=$(".tour-tip",ov);
-    Object.assign(hole.style,{left:(r.left-pad)+"px", top:(r.top-pad)+"px", width:(r.width+pad*2)+"px", height:(r.height+pad*2)+"px"});
+    const hole=$(".tour-hole",ov), tip=$(".tour-tip",ov), pad=6, gap=14;
     $("#tourN",ov).textContent=`${TI+1} из ${TOUR.length}`; $("#tourT",ov).textContent=t; $("#tourD",ov).textContent=d;
     $("#tourNext",ov).textContent=TI===TOUR.length-1?"Понятно":"Далее";
-    const below = r.bottom + 12 + 150 < innerHeight;
-    tip.style.top = below ? (r.bottom+14)+"px" : "auto";
-    tip.style.bottom = below ? "auto" : (innerHeight - r.top + 14)+"px";
+    const top0=Math.max(16, safeTop+12), nav=document.querySelector("nav.tabs"), isNav=sel==="nav.tabs";
+    const bottom0=(!isNav && nav ? nav.getBoundingClientRect().top : innerHeight) - 10;
+    const tipH=tip.offsetHeight+gap;
+    let r=el.getBoundingClientRect();
+    if(!isNav){
+      // ставим подсветку и подсказку вместе в свободную часть экрана — между верхом и нижним меню
+      const avail=bottom0-top0, want = r.height+pad*2+tipH<=avail ? top0+(avail-(r.height+pad*2+tipH))/2+pad : top0+tipH+pad;
+      window.scrollBy(0, r.top-want); r=el.getBoundingClientRect();
+    }
+    const ht=Math.max(r.top-pad, top0-pad), hb=Math.min(r.bottom+pad, bottom0);
+    Object.assign(hole.style,{left:(r.left-pad)+"px", top:ht+"px", width:(r.width+pad*2)+"px", height:Math.max(0,hb-ht)+"px"});
+    let below = hb+gap+tip.offsetHeight <= bottom0;
+    if(isNav) below=false;
+    if(!below && ht-gap-tip.offsetHeight < top0) below = hb+gap+tip.offsetHeight <= innerHeight-8;
+    tip.style.top = below ? (hb+gap)+"px" : Math.max(top0, ht-gap-tip.offsetHeight)+"px";
+    tip.style.bottom = "auto";
     tip.style.left = Math.max(12, Math.min(innerWidth-12-Math.min(340,innerWidth-24), r.left+r.width/2-170))+"px";
     tip.classList.toggle("up", !below);
   }

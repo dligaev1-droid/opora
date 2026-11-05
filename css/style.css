@@ -1016,3 +1016,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
              radial-gradient(85% 45% at 75% 100%,var(--glow3),transparent 72%)}
 /* приветствие на главных — спокойнее, не кричит */
 h1.hello{font-size:1.55rem;font-weight:600;letter-spacing:-.01em}
+
+/* Первый экран: один вопрос «С чего начнём?» */
+.onb-first{gap:14px}
+.onb-pick .opt{justify-content:flex-start;align-items:center;padding:14px}
+.onb-pick .ico{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.onb-tg{align-self:center;text-align:center;color:var(--muted)!important;font-weight:500;line-height:1.35}
+
+/* Экскурсия: страница не листается, пока открыты подсказки */
+html.tour-lock, html.tour-lock body{overflow:hidden;overscroll-behavior:none}

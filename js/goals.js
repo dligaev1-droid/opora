@@ -214,8 +214,8 @@ function vNew(){
   const steps=[
     ["Какая сфера?","",`<div class="chips">${AREAS.map(a=>`<button class="chip" data-na="${a}" aria-pressed="${NG.area===a}">${a}</button>`).join("")}</div>`],
     ["Зачем это вам?","Цель «потому что надо» быстро выжигает. Цель «потому что важно» держит.",`<div class="chips">${WHY.map(w=>`<button class="chip" data-nw="${w}" aria-pressed="${NG.why===w}">${w}</button>`).join("")}</div><input type="text" id="ngWhy" placeholder="Или своими словами" aria-label="Зачем" value="${esc(WHY.includes(NG.why)?"":NG.why)}" maxlength="120">`],
-    ["Сформулируйте цель","Конкретно и по силам. Не «стать здоровым», а «гулять 3 раза в неделю».",`<input type="text" id="ngT" placeholder="Например: выучить 500 английских слов" aria-label="Цель" value="${esc(NG.t)}" maxlength="120">`],
-    ["Первый шаг на 10 минут","Настолько маленький, что смешно не сделать.",`<input type="text" id="ngS" placeholder="Например: скачать приложение со словами" aria-label="Первый шаг" value="${esc(NG.step)}" maxlength="120">`],
+    ["Сформулируйте цель","Конкретно и по силам. Не «стать здоровым», а «гулять 3 раза в неделю».",`<input type="text" id="ngT" placeholder="Например: выучить 500 слов" aria-label="Цель" value="${esc(NG.t)}" maxlength="120">`],
+    ["Первый шаг на 10 минут","Настолько маленький, что смешно не сделать.",`<input type="text" id="ngS" placeholder="Например: скачать словарь" aria-label="Первый шаг" value="${esc(NG.step)}" maxlength="120">`],
     ["К какому сроку? (необязательно)","Срок помогает, но не должен давить. Можно оставить пустым.",`<input type="date" id="ngD" value="${esc(NG.due)}" aria-label="Срок">`]
   ];
   const [t,h,body]=steps[NG.i];
@@ -402,7 +402,7 @@ function vProc(){
       ["Что вы откладываете?",`<input type="text" id="prIn" placeholder="Например: отчёт для начальника" aria-label="Что откладываю" value="${esc(PR.task)}" maxlength="120">`],
       ["Что вы чувствуете, когда думаете об этом?",`<div class="opts">${PT.map(([t])=>`<button class="opt${PR.feel===t?" sel":""}" data-pf="${t}">${t}</button>`).join("")}</div>`],
       ["Какая мысль мешает начать?",`<div class="opts">${PM.map(([t])=>`<button class="opt${PR.thought===t?" sel":""}" data-pm="${t}">${t}</button>`).join("")}</div>`],
-      ["Самый маленький шаг на 10 минут",`<input type="text" id="prIn" placeholder="Например: открыть файл и написать заголовок" aria-label="Маленький шаг" value="${esc(PR.step)}" maxlength="120">`]
+      ["Самый маленький шаг на 10 минут",`<input type="text" id="prIn" placeholder="Например: написать заголовок" aria-label="Маленький шаг" value="${esc(PR.step)}" maxlength="120">`]
     ][PR.i];
     return `${gback()}<div class="stack-s"><h1>Разбор прокрастинации</h1><div class="progress"><i style="width:${PR.i*25}%"></i></div></div>
     <div class="card"><span class="label">Шаг ${PR.i+1} из 4</span><h3>${body[0]}</h3>${body[1]}
